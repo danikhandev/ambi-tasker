@@ -1,0 +1,589 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  PROVIDER
+  ADMIN
+}
+
+enum BookingStatus {
+  Requested
+  Accepted
+  Arrived
+  InProgress
+  Completed
+  Cancelled
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String           @id @default(uuid())
+  name          String           @map("full_name")
+  email         String           @unique
+  phone         String?
+  passwordHash  String           @map("password_hash")
+  role          Role             @default(USER)
+  profileImage  String?          @map("profile_image")
+  isActive      Boolean          @default(true) @map("is_active")
+  
+  // Dynamic Locations
+  districtId    String?          @map("district_id")
+  district      District?        @relation(fields: [districtId], references: [id])
+  cityId        String?          @map("city_id")
+  city          City?            @relation(fields: [cityId], references: [id])
+  areaId        String?          @map("area_id")
+  area          Area?            @relation(fields: [areaId], references: [id])
+  address       String?          @map("detailed_address")
+  latitude      Float?           @map("latitude")
+  longitude     Float?           @map("longitude")
+
+  isEmailVerified Boolean          @default(false) @map("is_email_verified")
+  isPhoneVerified Boolean          @default(false) @map("is_phone_verified")
+  isOnline        Boolean          @default(false) @map("is_online")
+  
+  // Password Reset Fields
+  resetToken      String?          @map("reset_token")
+  resetTokenExpiry DateTime?       @map("reset_token_expiry")
+  resetOtp        String?          @map("reset_otp")
+  resetOtpExpiry  DateTime?        @map("reset_otp_expiry")
+
+  settings        Json?            @default("{}") // Stores notification and privacy preferences
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updated_at    DateTime         @updatedAt @map("updated_at")
+
+  addresses       Address[]
+  providerProfile ProviderProfile?
+  bookings        Booking[]        @relation("CustomerBookings")
+  notifications   UserNotification[]
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  conversationsAsUser     Conversation[] @relation("UserConversations")
+  conversationsAsProvider Conversation[] @relation("ProviderConversations")
+  reports          Report[]         @relation("SentReports")
+  reviews          Review[]         @relation("UserToReview")
+  supportTickets   SupportTicket[]
+
+  @@map("profiles")
+}
+
+model Address {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label          String   // e.g., 'Home', 'Office'
+  address        String   @map("detailed_address")
+  districtId     String?  @map("district_id")
+  district       District? @relation(fields: [districtId], references: [id])
+  cityId         String?  @map("city_id")
+  city           City?    @relation(fields: [cityId], references: [id])
+  areaId         String?  @map("area_id")
+  area           Area?    @relation(fields: [areaId], references: [id])
+  latitude       Float?
+  longitude      Float?
+  isDefault      Boolean  @default(false) @map("is_default")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("user_addresses")
+}
+
+model ProviderProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique @map("user_id")
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professionalTitle  String?            @map("professional_title")
+  serviceDescription String?            @map("service_description")
+  hourlyRate         Float?             @map("hourly_rate")
+  experienceYears    Int?               @default(0) @map("experience_years")
+  isAvailable        Boolean            @default(true) @map("is_available")
+  
+  // KYC Documents
+  cnicNumber         String?           @unique @map("cnic_number")
+  cnicFrontUrl       String?           @map("cnic_front_url")
+  cnicBackUrl        String?           @map("cnic_back_url")
+  selfieUrl          String?           @map("selfie_url")
+  
+  verificationStatus VerificationStatus @default(NOT_SUBMITTED) @map("approval_status")
+  rejectionReason    String?            @map("rejection_reason")
+  kycSubmittedAt     DateTime?          @map("kyc_submitted_at")
+  kycVerifiedAt       DateTime?          @map("kyc_verified_at")
+  kycConfidenceScore Float?             @map("kyc_confidence_score")
+  kycData            Json?              @map("kyc_data") // Stores OCR extracted info for audit
+  
+  earnings           Float              @default(0.0) @map("earnings_total")
+  rating             Float              @default(0.0)
+  ratingCount        Int                @default(0) @map("rating_count")
+  settings           Json?              @default("{}") // Stores provider specific preferences
+  serviceRadius      Float              @default(10.0) @map("service_radius") // km
+  
+  // Providers can serve multiple areas
+  serviceAreas       Area[]             @relation("ProviderServiceAreas")
+  
+  bookings           Booking[]          @relation("ProviderBookings")
+  reviews            Review[]           @relation("ProviderToReview")
+
+  portfolio          Json?              // Store array of {id, title, image}
+  servicesList       Json?              // Store array of {id, title, price, type}
+  skills             String[]           @default([])
+
+  // Live Location Tracking
+  latitude           Float?             @map("latitude")
+  longitude          Float?             @map("longitude")
+  locationUpdatedAt  DateTime?          @map("location_updated_at")
+
+  @@map("providers")
+}
+
+// ─── LOCATION SYSTEM ─────────────────────────────────────────────────────────
+
+model Country {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  code      String     @unique // e.g., PK
+  provinces Province[]
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now())
+}
+
+model Province {
+  id        String     @id @default(uuid())
+  name      String
+  countryId String
+  country   Country    @relation(fields: [countryId], references: [id])
+  districts District[]
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now())
+
+  @@unique([name, countryId])
+}
+
+model District {
+  id         String   @id @default(uuid())
+  name       String
+  provinceId String
+  province   Province @relation(fields: [provinceId], references: [id])
+  cities     City[]
+  users      User[]
+  addresses  Address[]
+  bookings   Booking[]
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now())
+
+  @@unique([name, provinceId])
+}
+
+model City {
+  id         String   @id @default(uuid())
+  name       String
+  districtId String
+  district   District @relation(fields: [districtId], references: [id])
+  areas      Area[]
+  users      User[]
+  addresses  Address[]
+  bookings   Booking[]
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now())
+
+  @@unique([name, districtId])
+}
+
+model Area {
+  id        String            @id @default(uuid())
+  name      String
+  cityId    String
+  city      City              @relation(fields: [cityId], references: [id])
+  users     User[]
+  providers ProviderProfile[] @relation("ProviderServiceAreas")
+  addresses Address[]
+  bookings  Booking[]
+  isActive  Boolean           @default(true) @map("is_active")
+  createdAt DateTime          @default(now())
+
+  @@unique([name, cityId])
+}
+
+// ─── END LOCATION SYSTEM ─────────────────────────────────────────────────────
+
+model Service {
+  id          String    @id @default(uuid())
+  name        String
+  category    String
+  price       Float
+  description String
+  icon        String?
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now())
+  
+  bookings    Booking[]
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  userId      String
+  customer    User          @relation("CustomerBookings", fields: [userId], references: [id])
+  providerId  String
+  provider    ProviderProfile @relation("ProviderBookings", fields: [providerId], references: [id])
+  serviceId   String
+  service     Service       @relation(fields: [serviceId], references: [id])
+  status      BookingStatus @default(Requested)
+  location    String        // Address string
+  latitude    Float?        @map("latitude")
+  longitude   Float?        @map("longitude")
+  
+  // Structured location
+  districtId  String?       @map("district_id")
+  district    District?     @relation(fields: [districtId], references: [id])
+  cityId      String?       @map("city_id")
+  city        City?         @relation(fields: [cityId], references: [id])
+  areaId      String?       @map("area_id")
+  area        Area?         @relation(fields: [areaId], references: [id])
+
+  scheduledAt DateTime?     @map("scheduled_at")
+  notes       String?
+  totalPrice  Float?        @map("total_price")
+
+  // QR Arrival Verification
+  qrToken           String?       @map("qr_token") @unique
+  qrExpiry          DateTime?     @map("qr_expiry")
+  arrivalVerified   Boolean       @default(false) @map("arrival_verified")
+  arrivalVerifiedAt  DateTime?    @map("arrival_verified_at")
+  arrivalLat        Float?        @map("arrival_lat")
+  arrivalLng        Float?        @map("arrival_lng")
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  messages    Message[]
+  payment     Payment?
+  receipt     Receipt?
+  reports     Report[]
+  review      Review?
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique @map("booking_id")
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount        Float
+  method        String        @default("CASH") // CASH, STRIPE, MOCK
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       @map("transaction_id")
+  paidAt        DateTime?     @map("paid_at")
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  senderId       String       @map("sender_id")
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId     String       @map("receiver_id")
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  bookingId      String?      @map("booking_id")
+  booking        Booking?     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messageText    String       @map("message_text")
+  isRead         Boolean      @default(false) @map("is_read")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("messages")
+}
+
+enum NotificationType {
+  SYSTEM
+  BOOKING
+  PAYMENT
+  ALERT
+  PROMOTION
+  GENERAL
+}
+
+enum NotificationTarget {
+  INDIVIDUAL
+  ALL_USERS
+  ALL_PROVIDERS
+  SPECIFIC_USER
+  SPECIFIC_PROVIDER
+}
+
+model Notification {
+  id          String             @id @default(uuid())
+  title       String
+  body        String
+  type        NotificationType   @default(GENERAL)
+  targetType  NotificationTarget @default(INDIVIDUAL)
+  
+  actionUrl   String?            @map("action_url")
+  senderId    String?            @map("sender_id")
+  createdAt   DateTime           @default(now())
+  
+  recipients      UserNotification[]
+  adminRecipients AdminNotification[]
+
+  @@map("notifications")
+}
+
+model UserNotification {
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationId String       @map("notification_id")
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  isRead         Boolean      @default(false) @map("is_read")
+  readAt         DateTime?    @map("read_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([userId, isRead])
+  @@map("user_notifications")
+}
+
+model Receipt {
+  id          String   @id @default(uuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount      Float
+  generatedAt DateTime @default(now())
+}
+
+// ─── ADMIN SYSTEM ────────────────────────────────────────────────────────────
+
+model Admin {
+  id                     String   @id @default(uuid())
+  name                   String   @default("Admin")
+  email                  String   @unique
+  passwordHash           String   @map("password_hash")
+  avatar                 String?  // Profile image URL
+  role                   String   @default("SUB_ADMIN") // 'SUPER_ADMIN' or 'SUB_ADMIN'
+  permissions            Json?    // Stores UI and API permission matrix
+  status                 String   @default("active")   // 'active' or 'inactive'
+  requiresPasswordChange Boolean  @default(false) @map("requires_password_change")
+  lastLoginAt            DateTime? @map("last_login_at")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  notifications      AdminNotification[]
+  activityLogs       AdminLog[]
+
+  @@map("admins")
+}
+
+model AdminLog {
+  id          String   @id @default(uuid())
+  adminId     String   @map("admin_id")
+  admin       Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action      String
+  targetType  String   @map("target_type")
+  targetId    String?  @map("target_id")
+  details     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("admin_logs")
+}
+
+model AdminNotification {
+  id             String       @id @default(uuid())
+  adminId        String       @map("admin_id")
+  admin          Admin        @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  notificationId String       @map("notification_id")
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  isRead         Boolean      @default(false) @map("is_read")
+  readAt         DateTime?    @map("read_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([adminId, isRead])
+  @@map("admin_notifications")
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  identifier String   // email or phone
+  token     String
+  expires   DateTime
+  type      String   // 'EMAIL' or 'PHONE'
+
+  @@unique([identifier, token])
+}
+
+model OtpCode {
+  id         String   @id @default(uuid())
+  identifier String   // email or phone number
+  code       String
+  type       String   // 'EMAIL_VERIFY', 'PHONE_VERIFY', 'PASSWORD_RESET'
+  expiresAt  DateTime @map("expires_at")
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([identifier, type])
+  @@map("otp_codes")
+}
+
+model Report {
+  id          String         @id @default(uuid())
+  reporterId  String
+  reporter    User           @relation("SentReports", fields: [reporterId], references: [id])
+  targetId    String?        // ID of user or provider being reported
+  bookingId   String?
+  booking     Booking?       @relation(fields: [bookingId], references: [id])
+  category    ReportCategory
+  description String
+  status      ReportStatus   @default(PENDING)
+  createdAt   DateTime       @default(now())
+}
+
+enum ReportCategory {
+  UNPROFESSIONAL_BEHAVIOR
+  DELAYED_SERVICE
+  SAFETY_CONCERN
+  POOR_QUALITY
+  PAYMENT_ISSUE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model Conversation {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation("UserConversations", fields: [userId], references: [id])
+  providerId    String    @map("provider_id")
+  provider      User      @relation("ProviderConversations", fields: [providerId], references: [id])
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastMessageAt DateTime? @map("last_message_at")
+
+  messages    Message[]
+
+  @@unique([userId, providerId])
+  @@map("conversations")
+}
+
+model Review {
+  id              String          @id @default(uuid())
+  bookingId       String          @unique @map("booking_id")
+  booking         Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  userId          String          @map("user_id")
+  user            User            @relation("UserToReview", fields: [userId], references: [id])
+  providerId      String          @map("provider_id")
+  providerProfile ProviderProfile @relation("ProviderToReview", fields: [providerId], references: [id])
+  
+  rating          Int             @default(5)
+  comment         String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@map("reviews")
+}
+
+model SupportTicket {
+  id          String        @id @default(uuid())
+  userId      String?       @map("user_id")
+  user        User?         @relation(fields: [userId], references: [id])
+  category    String        // e.g., 'booking', 'payment', 'safety', 'general'
+  subject     String
+  message     String
+  status      String        @default("PENDING") // 'PENDING', 'OPEN', 'RESOLVED', 'CLOSED'
+  priority    String        @default("LOW")     // 'LOW', 'MEDIUM', 'HIGH'
+  createdAt   DateTime      @default(now())     @map("created_at")
+  updatedAt   DateTime      @updatedAt          @map("updated_at")
+
+  @@map("support_tickets")
+}
+
+model SystemSetting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  @@map("system_settings")
+}
+
+model Poster {
+  id          String   @id @default(uuid())
+  title       String
+  subtitle    String?
+  imageUrl    String   @map("image_url")
+  link        String?
+  buttonText  String?  @default("Book Now") @map("button_text")
+  color       String?  @default("from-primary/80 to-primary/90")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("posters")
+}
+
+model SocialMediaLink {
+  id        String   @id @default(uuid())
+  platform  String   @unique // e.g., facebook, instagram, twitter, linkedin, youtube
+  url       String
+  icon      String?  // Optional icon identifier
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("social_media_links")
+}
+model AdminSetting {
+  id                    String   @id @default(uuid())
+  
+  // Branding
+  appName               String   @default("AmbiTasker")
+  logoUrl               String?  @map("logo_url")
+  faviconUrl            String?  @map("favicon_url")
+  footerCopyrightText   String   @default("© 2026 AmbiTasker. Empowering local professionals across Pakistan 🇵🇰") @map("footer_copyright_text")
+  
+  // Platform Config
+  platformFeePercentage Float    @default(10.0) @map("platform_fee_percentage")
+  currency              String   @default("PKR")
+  timezone              String   @default("UTC+5")
+  
+  // Payment
+  paymentGateway        String   @default("PayFast") @map("payment_gateway")
+  isPaymentEnabled      Boolean  @default(true) @map("is_payment_enabled")
+  
+  // Contact
+  supportEmail          String?  @map("support_email")
+  supportPhone          String?  @map("support_phone")
+  
+  // Notifications
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
+  pushNotificationsEnabled  Boolean @default(true) @map("push_notifications_enabled")
+  
+  // Security
+  twoFactorAuthEnabled  Boolean @default(false) @map("two_factor_auth_enabled")
+  loginAlertsEnabled    Boolean @default(false) @map("login_alerts_enabled")
+  
+  // Social Links
+  socialLinks           Json?    @default("[]") @map("social_links")
+
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_settings")
+}

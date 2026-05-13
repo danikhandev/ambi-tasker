@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ambi Tasker</string>
+    <string name="title_activity_main">Ambi Tasker</string>
+    <string name="package_name">com.ambitasker.app</string>
+    <string name="custom_url_scheme">com.ambitasker.app</string>
+</resources>

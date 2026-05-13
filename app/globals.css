@@ -1,0 +1,1105 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@100..900&family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant rtl (&:is([dir="rtl"] *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+:root {
+  /* Ambi Tasker Production Design System (SaaS Standard) */
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #0F172A;
+  --secondary-foreground: #FFFFFF;
+  
+  --accent: #F59E0B;
+  --accent-foreground: #0F172A;
+  
+  --success: #16A34A;
+  --warning: #F59E0B;
+  --danger: #DC2626;
+  
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  
+  --border: #E2E8F0;
+  --input: #F1F5F9;
+  --ring: #2563EB;
+  
+  --radius: 1.25rem;
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+}
+
+.dark {
+  --background: hsl(220, 45%, 5%);
+  --foreground: hsl(210, 20%, 98%);
+  
+  --primary: hsl(175, 50%, 35%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  
+  --card: hsl(220, 45%, 8%);
+  --card-foreground: hsl(210, 20%, 98%);
+  
+  --border: hsl(220, 40%, 15%);
+  --input: hsl(220, 40%, 12%);
+  --ring: hsl(175, 50%, 35%);
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 8s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .animate-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.03) 20%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.03) 80%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+}
+
+@utility glass-panel {
+  @apply bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/5;
+}
+
+@utility btn-premium {
+  @apply relative overflow-hidden h-12 px-6 rounded-2xl font-display font-bold text-sm tracking-wide transition-all active:scale-95;
+  @apply flex items-center justify-center gap-2;
+}
+
+@utility btn-primary {
+  @apply btn-premium bg-primary text-white shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5;
+}
+
+@utility btn-secondary {
+  @apply btn-premium bg-white dark:bg-card text-foreground border border-border hover:bg-gray-50 dark:hover:bg-white/5;
+}
+
+@utility card-minimal {
+  @apply bg-card border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300;
+}
+
+@utility input-elegant {
+  @apply h-12 w-full bg-input border-2 border-transparent rounded-2xl px-5 text-sm font-medium transition-all;
+  @apply focus:bg-white dark:focus:bg-black/20 focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5;
+}
+
+@layer utilities {
+  .text-xs { font-size: 0.75rem; line-height: 1rem; }
+  .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .text-base { font-size: 1rem; line-height: 1.5rem; }
+  .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .text-5xl { font-size: 3rem; line-height: 1; }
+  .text-6xl { font-size: 3.75rem; line-height: 1; }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE + Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-hint: var(--text-hint);
+  --color-text-disabled: var(--text-disabled);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-satoshi);
+  --font-times-roman: var(--font-times-roman);
+  --font-unbounded: var(--font-unbounded);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+body {
+  font-family: var(--font-satoshi), Arial, Helvetica, sans-serif;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Blob animations for landing page */
+@keyframes blob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(20px, -50px) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  75% {
+    transform: translate(50px, 50px) scale(1.05);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Slide animations for multi-step forms */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-insert-cursor {
+  animation: insertCursorBlink 0.5s steps(1) infinite;
+}
+
+@keyframes insertCursorBlink {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* Syncing bar animation for chat sidebar */
+@keyframes syncBar {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-sync-bar {
+  animation: syncBar 1.5s ease-in-out infinite;
+}
+
+/* ---break---  */
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --primary: #10B981;
+  --primary-foreground: #FFFFFF;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --border: #1F2937;
+  --input: #0F2626;
+  --ring: #10B981;
+  --text: #F8FAFC;
+  --text-secondary: #D1D5DB;
+  --text-hint: #9CA3AF;
+  --text-disabled: #4B5563;
+}
+
+/* --- Theme Options --- */
+
+/* GRAY THEME — Cyber Slate modern */
+.theme-gray {
+  --background: #F1F5F9; /* More distinct gray */
+  --foreground: #0F172A;
+  --primary: #6366F1;
+  --primary-dark: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E2E8F0;
+  --secondary-foreground: #1E293B;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #818CF8;
+  --accent-soft: #EEF2FF;
+  --accent-foreground: #312E81;
+  --destructive: #EF4444;
+  --border: #E2E8F0;
+  --input: #F8FAFC;
+  --ring: #6366F1;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --text-hint: #94A3B8;
+  --text-disabled: #CBD5E1;
+  --gray-soft: #F1F5F9;
+  --gray-medium: #E2E8F0;
+  --gold: #D4AF37;
+  --gold-soft: #F9F1D7;
+  --success: #10B981;
+}
+
+/* BLUE THEME — Aura Blue vibrant corporate */
+.theme-blue {
+  --background: #EBF5FF; /* More distinct blue */
+  --foreground: #0F172A;
+  --primary: #2563EB;
+  --primary-dark: #1E40AF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #DBEAFE;
+  --secondary-foreground: #1E3A8A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --muted: #EFF6FF;
+  --muted-foreground: #3B82F6;
+  --accent: #3B82F6;
+  --accent-soft: #E0F2FE;
+  --accent-foreground: #0369A1;
+  --destructive: #EF4444;
+  --border: #BFDBFE;
+  --input: #F8FAFC;
+  --ring: #2563EB;
+  --text: #0F172A;
+  --text-secondary: #1E40AF;
+  --text-hint: #60A5FA;
+  --text-disabled: #93C5FD;
+  --gray-soft: #F0F9FF;
+  --gray-medium: #E0F2FE;
+  --gold: #F59E0B;
+  --gold-soft: #FEF3C7;
+  --success: #10B981;
+}
+
+/* BLACK THEME — Premium Obsidian / OLED */
+.theme-black {
+  --background: #05070A;
+  --foreground: #F8FAFC;
+  --primary: #FFFFFF;
+  --primary-dark: #E2E8F0;
+  --primary-foreground: #000000;
+  --secondary: #111827;
+  --secondary-foreground: #F8FAFC;
+  --card: #0D1117;
+  --card-foreground: #F8FAFC;
+  --popover: #0D1117;
+  --popover-foreground: #F8FAFC;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #D4AF37;
+  --accent-soft: #1C1917;
+  --accent-foreground: #000000;
+  --destructive: #F87171;
+  --border: #1F2937;
+  --input: #0D1117;
+  --ring: #FFFFFF;
+  --text: #F8FAFC;
+  --text-secondary: #D1D5DB;
+  --text-hint: #6B7280;
+  --text-disabled: #374151;
+  --gray-soft: #111827;
+  --gray-medium: #1F2937;
+  --gold: #D4AF37;
+  --gold-soft: #1C1917;
+  --success: #34D399;
+}
+
+/* ADMIN THEME — Deep Indigo / Premium Dash (Inspired by user reference) */
+.theme-admin {
+  --background: #1A1B4B;
+  --foreground: #FFFFFF;
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #818CF8; /* Switched from pink to harmonious indigo-violet */
+  --secondary-foreground: #FFFFFF;
+  --card: #2A2D6E;
+  --card-foreground: #FFFFFF;
+  --popover: #2A2D6E;
+  --popover-foreground: #FFFFFF;
+  --muted: #3B4277;
+  --muted-foreground: #CBD5E1;
+  --accent: #60A5FA;
+  --accent-foreground: #FFFFFF;
+  --destructive: #F87171;
+  --border: #3B4277;
+  --input: #1E1F4B;
+  --ring: #6366F1;
+  --text: #FFFFFF;
+  --text-secondary: #E2E8F0; /* Brightened for readability */
+  --text-hint: #94A3B8;
+  --text-disabled: #475569;
+  --success: #34D399;
+}
+
+.theme-admin h1 { font-size: 26px; }
+.theme-admin h2 { font-size: 22px; }
+.theme-admin h3 { font-size: 19px; }
+.theme-admin p, .theme-admin span { font-size: 15px; }
+.theme-admin .text-xs { font-size: 13px; }
+
+/* ADMIN LIGHT THEME — Soft Lavender / Clean (Inspired by second reference) */
+.theme-admin-light {
+  --background: #F0F4FF;
+  --foreground: #1A1C3D;
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #A5B4FC; /* Switched from pink to soft violet-blue */
+  --secondary-foreground: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: #1A1C3D;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1C3D;
+  --muted: #E2E8F0;
+  --muted-foreground: #64748B;
+  --accent: #60A5FA;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --border: #E2E8F0;
+  --input: #FFFFFF;
+  --ring: #6366F1;
+  --text: #1A1C3D;
+  --text-secondary: #475569;
+  --text-hint: #94A3B8;
+  --text-disabled: #94A3B8;
+  --success: #10B981;
+}
+
+.theme-admin-light h1 { font-size: 26px; font-weight: 800; color: #1A1C3D; }
+.theme-admin-light h2 { font-size: 22px; font-weight: 700; color: #1A1C3D; }
+.theme-admin-light h3 { font-size: 19px; font-weight: 600; color: #1A1C3D; }
+.theme-admin-light p { font-size: 15px; color: #475569; }
+.theme-admin-light .card-modern { background: #FFFFFF; border: 1px solid rgba(99, 102, 241, 0.1); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.05); }
+
+/* ---break---  */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Typography Updates - Professional font sizes */
+  h1, .text-h1 {
+    @apply text-[22px] md:text-[24px] font-black tracking-tight text-foreground leading-[1.2];
+  }
+
+  h2, .text-h2 {
+    @apply text-[18px] md:text-[20px] font-bold tracking-tight text-foreground leading-[1.3];
+  }
+
+  h3, .text-h3 {
+    @apply text-[16px] md:text-[18px] font-semibold text-foreground leading-snug;
+  }
+
+  p, li, .text-body {
+    @apply text-[14px] md:text-[16px] text-text-secondary leading-relaxed font-medium;
+  }
+
+  small, .text-caption {
+    @apply text-[12px] text-text-hint font-medium leading-none;
+  }
+
+  /* Input fields modern styling - Standardized Height 52px */
+  input,
+  select,
+  textarea {
+    @apply bg-input border border-border text-foreground placeholder:text-text-hint transition-all duration-300 outline-none shadow-sm rounded-2xl px-5 py-4 min-h-[52px] w-full;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply ring-4 ring-primary/10 border-primary bg-background shadow-md shadow-primary/5 -translate-y-0.5;
+  }
+
+  /* Labels standardized */
+  label {
+    @apply block text-[11px] font-black text-text-hint uppercase tracking-widest mb-2 px-1;
+  }
+}
+
+/* Button Standards - Standardized Height 52px */
+.btn-primary {
+  @apply bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-widest h-[52px] rounded-2xl px-10 flex items-center justify-center gap-3 min-w-[120px];
+  @apply hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-secondary {
+  @apply bg-white text-primary text-[11px] font-black uppercase tracking-widest h-[52px] rounded-2xl px-10 flex items-center justify-center gap-3 border border-border/60 shadow-sm active:scale-[0.97] transition-all duration-300;
+}
+
+/* Card Standards - Upgraded to xl rounded corners and soft shadows */
+.card-modern {
+  @apply bg-card text-card-foreground p-8 rounded-[24px] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_-5px_rgba(37,99,235,0.08)] transition-all duration-500 border border-border/60 hover:-translate-y-1;
+}
+
+/* Spacer Utilities */
+.section-gap { @apply py-12 md:py-20 lg:py-24; }
+.component-gap { @apply space-y-6 md:space-y-8; }
+
+/* Status Badges - SaaS Standards */
+@utility badge-status {
+  @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border inline-flex items-center gap-1.5;
+}
+@utility badge-pending { 
+  @apply badge-status bg-warning/10 text-warning border-warning/20; 
+}
+@utility badge-approved { 
+  @apply badge-status bg-success/10 text-success border-success/20; 
+}
+@utility badge-rejected { 
+  @apply badge-status bg-danger/10 text-danger border-danger/20; 
+}
+
+
+/* Typography Standards for Mobile Apps */
+.h1-modern {
+  @apply text-[24px] tracking-tight font-bold text-foreground leading-snug;
+}
+
+.h2-modern {
+  @apply text-[20px] tracking-tight font-bold text-foreground leading-snug;
+}
+
+.h3-modern {
+  @apply text-[18px] tracking-tight font-semibold text-foreground;
+}
+
+.body-modern {
+  @apply text-[15px] text-text-secondary leading-relaxed;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+.lk-grid-layout-wrapper {
+  @apply text-white;
+}
+
+/* Glass card effects for landing page */
+.glass-card {
+  @apply bg-primary/20 hover:bg-primary/25;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(125, 249, 255, 0.1);
+}
+
+input,
+button {
+  border-radius: var(--radius);
+}
+
+.glass-card-hover {
+  transition: all 0.3s ease;
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(125, 249, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(125, 249, 255, 0.1);
+}
+
+/* Neon glow effects */
+.neon-glow {
+  box-shadow: 0 0 20px rgba(125, 249, 255, 0.3),
+    0 0 40px rgba(125, 249, 255, 0.2);
+}
+
+.neon-glow-strong {
+  box-shadow: 0 0 30px rgba(125, 249, 255, 0.5),
+    0 0 60px rgba(125, 249, 255, 0.3),
+    0 0 90px rgba(125, 249, 255, 0.2);
+}
+
+/* Custom scrollbar styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(1, 78, 120, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(1, 78, 120, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(1, 78, 120, 0.5);
+}
+
+/* =============================================
+   URDU / RTL LANGUAGE SUPPORT (PROFESSIONAL GRADE)
+   ============================================= */
+
+@layer base {
+
+  /* Set base font and direction when RTL is active */
+  html[dir="rtl"] {
+    scroll-behavior: smooth;
+    font-size: 16px;
+    /* Slightly larger base for Arabic/Urdu scripts */
+  }
+
+  html[dir="rtl"] body :not([class*="unbounded"]):not(.brand-font) {
+    /* Noto Sans Arabic is cleaner for digital screens/body text than Nastaliq */
+    font-family: 'Noto Sans Arabic', 'SF Pro Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.8 !important;
+    /* Proper line height for clustered Urdu chars */
+    word-spacing: 0.05em;
+    /* Better spacing for Urdu readability */
+    letter-spacing: 0 !important;
+  }
+
+  /* Urdu Heading Standards - Professional Nastaliq for Titles */
+  html[dir="rtl"] h1,
+  html[dir="rtl"] h2,
+  html[dir="rtl"] h4,
+  html[dir="rtl"] .h1-modern,
+  html[dir="rtl"] .h2-modern {
+    font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', serif !important;
+    line-height: 2.2 !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.75rem;
+  }
+
+  html[dir="rtl"] h1,
+  html[dir="rtl"] .h1-modern {
+    font-size: 32px !important;
+  }
+
+  html[dir="rtl"] h2,
+  html[dir="rtl"] .h2-modern {
+    font-size: 26px !important;
+  }
+
+  html[dir="rtl"] h3,
+  html[dir="rtl"] .h3-modern {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    font-size: 20px !important;
+    line-height: 1.8 !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Body & Text Standards - Professional Sans Arabic for Body */
+  html[dir="rtl"] p,
+  html[dir="rtl"] .body-modern,
+  html[dir="rtl"] li {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    font-size: 16px !important;
+    line-height: 2.0 !important;
+    text-align: right;
+    color: var(--text-secondary);
+  }
+
+  /* Component Specific Urdu Scaling */
+  html[dir="rtl"] .btn-primary,
+  html[dir="rtl"] .btn-secondary,
+  html[dir="rtl"] button:not(.icon-only):not(.p-2):not(.p-1) {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    font-weight: 700 !important;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    letter-spacing: 0 !important;
+  }
+
+  html[dir="rtl"] input,
+  html[dir="rtl"] select,
+  html[dir="rtl"] textarea {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    font-size: 15px !important;
+    direction: rtl !important;
+    text-align: right !important;
+    line-height: 1.8 !important;
+  }
+
+  /* Placeholder specific for Urdu */
+  html[dir="rtl"] input::placeholder,
+  html[dir="rtl"] textarea::placeholder {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    text-align: right !important;
+    opacity: 0.7;
+    font-size: 13px;
+  }
+
+  /* Labels and Hints */
+  html[dir="rtl"] label,
+  html[dir="rtl"] .text-xs,
+  html[dir="rtl"] .text-sm {
+    font-family: 'Noto Sans Arabic', sans-serif !important;
+    line-height: 1.8 !important;
+    font-size: 14px !important;
+    text-align: right;
+    display: block;
+  }
+
+  html[dir="rtl"] .text-xs {
+    font-size: 11px !important;
+  }
+}
+
+/* ===========================================
+   RTL - AUTOMATIC ICON FLIPS
+   Flips directional icons (next, back, arrow)
+   =========================================== */
+html[dir="rtl"] .lucide-chevron-right,
+html[dir="rtl"] .lucide-chevron-left,
+html[dir="rtl"] .lucide-arrow-right,
+html[dir="rtl"] .lucide-arrow-left,
+html[dir="rtl"] .lucide-move-right,
+html[dir="rtl"] .lucide-move-left,
+html[dir="rtl"] .lucide-log-out,
+html[dir="rtl"] .lucide-log-in {
+  transform: scaleX(-1) !important;
+}
+
+/* ===========================================
+   RTL - LOGICAL LAYOUT FIXES
+   Using logical properties for better support
+   =========================================== */
+
+/* Sidebar Directional logic */
+html[dir="rtl"] aside.fixed {
+  inset-inline-start: auto !important;
+  inset-inline-end: 0 !important;
+  border-inline-end: none !important;
+  border-inline-start: 1px solid var(--border) !important;
+}
+
+/* Logical property mirrors for layout utilities */
+html[dir="rtl"] .ml-auto {
+  margin-inline-start: 0 !important;
+  margin-inline-end: auto !important;
+}
+
+html[dir="rtl"] .mr-auto {
+  margin-inline-end: 0 !important;
+  margin-inline-start: auto !important;
+}
+
+/* Inset logic - let components handle this with start-/end- classes */
+html[dir="rtl"] .text-left {
+  text-align: right !important;
+}
+
+html[dir="rtl"] .text-right {
+  text-align: left !important;
+}
+
+/* Transition effects should be mirror-friendly */
+html[dir="rtl"] .translate-x-full {
+  transform: translateX(-100%) !important;
+}
+
+html[dir="rtl"] .-translate-x-full {
+  transform: translateX(100%) !important;
+}
+
+/* Fixed Layout Containers - Desktop Polish */
+.container {
+  max-width: 1400px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+@media (min-width: 1600px) {
+  .hero-inner {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Padding adjustments for inputs with icons */
+html[dir="rtl"] .pl-11,
+html[dir="rtl"] .pl-12 {
+  padding-left: 1rem !important;
+  padding-right: 3rem !important;
+}
+
+html[dir="rtl"] .pr-11,
+html[dir="rtl"] .pr-12 {
+  padding-right: 1rem !important;
+  padding-left: 3rem !important;
+}
+
+/* Fix for search bars and similar */
+html[dir="rtl"] .pl-10 {
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+}
+
+html[dir="rtl"] .pr-10 {
+  padding-right: 1rem !important;
+  padding-left: 2.5rem !important;
+}
+
+/* Grid and Flex gaps generally handle RTL well, but sometimes alignment needs fix */
+html[dir="rtl"] .text-left {
+  text-align: right !important;
+}
+
+html[dir="rtl"] .text-right {
+  text-align: left !important;
+}
+
+/* Transition effects should be mirror-friendly */
+html[dir="rtl"] .translate-x-full {
+  transform: translateX(-100%) !important;
+}
+
+html[dir="rtl"] .-translate-x-full {
+  transform: translateX(100%) !important;
+}
+
+/* Smooth Language Switch Animation */
+.language-switch-enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.language-switch-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 300ms ease-out;
+}
+
+/* Urdu Premium Polish */
+html[dir="rtl"] .urdu-font {
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[dir="rtl"] .pl-16 {
+  padding-left: 1rem !important;
+  padding-right: 4rem !important;
+}
+
+html[dir="rtl"] .pl-20 {
+  padding-left: 1rem !important;
+  padding-right: 5rem !important;
+}
+
+/* Placeholder alignment */
+html[dir="rtl"] ::placeholder {
+  text-align: right !important;
+}
+
+/* Technical inputs keep English LTR */
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] input[type="tel"],
+html[dir="rtl"] .en-force {
+  direction: ltr !important;
+  text-align: left !important;
+  font-family: var(--font-satoshi), Arial, sans-serif !important;
+}
+
+/* ===========================================
+   URDU - STATE & ANIMATIONS
+   =========================================== */
+.lang-fade-enter {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.lang-fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* ===========================================
+   THEME COMPATIBILITY - Contrast Checks
+   =========================================== */
+.dark html[dir="rtl"] body {
+  color: var(--text);
+}
+
+.dark html[dir="rtl"] .text-text-hint {
+  color: var(--text-hint);
+}
+
+/* Fix for lucide icons size in Urdu buttons to prevent misalignment */
+html[dir="rtl"] button svg {
+  margin-top: -2px;
+}
+
+/* Global Transitions & Micro-interactions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, transform, box-shadow, filter;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  transition-duration: 300ms;
+}
+
+/* Professional Shimmer for Skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--primary-rgb, 15, 76, 76), 0.03) 25%,
+    rgba(var(--primary-rgb, 15, 76, 76), 0.08) 50%,
+    rgba(var(--primary-rgb, 15, 76, 76), 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Button & Interactive Element Enhancements */
+.btn-primary, .btn-secondary {
+  @apply transition-all duration-300 active:scale-[0.96] hover:scale-[1.02] hover:shadow-xl active:shadow-sm;
+}
+
+input, select, textarea {
+  @apply transition-all duration-300 focus:scale-[1.01];
+}
+
+.card-modern {
+  @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 active:scale-[0.98];
+}
+
+/* Scroll Animation Utilities */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}

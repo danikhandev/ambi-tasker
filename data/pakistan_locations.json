@@ -1,0 +1,193 @@
+[
+  {
+    "province": "Punjab",
+    "districts": [
+      {
+        "district": "Lahore",
+        "areas": ["DHA", "Johar Town", "Model Town", "Gulberg", "Bahria Town", "Garden Town", "Faisal Town", "Iqbal Town", "Cantt", "Township", "Shadman", "Wapda Town", "Raiwind", "Shalimar"]
+      },
+      {
+        "district": "Faisalabad",
+        "areas": ["Madina Town", "Peoples Colony", "Satiana Road", "Jhang Road", "Susan Road", "Millat Road", "Jinnah Colony", "Canal Road", "Gulshan Iqbal", "Chak Jhumra"]
+      },
+      {
+        "district": "Rawalpindi",
+        "areas": ["Saddar", "Bahria Town", "DHA", "Gulzar-e-Quaid", "Chaklala Scheme", "Satellite Town", "Asghar Mall", "Westridge", "Wah Cantt", "Taxila"]
+      },
+      {
+        "district": "Gujranwala",
+        "areas": ["City", "Satellite Town", "Model Town", "Peoples Colony", "Civil Lines", "Gondlanwala", "Kamoke", "Wazirabad"]
+      },
+      {
+        "district": "Multan",
+        "areas": ["Cantt", "Gulgasht Colony", "Shah Rukn-e-Alam", "Qasimpur", "Bosan Road", "Vehari Road", "Shujabad Road", "New Multan"]
+      },
+      {
+        "district": "Sialkot",
+        "areas": ["Cantt", "City", "Allama Iqbal Town", "Daska", "Pasrur", "Sambrial", "Kotli Loharan"]
+      },
+      {
+        "district": "Bahawalpur",
+        "areas": ["City", "Satellite Town", "Model Town", "Cantt", "Hasilpur", "Yazman", "Ahmedpur East"]
+      },
+      {
+        "district": "Sargodha",
+        "areas": ["City", "University Road", "Satellite Town", "Model Town", "Bhera", "Bhalwal", "Shahpur"]
+      },
+      {
+        "district": "Sheikhupura",
+        "areas": ["City", "Muridke", "Sharaqpur", "Safdarabad", "Ferozewala", "Nankana Sahib"]
+      },
+      {
+        "district": "Jhang",
+        "areas": ["City", "Chiniot", "Shorkot", "Ahmadpur Sial"]
+      },
+      {
+        "district": "Gujrat",
+        "areas": ["City", "Kharian", "Lalamusa", "Dinga", "Jalalpur Jattan"]
+      },
+      {
+        "district": "Kasur",
+        "areas": ["City", "Chunian", "Pattoki", "Kot Radha Kishan"]
+      }
+    ]
+  },
+  {
+    "province": "Sindh",
+    "districts": [
+      {
+        "district": "Karachi",
+        "areas": ["DHA", "Clifton", "Gulshan-e-Iqbal", "North Nazimabad", "Korangi", "Malir", "Gulistan-e-Johar", "Federal B Area", "PECHS", "Saddar", "Orangi Town", "Surjani Town", "Landhi", "Baldia Town", "Keamari"]
+      },
+      {
+        "district": "Hyderabad",
+        "areas": ["Latifabad", "Qasimabad", "City", "Cantt", "Kotri", "Hatri", "Tando Jam"]
+      },
+      {
+        "district": "Sukkur",
+        "areas": ["City", "Rohri", "Saleh Pat", "New Sukkur", "Sindh Industrial Trading Estate"]
+      },
+      {
+        "district": "Larkana",
+        "areas": ["City", "Dokri", "Ratodero", "Shahdad Kot"]
+      },
+      {
+        "district": "Nawabshah",
+        "areas": ["City", "Sakrand", "Daulatpur", "Moro"]
+      },
+      {
+        "district": "Mirpur Khas",
+        "areas": ["City", "Digri", "Kot Ghulam Muhammad", "Tando Allahyar"]
+      },
+      {
+        "district": "Khairpur",
+        "areas": ["City", "Gambat", "Kot Diji", "Kingri"]
+      }
+    ]
+  },
+  {
+    "province": "Khyber Pakhtunkhwa",
+    "districts": [
+      {
+        "district": "Peshawar",
+        "areas": ["Hayatabad", "University Town", "Saddar", "Cantt", "Gulberg", "Dalazak Road", "Warsak Road", "Ring Road", "Kohat Road"]
+      },
+      {
+        "district": "Haripur",
+        "areas": ["Khanpur", "Ghazi", "Hattar", "Bagra", "Khurd", "Khalabat Township"]
+      },
+      {
+        "district": "Abbottabad",
+        "areas": ["City", "Cantt", "Mirpur", "Havelian", "Nathia Gali", "Thandiani"]
+      },
+      {
+        "district": "Mardan",
+        "areas": ["City", "Cantt", "Rustam", "Katlang", "Takht Bhai"]
+      },
+      {
+        "district": "Swat",
+        "areas": ["Mingora", "Saidu Sharif", "Matta", "Bahrain", "Kalam", "Madyan"]
+      },
+      {
+        "district": "Mansehra",
+        "areas": ["City", "Balakot", "Oghi", "Batagram", "Shinkiari"]
+      },
+      {
+        "district": "Kohat",
+        "areas": ["City", "Cantt", "Dara Adam Khel", "Hangu", "Tal"]
+      },
+      {
+        "district": "Dera Ismail Khan",
+        "areas": ["City", "Cantt", "Tank", "Kulachi"]
+      }
+    ]
+  },
+  {
+    "province": "Balochistan",
+    "districts": [
+      {
+        "district": "Quetta",
+        "areas": ["Cantt", "Satellite Town", "Jinnah Town", "Sariab", "Lak Pass", "Brewery Road", "Airport Road", "Hazara Town", "Western Bypass"]
+      },
+      {
+        "district": "Gwadar",
+        "areas": ["City", "Coastal Highway", "Surbandar", "Pasni", "Ormara"]
+      },
+      {
+        "district": "Turbat",
+        "areas": ["City", "Mand", "Buleda", "Tump"]
+      },
+      {
+        "district": "Khuzdar",
+        "areas": ["City", "Wadh", "Nal", "Surab"]
+      },
+      {
+        "district": "Hub",
+        "areas": ["City", "Uthal", "Winder", "Kanrach"]
+      }
+    ]
+  },
+  {
+    "province": "Islamabad Capital Territory",
+    "districts": [
+      {
+        "district": "Islamabad",
+        "areas": ["F-6", "F-7", "F-8", "F-10", "F-11", "G-9", "G-10", "G-11", "G-13", "G-15", "I-8", "I-10", "I-14", "H-8", "H-9", "E-7", "Bahria Town", "DHA", "Bani Gala", "Tarlai", "Margalla Hills", "Saidpur Village"]
+      }
+    ]
+  },
+  {
+    "province": "Gilgit-Baltistan",
+    "districts": [
+      {
+        "district": "Gilgit",
+        "areas": ["City", "Jutial", "Konodas", "Gilgit Cantt", "Nomal", "Danyore"]
+      },
+      {
+        "district": "Skardu",
+        "areas": ["City", "Kachura", "Shigar", "Satpara", "Hussainabad"]
+      },
+      {
+        "district": "Hunza",
+        "areas": ["Karimabad", "Altit", "Baltit", "Gulmit", "Passu", "Khunjerab"]
+      }
+    ]
+  },
+  {
+    "province": "Azad Jammu & Kashmir",
+    "districts": [
+      {
+        "district": "Mirpur",
+        "areas": ["City", "New Mirpur", "Allama Iqbal Town", "Chakswari", "Dadyal"]
+      },
+      {
+        "district": "Muzaffarabad",
+        "areas": ["City", "Chattar", "Domel", "Garhi Habibullah", "Upper Neelum"]
+      },
+      {
+        "district": "Rawalakot",
+        "areas": ["City", "Hajira", "Kahuta", "Banjosa", "Trarkhal"]
+      }
+    ]
+  }
+]
