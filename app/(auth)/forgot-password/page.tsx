@@ -15,17 +15,22 @@ import {
   ShieldCheck,
   CheckCircle2,
   KeyRound,
-  ArrowLeft
+  ChevronLeft,
+  Sparkles
 } from "lucide-react";
 import { unbounded } from "@/app/fonts";
 import Logo from "@/components/ui/Logo";
 import { useUI } from "@/contexts/UIContext";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useSound } from "@/contexts/SoundContext";
 
 type Step = "EMAIL" | "OTP" | "RESET" | "SUCCESS";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const { theme } = useUI();
+  const { language, setLanguage } = useUI();
+  const { t, isRTL } = useTranslation();
+  const { playClickSound } = useSound();
   
   const [step, setStep] = useState<Step>("EMAIL");
   const [isLoading, setIsLoading] = useState(false);
@@ -37,11 +42,11 @@ export default function ForgotPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [countdown, setCountdown] = useState(0);
 
   // 1. Submit Email -> Request OTP
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    playClickSound();
     setIsLoading(true);
     setError("");
 
@@ -67,6 +72,7 @@ export default function ForgotPasswordPage() {
   // 2. Verify OTP -> Get Reset Token
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    playClickSound();
     if (otp.length < 6) {
       setError("Enter full 6-digit code");
       return;
@@ -98,6 +104,7 @@ export default function ForgotPasswordPage() {
   // 3. Final Reset Password
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    playClickSound();
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -126,173 +133,241 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 relative overflow-hidden selection:bg-primary/30">
-      {/* Background Atmosphere */}
-      <div className="absolute top-0 right-0 w-[50%] h-full bg-primary blur-[150px] opacity-10 -z-10" />
-      <div className="absolute bottom-0 left-0 w-[30%] h-full bg-indigo-600 blur-[120px] opacity-5 -z-10" />
-      
-      <div className="fixed top-8 left-8">
-        <Link href="/login" className="hover:opacity-80 transition-opacity">
-           <Logo size="md" />
-        </Link>
-      </div>
+    <div className="min-h-screen flex bg-white font-sans" dir={isRTL ? "rtl" : "ltr"}>
+      {/* Left branding panel */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#f8fafc] p-16 flex-col justify-center relative overflow-hidden">
+        {/* Abstract background elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary blur-[100px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400 blur-[100px]" />
+        </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] px-6"
-      >
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[48px] p-8 md:p-12 shadow-2xl relative">
-          
-          {/* Progress Header */}
-          <div className="mb-10">
-             <Link href="/login" className="inline-flex items-center gap-2 text-[10px] font-black text-white/40 hover:text-primary uppercase tracking-widest transition-colors mb-8 group">
-                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Login
-             </Link>
-             <h2 className={`${unbounded.className} text-3xl font-black text-white mb-3`}>
-                {step === "SUCCESS" ? "Success!" : "Reset Access"}
-             </h2>
-             <p className="text-white/40 font-bold uppercase tracking-widest text-[10px]">
-                {step === "EMAIL" && "Enter your email to request an access override code."}
-                {step === "OTP" && "Enter the verification code sent to your sector."}
-                {step === "RESET" && "Initialize your new secure access credentials."}
-                {step === "SUCCESS" && "Core credentials updated. Secure link established."}
-             </p>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative z-10 space-y-12"
+        >
+          {/* Logo Section */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+              <Logo size="sm" />
+            </div>
+            <div className={`${unbounded.className} text-4xl font-black tracking-tighter flex items-center`}>
+              <span className="text-gray-900">Ambi</span>
+              <span className="text-primary">Tasker</span>
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            {step === "EMAIL" && (
-              <motion.form 
-                key="email"
-                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                onSubmit={handleEmailSubmit} className="space-y-8"
-              >
-                <div className="relative group">
-                  <Mail className="absolute top-5 left-5 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
-                  <input 
-                    type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                    placeholder="IDENT_MAIL@DOMAIN.COM"
-                    className="w-full h-16 bg-white/5 border border-white/10 rounded-2xl ps-14 pe-6 text-white text-sm font-black tracking-widest focus:border-primary/50 focus:bg-white/[0.08] transition-all outline-none uppercase"
-                  />
-                </div>
-                <button
-                  type="submit" disabled={isLoading}
-                  className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-2xl shadow-primary/30 group"
-                >
-                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Request Code <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></>}
-                </button>
-              </motion.form>
-            )}
+          {/* Headline */}
+          <div className="space-y-8 max-w-full overflow-hidden relative">
+            <h1 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter break-words whitespace-normal`}>
+              Experience the <br />
+              <span className="text-primary italic">difference</span> with <br />
+              AmbiTasker
+            </h1>
+            <p className="text-gray-500 text-xl font-medium max-w-lg leading-relaxed">
+              Your security is our priority. We'll help you get back to managing your professional bridge in no time.
+            </p>
+          </div>
 
-            {step === "OTP" && (
-              <motion.form 
-                key="otp"
-                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                onSubmit={handleVerifyOtp} className="space-y-8"
-              >
-                <div className="space-y-4">
-                   <div className="flex items-center justify-between px-2">
-                       <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Verification Code</label>
-                       <button type="button" onClick={() => setStep("EMAIL")} className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Change Email</button>
-                   </div>
-                   <input 
-                      type="text" required value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="0 0 0 0 0 0"
-                      className="w-full h-16 bg-primary/10 border-2 border-primary/30 rounded-2xl text-center text-2xl font-black text-primary tracking-[0.6em] outline-none"
-                   />
-                   <p className="text-[9px] text-white/20 text-center font-bold uppercase tracking-tighter">
-                      Check your email sector for the 6-digit access code.
-                   </p>
+          {/* Footer Subtext */}
+          <div className="flex items-center gap-6 pt-8">
+            <div className="flex -space-x-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
+                  <img src={`https://i.pravatar.cc/150?u=${i + 10}`} alt="User" />
                 </div>
-                <button
-                  type="submit" disabled={isLoading}
-                  className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-2xl shadow-primary/30 group"
-                >
-                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Verify Code <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></>}
-                </button>
-              </motion.form>
-            )}
+              ))}
+            </div>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+              Trusted by 10k+ people
+            </p>
+          </div>
+        </motion.div>
+      </div>
 
-            {step === "RESET" && (
-              <motion.form 
-                key="reset"
-                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                onSubmit={handleResetSubmit} className="space-y-6"
-              >
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-2">New Access Credentials</label>
-                  <div className="relative group">
-                    <Lock className="absolute top-5 left-5 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
-                    <input 
-                      type={showPassword ? "text" : "password"} required value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                      placeholder="NEW_ALPHA_KEY"
-                      className="w-full h-16 bg-white/5 border border-white/10 rounded-2xl ps-14 pe-14 text-white text-sm font-black tracking-widest focus:border-primary/50 focus:bg-white/[0.08] transition-all outline-none"
-                    />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-5 right-5 text-white/20 hover:text-white transition-colors">
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
+      {/* Right form panel */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center p-8 sm:p-12 min-h-screen relative">
+        {/* Top Navigation */}
+        <div className="w-full flex justify-between items-center z-20 mb-12 lg:mb-auto">
+          <Link 
+            href="/login" 
+            onClick={() => playClickSound()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-600 hover:bg-white hover:shadow-md transition-all active:scale-95"
+          >
+            <ChevronLeft size={16} />
+            <span>Back to Login</span>
+          </Link>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:block px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">
+              SECURE ACCESS OVERRIDE
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-center w-full max-w-[460px]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full space-y-10 py-12"
+          >
+            <div>
+              <h2 className={`${unbounded.className} text-4xl font-black text-gray-900 mb-3`}>
+                {step === "SUCCESS" ? "Success!" : "Reset Access"}
+              </h2>
+              <p className="text-gray-400 font-medium text-lg leading-relaxed">
+                {step === "EMAIL" && "Enter your email to request an access override code."}
+                {step === "OTP" && "Enter the 6-digit verification code sent to your email."}
+                {step === "RESET" && "Initialize your new secure access credentials."}
+                {step === "SUCCESS" && "Core credentials updated. Your secure link has been established."}
+              </p>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {step === "EMAIL" && (
+                <motion.form 
+                  key="email"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleEmailSubmit} className="space-y-8"
+                >
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Email Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute top-1/2 -translate-y-1/2 left-5 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+                      <input 
+                        type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ps-14 pe-6 text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none"
+                      />
+                    </div>
                   </div>
-                  <div className="relative group">
-                    <ShieldCheck className="absolute top-5 left-5 w-5 h-5 text-white/20 group-focus-within:text-primary transition-colors" />
+                  <button
+                    type="submit" disabled={isLoading}
+                    className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-xl shadow-primary/20 text-white disabled:opacity-60 group"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>REQUEST OVERRIDE CODE <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" /></>}
+                  </button>
+                </motion.form>
+              )}
+
+              {step === "OTP" && (
+                <motion.form 
+                  key="otp"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleVerifyOtp} className="space-y-8"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Verification Code</label>
+                        <button type="button" onClick={() => setStep("EMAIL")} className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Change Email</button>
+                    </div>
                     <input 
-                      type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                      placeholder="CONFIRM_ALPHA_KEY"
-                      className="w-full h-16 bg-white/5 border border-white/10 rounded-2xl ps-14 pe-6 text-white text-sm font-black tracking-widest focus:border-primary/50 focus:bg-white/[0.08] transition-all outline-none"
+                       type="text" required value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                       placeholder="0 0 0 0 0 0"
+                       className="w-full h-16 bg-primary/10 border-2 border-primary/30 rounded-2xl text-center text-2xl font-black text-primary tracking-[0.5em] outline-none"
                     />
                   </div>
-                </div>
+                  <button
+                    type="submit" disabled={isLoading}
+                    className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-xl shadow-primary/20 text-white disabled:opacity-60 group"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>VERIFY ACCESS CODE <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" /></>}
+                  </button>
+                </motion.form>
+              )}
 
-                <button
-                  type="submit" disabled={isLoading}
-                  className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-2xl shadow-primary/30 group"
+              {step === "RESET" && (
+                <motion.form 
+                  key="reset"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleResetSubmit} className="space-y-6"
                 >
-                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finalize Reset <KeyRound size={16} className="group-hover:rotate-12 transition-transform" /></>}
-                </button>
-              </motion.form>
-            )}
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">New Alpha Key</label>
+                      <div className="relative group">
+                        <Lock className="absolute top-1/2 -translate-y-1/2 left-5 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+                        <input 
+                          type={showPassword ? "text" : "password"} required value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                          placeholder="ENTER NEW PASSWORD"
+                          className="w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ps-14 pe-14 text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none"
+                        />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-1/2 -translate-y-1/2 right-5 text-gray-300 hover:text-gray-500 transition-colors">
+                          {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Confirm Alpha Key</label>
+                      <div className="relative group">
+                        <ShieldCheck className="absolute top-1/2 -translate-y-1/2 left-5 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
+                        <input 
+                          type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="CONFIRM NEW PASSWORD"
+                          className="w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ps-14 pe-14 text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-            {step === "SUCCESS" && (
+                  <button
+                    type="submit" disabled={isLoading}
+                    className="w-full h-16 bg-primary rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-xl shadow-primary/20 text-white disabled:opacity-60 group pt-2"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>FINALIZE ACCESS RESET <KeyRound size={16} className="group-hover:rotate-12 transition-transform" /></>}
+                  </button>
+                </motion.form>
+              )}
+
+              {step === "SUCCESS" && (
+                <motion.div 
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-10 py-6"
+                >
+                  <div className="w-24 h-24 bg-emerald-50 rounded-[32px] flex items-center justify-center mx-auto relative shadow-sm border border-emerald-100">
+                     <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center text-white text-[10px] font-black">✓</motion.div>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className={`${unbounded.className} text-xl font-black text-gray-900`}>Access Restored</h3>
+                    <p className="text-gray-500 text-sm font-medium leading-relaxed">Your security credentials have been updated successfully. You can now authenticate with your new access key.</p>
+                  </div>
+                  <Link 
+                    href="/login"
+                    onClick={() => playClickSound()}
+                    className="w-full h-16 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-xl shadow-gray-900/20"
+                  >
+                    RETURN TO SIGN IN <ArrowRight size={16} />
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {error && step !== "SUCCESS" && (
               <motion.div 
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-10 py-6"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="p-5 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 text-red-600"
               >
-                <div className="w-24 h-24 bg-emerald-500/20 border-4 border-emerald-500/30 rounded-[32px] flex items-center justify-center mx-auto relative">
-                   <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-gray-950 flex items-center justify-center text-white text-[10px] font-black">✓</motion.div>
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <AlertCircle size={20} />
                 </div>
-                <div className="space-y-4">
-                  <h3 className={`${unbounded.className} text-xl font-black text-white`}>Access Restored</h3>
-                  <p className="text-white/40 text-xs font-bold uppercase leading-relaxed tracking-widest">Your security kernel has been updated. You can now authenticate with your new credentials.</p>
-                </div>
-                <Link 
-                  href="/login"
-                  className="w-full h-16 bg-white text-gray-950 rounded-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-2xl shadow-white/10"
-                >
-                  Return to Dashboard <ArrowRight size={16} />
-                </Link>
+                <span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">ERROR: {error}</span>
               </motion.div>
             )}
-          </AnimatePresence>
-
-          {error && step !== "SUCCESS" && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="mt-8 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-400"
-            >
-              <AlertCircle size={20} className="shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">ERR: {error}</span>
-            </motion.div>
-          )}
-
+          </motion.div>
         </div>
-
-        <div className="mt-12 text-center">
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
-               Powered by AmbiTasker Iron Guard
-            </p>
+        
+        {/* Small Logo for Mobile */}
+        <div className="lg:hidden mt-20 flex items-center gap-3">
+          <div className={`${unbounded.className} text-2xl font-black tracking-tighter flex items-center`}>
+            <span className="text-gray-900">Ambi</span>
+            <span className="text-primary">Tasker</span>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -32,7 +32,10 @@ export default function SharedShell({ children }: { children: React.ReactNode })
 
   // Pages with NO header/shell (Pure Focus Mode)
   const isAuthPage = pathname?.startsWith("/login") || 
+                     pathname?.startsWith("/signup") || 
                      pathname?.startsWith("/register") || 
+                     pathname?.startsWith("/forgot-password") || 
+                     pathname?.startsWith("/verify-email") || 
                      pathname?.startsWith("/select-role") || 
                      pathname?.startsWith("/onboarding") || 
                      pathname?.startsWith("/splash") || 

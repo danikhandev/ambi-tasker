@@ -68,6 +68,8 @@ model User {
   resetOtpExpiry  DateTime?        @map("reset_otp_expiry")
 
   settings        Json?            @default("{}") // Stores notification and privacy preferences
+  lastActiveAt    DateTime?        @map("last_active_at")
+  lastLoginAt     DateTime?        @map("last_login_at")
   createdAt     DateTime         @default(now()) @map("created_at")
   updated_at    DateTime         @updatedAt @map("updated_at")
 
@@ -330,12 +332,14 @@ enum NotificationTarget {
 model Notification {
   id          String             @id @default(uuid())
   title       String
-  body        String
+  body        String             @default("")
   type        NotificationType   @default(GENERAL)
   targetType  NotificationTarget @default(INDIVIDUAL)
   
   actionUrl   String?            @map("action_url")
   senderId    String?            @map("sender_id")
+  metadata    Json?              @map("metadata")
+  userId      String?            @map("user_id")
   createdAt   DateTime           @default(now())
   
   recipients      UserNotification[]
@@ -582,6 +586,10 @@ model AdminSetting {
   
   // Social Links
   socialLinks           Json?    @default("[]") @map("social_links")
+
+  // Real-time Stats
+  trustedUsersCount     Int      @default(1000) @map("trusted_users_count")
+  trustedBadgeText      String   @default("Trusted by {count} happy customers") @map("trusted_badge_text")
 
   updatedAt             DateTime @updatedAt @map("updated_at")
 

@@ -3,12 +3,12 @@ import { logger } from '@/utils/logger';
 
 // Initialize transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true',
+  secure: process.env.SMTP_SECURE === 'true' || false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER || process.env.SMTP_USER,
+    pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
   },
 });
 
@@ -93,14 +93,14 @@ export async function dispatchNotification(payload: NotificationPayload) {
     }
 
     const mailOptions = {
-      from: `"AmbiTasker System" <${process.env.SMTP_USER || 'no-reply@ambitasker.com'}>`,
+      from: `"AmbiTasker System" <${process.env.EMAIL_USER || process.env.SMTP_USER || 'no-reply@ambitasker.com'}>`,
       to,
       subject,
       html: htmlContent,
     };
 
-    // If SMTP_USER is not configured, we'll just log it to avoid crashing
-    if (!process.env.SMTP_USER) {
+    // If neither SMTP_USER nor EMAIL_USER is configured, we'll just log it to avoid crashing
+    if (!process.env.SMTP_USER && !process.env.EMAIL_USER) {
       logger.warn(`[MOCK NOTIFICATION] Event: ${eventName} to ${to}`);
       return true; // Pretend it succeeded
     }

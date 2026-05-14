@@ -37,75 +37,75 @@ function ChatIconWithBadge({ userId }: { userId: string }) {
 const SERVICE_CATEGORIES = [
   // 1️⃣ Core Services (Priority)
   {
-    id: "electrician-services",
-    nameKey: "categories.electrician-services.name",
-    slug: "electrician-services",
+    id: "electrician",
+    nameKey: "categories.electrician.name",
+    slug: "electrician",
     icon: Zap,
-    descriptionKey: "categories.electrician-services.desc",
+    descriptionKey: "categories.electrician.desc",
     popularKeys: ["services.electrician_popular.wiring", "services.electrician_popular.elecRepair", "services.electrician_popular.fixtureInst"]
   },
   {
-    id: "plumber-services",
-    nameKey: "categories.plumber-services.name",
-    slug: "plumber-services",
+    id: "plumber",
+    nameKey: "categories.plumber.name",
+    slug: "plumber",
     icon: Droplets,
-    descriptionKey: "categories.plumber-services.desc",
+    descriptionKey: "categories.plumber.desc",
     popularKeys: ["services.plumber_popular.pipeRepair", "services.plumber_popular.fixtureInst", "services.plumber_popular.plumbingRepair"]
   },
   {
-    id: "mechanic-services",
-    nameKey: "categories.mechanic-services.name",
-    slug: "mechanic-services",
+    id: "mechanic",
+    nameKey: "categories.mechanic.name",
+    slug: "mechanic",
     icon: Wrench,
-    descriptionKey: "categories.mechanic-services.desc",
+    descriptionKey: "categories.mechanic.desc",
     popularKeys: ["services.mechanic_popular.bikeRepair", "services.mechanic_popular.carRepair", "services.mechanic_popular.engineService"]
   },
   {
-    id: "painting-services",
-    nameKey: "categories.painting-services.name",
-    slug: "painting-services",
+    id: "painting",
+    nameKey: "categories.painting.name",
+    slug: "painting",
     icon: Paintbrush,
-    descriptionKey: "categories.painting-services.desc",
+    descriptionKey: "categories.painting.desc",
     popularKeys: ["services.painting_popular.house", "services.painting_popular.wallTexture", "services.painting_popular.interior"]
   },
   {
-    id: "education-services",
-    nameKey: "categories.education-services.name",
-    slug: "education-services",
+    id: "education",
+    nameKey: "categories.education.name",
+    slug: "education",
     icon: BookOpen,
-    descriptionKey: "categories.education-services.desc",
+    descriptionKey: "categories.education.desc",
     popularKeys: ["services.education_popular.homeTutor", "services.education_popular.onlineTutor", "services.education_popular.skillTraining"]
   },
   {
-    id: "gardening-services",
-    nameKey: "categories.gardening-services.name",
-    slug: "gardening-services",
+    id: "gardening",
+    nameKey: "categories.gardening.name",
+    slug: "gardening",
     icon: Leaf,
-    descriptionKey: "categories.gardening-services.desc",
+    descriptionKey: "categories.gardening.desc",
     popularKeys: ["services.gardening_popular.lawn", "services.gardening_popular.planting", "services.gardening_popular.landscape"]
   },
   {
-    id: "cleaning-services",
-    nameKey: "categories.cleaning-services.name",
-    slug: "cleaning-services",
+    id: "cleaning",
+    nameKey: "categories.cleaning.name",
+    slug: "cleaning",
     icon: Sparkles,
-    descriptionKey: "categories.cleaning-services.desc",
+    descriptionKey: "categories.cleaning.desc",
     popularKeys: ["services.cleaning_popular.home", "services.cleaning_popular.office", "services.cleaning_popular.deep"]
   },
   {
-    id: "security-services",
-    nameKey: "categories.security-services.name",
-    slug: "security-services",
+    id: "security",
+    nameKey: "categories.security.name",
+    slug: "security",
     icon: ShieldCheck,
-    descriptionKey: "categories.security-services.desc",
+    descriptionKey: "categories.security.desc",
     popularKeys: ["services.security_popular.guard", "services.security_popular.homeSecurity", "services.security_popular.cctv"]
   },
   {
-    id: "automotive-services",
-    nameKey: "categories.automotive-services.name",
-    slug: "automotive-services",
+    id: "automotive",
+    nameKey: "categories.automotive.name",
+    slug: "automotive",
     icon: Car,
-    descriptionKey: "categories.automotive-services.desc",
+    descriptionKey: "categories.automotive.desc",
     popularKeys: ["services.automotive_popular.wash", "services.automotive_popular.detailing", "services.automotive_popular.maintenance"]
   },
 

@@ -40,25 +40,27 @@ export default function Brand({
   const fontSizeClass = fontSizes[size] || fontSizes.md;
 
   return (
-    <div className={`inline-flex items-center gap-2.5 sm:gap-3 transition-all ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 sm:gap-3 transition-all ${className}`} style={{ flexDirection: 'row', direction: 'ltr' }}>
       <Logo 
         size={size} 
         className="shrink-0"
       />
       <span 
+        dir="ltr"
         className={`
+          ${unbounded.className}
           ${fontSizeClass} 
-          font-bold 
+          font-black 
           tracking-[-0.02em] 
           text-current 
           dark:text-white 
           whitespace-nowrap 
           leading-none
           ${hideTextOnMobile ? 'hidden sm:inline-block' : 'inline-block'}
+          brand-font
         `}
-        style={{ fontFamily: 'var(--font-unbounded), sans-serif' }}
       >
-        {t("header.brandName")}
+        Ambi Tasker
       </span>
     </div>
   );

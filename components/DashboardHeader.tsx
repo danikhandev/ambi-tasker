@@ -214,19 +214,6 @@ export default function DashboardHeader({
                 {displaySubtitle && <p className="text-[10px] md:text-[11px] font-black text-text-hint/60 uppercase tracking-[0.2em] mt-2">{displaySubtitle}</p>}
               </div>
             </motion.div>
-          ) : !isAdminView ? (
-            <div className="flex items-center gap-4 flex-1">
-              {!isProviderView && (
-                <div className="relative group max-w-md w-full hidden md:block">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-hint/50 group-focus-within:text-primary transition-colors duration-300" />
-                  <input
-                    type="text"
-                    placeholder={t("header.searchPlaceholder")}
-                    className="bg-secondary/30 border border-border/60 rounded-2xl pl-14 pr-6 h-[52px] text-[14px] font-semibold w-full focus:ring-4 focus:ring-primary/10 focus:border-primary/40 focus:bg-background transition-all placeholder:text-text-hint/60 text-foreground shadow-sm"
-                  />
-                </div>
-              )}
-            </div>
           ) : null}
           {isAdminView && pathname !== "/admin/dashboard" && (
             <div className="ml-4">
@@ -318,30 +305,7 @@ export default function DashboardHeader({
               </Link>
             )}
 
-            {!isAdminView && !isProviderView && (
-              <>
-                <button
-                  onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
-                  className="w-11 h-11 flex items-center justify-center text-text-hint hover:text-primary hover:bg-primary/5 rounded-2xl transition-all group shadow-sm bg-secondary/30 border border-border/40"
-                  title={t("header.switchLanguage")}
-                >
-                  <Globe className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  <span className="sr-only">{language === 'en' ? 'EN' : 'اردو'}</span>
-                </button>
 
-                <button
-                  onClick={() => switchTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="w-11 h-11 flex items-center justify-center text-text-hint hover:text-primary hover:bg-primary/5 rounded-2xl transition-all group shadow-sm bg-secondary/30 border border-border/40"
-                  title={t("admin.switchTheme")}
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="w-5 h-5 group-hover:scale-110 transition-all text-amber-400" />
-                  ) : (
-                    <Moon className="w-5 h-5 group-hover:scale-110 transition-all text-indigo-400" />
-                  )}
-                </button>
-              </>
-            )}
 
             {!isAdminView && (
               <div className="relative">

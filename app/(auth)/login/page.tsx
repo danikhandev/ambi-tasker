@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -47,6 +47,20 @@ function LoginContent() {
   const [otp, setOtp] = useState("");
   const [showOTP, setShowOTP] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+  const [stats, setStats] = useState({ badgeText: "", formattedCount: "" });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/public/stats");
+        const data = await res.json();
+        if (data.success) setStats(data.data);
+      } catch (err) {
+        console.error("Failed to fetch stats");
+      }
+    };
+    fetchStats();
+  }, []);
 
   const validateField = (name: string, value: string) => {
     let err = "";
@@ -150,8 +164,17 @@ function LoginContent() {
     }
   };
 
-  const roleLabel = roleParam === "provider" ? "Provider" : roleParam === "admin" ? "Admin" : "Customer";
-  const portalName = roleParam === "provider" ? "PROFESSIONAL PROVIDER PORTAL" : roleParam === "admin" ? "SECURE ADMIN PORTAL" : "TRUSTED CUSTOMER PORTAL";
+  const roleLabel = roleParam === "provider" 
+    ? (t("auth.providerRole") || "Provider") 
+    : roleParam === "admin" 
+      ? (t("auth.adminRole") || "Admin") 
+      : (t("auth.userRole") || "User");
+
+  const portalName = roleParam === "provider" 
+    ? (t("auth.providerPortal") || "PROFESSIONAL PROVIDER PORTAL") 
+    : roleParam === "admin" 
+      ? (t("auth.adminPortal") || "SECURE ADMIN PORTAL") 
+      : (t("auth.userPortal") || "TRUSTED USER PORTAL");
 
   return (
     <div className="min-h-screen flex bg-white font-sans" dir={isRTL ? "rtl" : "ltr"}>
@@ -173,21 +196,29 @@ function LoginContent() {
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
               <Logo size="sm" />
             </div>
-            <div className={`${unbounded.className} text-4xl font-black tracking-tighter flex items-center`}>
-              <span className="text-gray-900">Serve</span>
-              <span className="text-primary">-U</span>
+            {/* Force LTR for brand wordmark to prevent name flipping */}
+            <div className={`${unbounded.className} text-4xl font-black tracking-tighter flex items-center`} dir="ltr">
+              <span className="text-gray-900">Ambi</span>
+              <span className="text-primary">Tasker</span>
             </div>
           </div>
 
           {/* Headline */}
-          <div className="space-y-8">
-            <h1 className={`${unbounded.className} text-7xl md:text-8xl font-black text-gray-900 leading-[0.95] tracking-tighter`}>
-              Experience the <br />
-              <span className="text-primary italic">difference</span> with <br />
-              AmbiTasker
-            </h1>
+          <div className="space-y-8 max-w-full overflow-hidden relative">
+            {isRTL ? (
+              <h1 
+                className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.3] tracking-tighter break-words whitespace-normal`}
+                dangerouslySetInnerHTML={{ __html: t("auth.experienceDifferenceHtml") }}
+              />
+            ) : (
+              <h1 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter break-words whitespace-normal`}>
+                Experience the <br />
+                <span className="text-primary italic">difference</span> with <br />
+                AmbiTasker
+              </h1>
+            )}
             <p className="text-gray-500 text-xl font-medium max-w-lg leading-relaxed">
-              Join thousands of satisfied users and verified providers today. Your bridge to professional excellence.
+              {t("auth.loginHeroDesc") || "Join thousands of satisfied users and verified providers today. Your bridge to professional excellence."}
             </p>
           </div>
 
@@ -201,171 +232,173 @@ function LoginContent() {
               ))}
             </div>
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-              Trusted by 10k+ people
+              {stats.badgeText || t("landing.hero.badge") || "Trusted by 10k+ people"}
             </p>
           </div>
         </motion.div>
       </div>
 
       {/* Right login form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 sm:p-12 relative">
+      <div className="w-full lg:w-1/2 flex flex-col items-center p-8 sm:p-12 min-h-screen relative">
         {/* Top Navigation */}
-        <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-20">
+        <div className="w-full flex justify-between items-center z-20 mb-12 lg:mb-auto">
           <Link 
             href="/" 
             onClick={() => playClickSound()}
             className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-600 hover:bg-white hover:shadow-md transition-all active:scale-95"
           >
-            <ChevronLeft size={16} />
-            <span>Back Home</span>
+            <ChevronLeft size={16} className={isRTL ? "rotate-180" : ""} />
+            <span>{t("nav.home") || "Back Home"}</span>
           </Link>
 
           <div className="flex items-center gap-4">
             <div className="hidden sm:block px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">
               {portalName}
             </div>
-            <button
-              onClick={() => { playClickSound(); setLanguage(language === "en" ? "ur" : "en"); }}
-              className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center hover:shadow-lg transition-all active:scale-95 text-gray-600"
-            >
-              <span className="text-[10px] font-black uppercase tracking-widest">{language === "en" ? "اردو" : "EN"}</span>
-            </button>
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[460px] space-y-10"
-        >
-          <div>
-            <h2 className={`${unbounded.className} text-4xl font-black text-gray-900 mb-3`}>
-              {roleLabel} Sign In
-            </h2>
-            <p className="text-gray-400 font-medium text-lg">
-              {roleParam === "admin"
-                ? "Sign in to access the admin dashboard."
-                : `Sign in to manage your ${roleParam === "provider" ? "services" : "bookings"} and account.`}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Email Address</label>
-              <div className="relative group">
-                <Mail className="absolute top-1/2 -translate-y-1/2 left-5 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ps-14 pe-6 text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none"
-                  required
-                />
-              </div>
-              {fieldErrors.email && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.email}</p>}
+        <div className="flex-1 flex flex-col justify-center w-full max-w-[460px]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full space-y-10 py-12"
+          >
+            <div>
+              <h2 className={`${unbounded.className} text-4xl font-black text-gray-900 mb-3`}>
+                {roleLabel} {t("auth.signIn") || "Sign In"}
+              </h2>
+              <p className="text-gray-400 font-medium text-lg">
+                {roleParam === "admin"
+                  ? (t("auth.adminSigninSubtitle") || "Sign in to access the admin dashboard.")
+                  : (t("auth.loginSubtitle") || "Sign in to manage your bookings and account.")}
+              </p>
             </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-end ml-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Password</label>
-                <Link
-                  href="/forgot-password"
-                  onClick={() => playClickSound()}
-                  className="text-[11px] font-bold text-primary hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative group">
-                <Lock className="absolute top-1/2 -translate-y-1/2 left-5 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ps-14 pe-14 text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => { playClickSound(); setShowPassword(!showPassword); }}
-                  className="absolute top-1/2 -translate-y-1/2 right-5 text-gray-300 hover:text-gray-500 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {fieldErrors.password && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.password}</p>}
-            </div>
-
-            {/* 2FA OTP (admin) */}
-            {showOTP && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="space-y-3"
-              >
-                <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+                  {t("auth.emailAddress") || "Email Address"}
+                </label>
+                <div className="relative group">
+                  <Mail className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
                   <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="0  0  0  0  0  0"
-                    className="w-full h-16 bg-primary/10 border-2 border-primary/30 rounded-2xl text-center text-2xl font-black text-primary tracking-[0.5em] outline-none"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder={t("auth.email") || "Enter your email"}
+                    className={`w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ${isRTL ? "pe-14 ps-6" : "ps-14 pe-6"} text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none`}
                     required
                   />
                 </div>
-                <p className="text-center text-[10px] font-bold text-primary/70 uppercase tracking-widest">Enter Verification Code</p>
-              </motion.div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div className="p-5 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 text-red-600">
-                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                  <AlertCircle size={20} />
-                </div>
-                <span className="text-xs font-bold leading-relaxed">{error}</span>
+                {fieldErrors.email && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.email}</p>}
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full h-16 rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl ${
-                roleParam === "admin" ? "bg-gray-900 shadow-gray-900/20" : "bg-primary shadow-primary/20"
-              } group text-white disabled:opacity-60`}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <span>SIGN IN AS {roleLabel}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-                </>
+              {/* Password */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-end ml-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    {t("auth.password") || "Password"}
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    onClick={() => playClickSound()}
+                    className="text-[11px] font-bold text-primary hover:underline"
+                  >
+                    {t("auth.forgotPassword") || "Forgot Password?"}
+                  </Link>
+                </div>
+                <div className="relative group">
+                  <Lock className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    placeholder={t("auth.passwordLabel") || "Enter your password"}
+                    className={`w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ${isRTL ? "pe-14 ps-14" : "ps-14 pe-14"} text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none`}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { playClickSound(); setShowPassword(!showPassword); }}
+                    className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "left-5" : "right-5"} text-gray-300 hover:text-gray-500 transition-colors`}
+                  >
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                  </button>
+                </div>
+                {fieldErrors.password && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.password}</p>}
+              </div>
+
+              {/* 2FA OTP (admin) */}
+              {showOTP && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-3"
+                >
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="0  0  0  0  0  0"
+                      className="w-full h-16 bg-primary/10 border-2 border-primary/30 rounded-2xl text-center text-2xl font-black text-primary tracking-[0.5em] outline-none"
+                      required
+                    />
+                  </div>
+                  <p className="text-center text-[10px] font-bold text-primary/70 uppercase tracking-widest">
+                    {t("auth.enterOtp") || "Enter Verification Code"}
+                  </p>
+                </motion.div>
               )}
-            </button>
-          </form>
 
-          {/* Footer links */}
-          <div className="pt-6 text-center">
-            <p className="text-gray-400 text-sm font-medium">
-              Don't have an account?{" "}
-              <Link href="/signup" onClick={() => playClickSound()} className="text-primary hover:underline font-bold ml-1">
-                Create account
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+              {/* Error */}
+              {error && (
+                <div className="p-5 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 text-red-600">
+                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                    <AlertCircle size={20} />
+                  </div>
+                  <span className="text-xs font-bold leading-relaxed">{error}</span>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full h-16 rounded-2xl font-black uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl ${
+                  roleParam === "admin" ? "bg-gray-900 shadow-gray-900/20" : "bg-primary shadow-primary/20"
+                } group text-white disabled:opacity-60`}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span>{t("auth.signIn") || "SIGN IN"} AS {roleLabel}</span>
+                    <ArrowRight className={`w-4 h-4 group-hover:translate-x-1.5 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Footer links */}
+            <div className="pt-6 text-center">
+              <p className="text-gray-400 text-sm font-medium">
+                {t("auth.noAccount") || "Don't have an account?"}{" "}
+                <Link href="/signup" onClick={() => playClickSound()} className="text-primary hover:underline font-bold ml-1">
+                  {t("auth.createAccount") || "Create account"}
+                </Link>
+              </p>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Small Logo for Mobile */}
         <div className="lg:hidden mt-20 flex items-center gap-3">
-          <div className={`${unbounded.className} text-2xl font-black tracking-tighter flex items-center`}>
-            <span className="text-gray-900">Serve</span>
-            <span className="text-primary">-U</span>
+          <div className={`${unbounded.className} text-2xl font-black tracking-tighter flex items-center`} dir="ltr">
+            <span className="text-gray-900">Ambi</span>
+            <span className="text-primary">Tasker</span>
           </div>
         </div>
       </div>

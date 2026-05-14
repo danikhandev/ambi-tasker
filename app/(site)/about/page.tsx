@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import BrandText from "@/components/BrandText";
 import Link from "next/link";
 import Image from "next/image";
-import ConnectSection from "@/components/ConnectSection";
+
 
 export default function AboutPage() {
     const { t, isRTL } = useTranslation();
@@ -232,12 +232,6 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Connect Section */}
-            <section className="py-24 bg-card">
-                <div className="max-w-7xl mx-auto px-6">
-                    <ConnectSection />
-                </div>
-            </section>
 
             {/* CTA Section */}
             <section className="py-24">

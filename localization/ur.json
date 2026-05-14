@@ -458,7 +458,15 @@
     "phoneNumber": "فون نمبر",
     "passwordLabel": "پاسورڈ",
     "confirmPassword": "تصدیق پاسورڈ",
-    "invalidPhone": "غلط فارمیٹ۔ +92-XXX-XXXXXXX یا 03XX-XXXXXXX استعمال کریں۔"
+    "invalidPhone": "غلط فارمیٹ۔ +92-XXX-XXXXXXX یا 03XX-XXXXXXX استعمال کریں۔",
+    "userRole": "صارف",
+    "providerRole": "فراہم کنندہ",
+    "adminRole": "ایڈمن",
+    "userPortal": "قابلِ اعتماد صارف پورٹل",
+    "providerPortal": "پیشہ ورانہ فراہم کنندہ پورٹل",
+    "adminPortal": "محفوظ ایڈمن پورٹل",
+    "noAccount": "اکاؤنٹ نہیں ہے؟",
+    "experienceDifferenceHtml": "ایمبی ٹاسکر کے ساتھ <br /> <span class='text-primary italic'>بہتری</span> کا تجربہ کریں"
   },
   "onboarding": {
     "step": "مرحلہ {current} کا {total}",
@@ -640,13 +648,18 @@
     },
     "services_ui": {
       "badge": "ہماری سروسز تلاش کریں",
-      "title": "آپ کی ہر ضرورت <br /> ایک ہی جگہ پر۔",
+      "title": "مقبول خدمات",
       "desc": "گھر کی مرمت سے لے کر زندگی کے بڑے ایونٹس تک، ہر کام کے لیے تصدیق شدہ فراہم کنندگان۔",
       "hotService": "مشہور سروس",
       "startingFrom": "شروع ہو رہی ہے",
       "viewAll": "تمام 30+ سروسز دیکھیں",
       "popular": "مقبول",
-      "searchInCategory": "اس زمرے میں تلاش کریں..."
+      "searchInCategory": "اس زمرے میں تلاش کریں...",
+      "viewTopRated": "بہترین ریٹنگ دیکھیں",
+      "electrical": "بجلی کا کام",
+      "plumbing": "پلمبنگ",
+      "mechanic": "مکینیکل",
+      "painting": "پینٹنگ"
     },
     "pros": {
       "badge": "علاقائی مہارت",
@@ -693,6 +706,19 @@
       "t3Content": "اعلیٰ معیار کی سروس! کلیننگ ٹیم نے میرے اپارٹمنٹ پر شاندار کام کیا۔",
       "t3Author": "فاطمہ زہرا",
       "t3Role": "تصدیق شدہ صارف"
+    },
+    "transform": {
+      "title": "کیا آپ اپنی جگہ کو <span class=\"text-primary italic\">بہتر</span> بنانے کے لیے تیار ہیں؟",
+      "desc": "ان ہزاروں مطمئن صارفین میں شامل ہوں جو روزمرہ کے کاموں کے لیے Ambi Tasker پر بھروسہ کرتے ہیں۔",
+      "btn": "سروسز دریافت کریں"
+    },
+    "trustPillars": {
+      "verifiedTitle": "تصدیق شدہ فراہم کنندگان",
+      "verifiedDesc": "ہر پیشہ ور شخص کو سخت پس منظر کی جانچ اور شناختی تصدیق کے عمل سے گزرنا پڑتا ہے۔",
+      "regionalTitle": "علاقائی نیٹ ورک",
+      "regionalDesc": "آپ کی اپنی کمیونٹی کے مقامی ماہرین، جو تیز ردعمل اور علاقائی اعتماد کو یقینی بناتے ہیں۔",
+      "mobileTitle": "موبائل کے لیے موزوں",
+      "mobileDesc": "بکنگز کا انتظام کریں، فراہم کنندگان کو ٹریک کریں اور ادائیگیاں براہ راست اپنے اسمارٹ فون سے کریں۔"
     },
     "cta": {
       "title": "کیا آپ <br /> تیار ہیں؟",
@@ -1314,12 +1340,14 @@
     "howItWorks": "کام کرنے کا طریقہ",
     "aboutUs": "ہمارے بارے میں",
     "giftCards": "گفٹ کارڈز",
-    "Ambi Tasker Pro": "Ambi Tasker Pro",
+    "AmbiTasker Pro": "Ambi Tasker Pro",
     "careers": "ملازمتیں",
     "pressNews": "نیوز اور میڈیا",
     "trustSafety": "اعتماد اور حفاظت",
     "cookieSettings": "کوکی ترتیبات",
-    "accessibility": "رسائی کی ترتیبات"
+    "accessibility": "رسائی کی ترتیبات",
+    "mission": "گھریلو خدمات اور پیشہ ورانہ کاموں کے لیے آپ کا قابل اعتماد ساتھی۔ 2026 سے مقامی مانگ کو مہارت سے جوڑ رہا ہے۔",
+    "location": "ہری پور سٹی، خیبر پختونخواہ، پاکستان"
   },
   "splashScreen": {
     "synchronizingIdentity": "{progress}% شناخت کو سنکرونائز کیا جا رہا ہے"

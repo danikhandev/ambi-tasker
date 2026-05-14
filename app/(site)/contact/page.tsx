@@ -83,9 +83,9 @@ export default function ContactPage() {
         {
             icon: MapPin,
             title: "Visit Us",
-            content: "Blue Area, Islamabad",
+            content: "Haripur City, KPK",
             description: "Come say hello at our HQ.",
-            action: "#",
+            action: "https://www.google.com/maps/search/Haripur+City+KPK+Pakistan",
             actionText: "Get directions"
         }
     ];
@@ -212,7 +212,7 @@ export default function ContactPage() {
                                                     value={formData.name}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                                     className="w-full px-6 py-4 rounded-2xl border border-border bg-muted focus:bg-card focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-medium"
-                                                    placeholder="Ahmed Khan"
+                                                    placeholder="Name"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -223,7 +223,7 @@ export default function ContactPage() {
                                                     value={formData.email}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                                     className="w-full px-6 py-4 rounded-2xl border border-border bg-muted focus:bg-card focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-medium"
-                                                    placeholder="ahmed@gmail.com"
+                                                    placeholder="name@gmail.com"
                                                 />
                                             </div>
                                         </div>
@@ -293,14 +293,14 @@ export default function ContactPage() {
                     <div className="h-[400px] bg-card rounded-[48px] border border-border overflow-hidden relative shadow-sm">
                         {/* Mock map representation */}
                         <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
-                            <div className="text-center group cursor-pointer">
-                                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white mb-4 animate-bounce shadow-md border border-border/50 hover:shadow-lg shadow-primary/40 relative z-10 mx-auto">
+                            <a href="https://www.google.com/maps/search/Haripur+City+KPK+Pakistan" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer block">
+                                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white mb-4 shadow-md border border-border/50 hover:shadow-lg shadow-primary/40 relative z-10 mx-auto">
                                     <MapPin className="w-8 h-8" />
                                 </div>
                                 <div className="px-6 py-2 bg-card rounded-full shadow-lg border border-gray-50 font-black text-sm text-foreground group-hover:scale-105 transition-transform">
-                                    AmbiTasker HQ, Islamabad
+                                    Ambi Tasker HQ, Haripur City, KPK
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         {/* Decorative grid */}
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#2563EB 0.5px, transparent 0.5px)", backgroundSize: "24px 24px" }} />

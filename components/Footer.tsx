@@ -66,23 +66,20 @@ export default function Footer() {
       { name: t("footer.browseServices"), href: "/search" },
       { name: t("footer.popularNearYou"), href: "/search?sort=popular" },
       { name: t("footer.howItWorks"), href: "/how-it-works" },
-      { name: t("footer.giftCards"), href: "/contact" },
       { name: t("footer.AmbiTasker Pro") || "Ambi Tasker Pro", href: "/signup/provider" },
     ],
     company: [
       { name: t("footer.aboutUs"), href: "/about" },
-      { name: t("footer.careers"), href: "/contact" },
-      { name: t("footer.pressNews"), href: "/contact" },
       { name: t("footer.trustSafety"), href: "/terms" },
+      { name: t("footer.support"), href: "/contact" },
     ],
     support: [
-      { name: t("footer.support"), href: "/contact" },
       { name: t("footer.terms"), href: "/terms" },
       { name: t("footer.privacy"), href: "/privacy" },
-      { name: t("footer.cookieSettings"), href: "/contact" },
-      { name: t("footer.accessibility"), href: "/contact" },
+      { name: t("footer.support"), href: "/contact" },
     ],
   };
+
 
   const socialLinks = []; // Intentionally empty to clean up but avoid other refactoring
 
@@ -100,9 +97,8 @@ export default function Footer() {
               <Link href="/" className="inline-block transition-transform hover:scale-[1.02]">
                 <Brand size="lg" />
               </Link>
-              <p className="text-gray-400 text-lg leading-relaxed max-w-sm">
-                Your trusted partner for home services and professional tasks. 
-                Connecting expertise with local demand since 2024.
+              <p className="text-text-secondary text-sm leading-relaxed max-w-sm font-bold">
+                {t("footer.mission") || "Your trusted partner for home services and professional tasks. Connecting expertise with local demand since 2026."}
               </p>
             </div>
 
@@ -133,7 +129,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-text-hint">{t("footer.headquarters")}</p>
-                  <span className="font-bold text-sm">Haripur, KPK, Pakistan</span>
+                  <span className="font-bold text-sm">{t("footer.location") || "Haripur, KPK, Pakistan"}</span>
                 </div>
               </div>
             </div>
@@ -202,13 +198,13 @@ export default function Footer() {
             </div>
 
             <div className="w-full lg:w-auto max-w-lg flex-1">
-              <form onSubmit={handleSubscribe} className={`flex gap-2 p-2 bg-card border border-border rounded-2xl focus-within:ring-4 focus-within:ring-primary/5 focus-within:border-primary/20 transition-all shadow-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className={`flex items-center gap-3 px-4 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Mail className="w-4 h-4 text-text-hint" />
+              <form onSubmit={handleSubscribe} className={`flex gap-2 p-2 h-16 bg-card border border-border rounded-2xl focus-within:ring-4 focus-within:ring-primary/5 focus-within:border-primary/20 transition-all shadow-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 px-4 flex-1 h-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Mail className="w-5 h-5 text-text-hint" />
                   <input
                     type="email"
                     placeholder="name@email.com"
-                    className={`bg-transparent border-none px-0 py-3 text-xs text-foreground placeholder:text-text-hint focus:ring-0 font-bold w-full ${isRTL ? 'text-right' : 'text-left'}`}
+                    className={`bg-transparent border-none !px-0 !py-0 !min-h-0 !shadow-none text-sm text-foreground placeholder:text-text-hint focus:!ring-0 focus:!border-none focus:!shadow-none focus:!-translate-y-0 h-full font-bold w-full outline-none ${isRTL ? 'text-right' : 'text-left'}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -216,7 +212,7 @@ export default function Footer() {
                 </div>
                 <button
                   type="submit"
-                  className="px-8 h-12 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all active:scale-95 shadow-lg shadow-black/5"
+                  className="px-8 h-full bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
                 >
                   {isSubscribed ? <CheckCircle2 className="w-4 h-4" /> : t("footer.subscribe")}
                 </button>
@@ -226,8 +222,14 @@ export default function Footer() {
 
           {/* Socials & Copyright */}
           <div className={`flex flex-col md:flex-row justify-between items-center gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <SocialMediaIcons />
+            <div className={`flex flex-col gap-3 ${isRTL ? 'items-end' : 'items-start'}`}>
+              <div className={`space-y-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">{t("connect.staySynced") || "STAY SYNCED"}</p>
+                <p className="text-sm font-bold text-foreground dark:text-white">{t("connect.connectWith") || "Connect With"} AmbiTasker</p>
+              </div>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <SocialMediaIcons />
+              </div>
             </div>
 
             <div className={`flex flex-col items-center gap-3 ${isRTL ? 'md:items-start' : 'md:items-end'}`}>

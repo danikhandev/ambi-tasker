@@ -545,7 +545,15 @@
     "phoneNumber": "Phone Number",
     "passwordLabel": "Password",
     "confirmPassword": "Confirm Password",
-    "invalidPhone": "Invalid format. Use +92-XXX-XXXXXXX or 03XX-XXXXXXX"
+    "invalidPhone": "Invalid format. Use +92-XXX-XXXXXXX or 03XX-XXXXXXX",
+    "userRole": "User",
+    "providerRole": "Provider",
+    "adminRole": "Admin",
+    "userPortal": "TRUSTED USER PORTAL",
+    "providerPortal": "PROFESSIONAL PROVIDER PORTAL",
+    "adminPortal": "SECURE ADMIN PORTAL",
+    "noAccount": "Don't have an account?",
+    "experienceDifferenceHtml": "Experience the <br /> <span class='text-primary italic'>difference</span> with <br /> AmbiTasker"
   },
   "onboarding": {
     "step": "Step {current} of {total}",
@@ -746,13 +754,18 @@
     },
     "services_ui": {
       "badge": "Services",
-      "title": "Everything you need.",
+      "title": "Popular Services",
       "desc": "Verified providers for every task, from repairs to life's big events.",
       "hotService": "Hot Service",
       "startingFrom": "Starting from",
       "viewAll": "Explore All 30+ Services",
       "popular": "Popular",
-      "searchInCategory": "Search in this category..."
+      "searchInCategory": "Search in this category...",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "mechanic": "Mechanic",
+      "painting": "Painting",
+      "viewTopRated": "View Top Rated"
     },
     "pros": {
       "badge": "Regional Excellence",
@@ -799,6 +812,19 @@
       "t3Content": "High quality service! The cleaning team did a fantastic job on my apartment.",
       "t3Author": "Fatima Zahra",
       "t3Role": "Verified Customer"
+    },
+    "transform": {
+      "title": "Ready to <span class=\"text-primary italic\">Transform</span> your space?",
+      "desc": "Join thousands of satisfied customers who trust Ambi Tasker for their daily operational needs.",
+      "btn": "Explore Services"
+    },
+    "trustPillars": {
+      "verifiedTitle": "Verified Providers",
+      "verifiedDesc": "Every professional undergoes a strict background check and identity verification process.",
+      "regionalTitle": "Regional Network",
+      "regionalDesc": "Local experts from your own community, ensuring fast response times and regional trust.",
+      "mobileTitle": "Mobile Optimized",
+      "mobileDesc": "Manage bookings, track providers, and handle payments directly from your smartphone."
     },
     "cta": {
       "title": "Ready to get <br /> started today?",
@@ -1377,7 +1403,9 @@
     "pressNews": "Press & News",
     "trustSafety": "Trust & Safety",
     "cookieSettings": "Cookie Settings",
-    "accessibility": "Accessibility"
+    "accessibility": "Accessibility",
+    "mission": "Your trusted partner for home services and professional tasks. Connecting expertise with local demand since 2026.",
+    "location": "Haripur City, KPK, Pakistan"
   },
   "splashScreen": {
     "synchronizingIdentity": "Synchronizing Identity {progress}%"

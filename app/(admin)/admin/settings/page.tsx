@@ -59,7 +59,9 @@ export default function AdminSettingsPage() {
         twoFactorAuthEnabled: false,
         loginAlertsEnabled: false,
         socialLinks: [],
-        footerCopyrightText: "© 2026 AmbiTasker. Empowering local professionals across Pakistan 🇵🇰"
+        footerCopyrightText: "© 2026 AmbiTasker. Empowering local professionals across Pakistan 🇵🇰",
+        trustedUsersCount: 1000,
+        trustedBadgeText: "Trusted by {count} happy customers"
     });
 
     const [socialForm, setSocialForm] = useState({ platform: "facebook", url: "", isActive: true });
@@ -364,6 +366,25 @@ export default function AdminSettingsPage() {
                                                     <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-text-hint"><Layout size={20} /></div>
                                                 )}
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div className="pt-10 border-t border-border/50">
+                                        <SectionHeader title="Social Proof" />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                            <div className="space-y-6">
+                                                <InputGroup label="Base Trusted Count" field="trustedUsersCount" type="number" placeholder="1000" />
+                                                <p className="text-[10px] text-text-hint">This value is added to the real-time user count for display.</p>
+                                            </div>
+                                            <div className="space-y-6">
+                                                <InputGroup label="Badge Text Pattern" field="trustedBadgeText" placeholder="Trusted by {count} happy customers" />
+                                                <p className="text-[10px] text-text-hint">Use {'{count}'} as a placeholder for the final number.</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-8 p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Live Preview</p>
+                                            <p className="text-sm font-bold text-foreground">
+                                                {settings.trustedBadgeText?.replace("{count}", settings.trustedUsersCount?.toLocaleString() || "0")}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

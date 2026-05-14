@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest) {
       "currency", "timezone", "paymentGateway", "isPaymentEnabled",
       "supportEmail", "supportPhone", "emailNotificationsEnabled",
       "pushNotificationsEnabled", "twoFactorAuthEnabled", "loginAlertsEnabled",
-      "socialLinks"
+      "socialLinks", "trustedUsersCount", "trustedBadgeText"
     ];
 
     const updateData: any = {};
