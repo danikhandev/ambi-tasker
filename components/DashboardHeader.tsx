@@ -81,59 +81,52 @@ export default function DashboardHeader({
       return { 
         displayName: admin.name || t("common.admin"), 
         displayRole: admin.role === 'SUPER_ADMIN' ? t("common.superAdmin") : t("common.subAdmin"), 
-        profileImage: admin.avatar || "/admin/system-admin.jpg" 
+        profileImage: admin.avatar || "/admin/system-admin.jpg",
+        email: admin.email
       };
     }
 
     // 2. If on Provider/User path, prioritize User info
     if ((isProviderPath || isUserPath) && user) {
       let roleLabel = activePerspective === "provider" ? t("common.professional") : t("common.customer");
-      
-      // Override role label if the user is a platform admin
-      if (user.role === 'ADMIN') {
-        roleLabel = t("common.admin");
-      }
+      if (user.role === 'ADMIN') roleLabel = t("common.admin");
 
       return {
         displayName: `${user.firstName} ${user.lastName}`.trim() || user.email?.toLowerCase().split("@")[0] || t("common.guest"),
         displayRole: roleLabel,
         profileImage: user.avatar,
+        email: user.email,
       };
     }
 
-    // 3. Fallback to Admin if nothing else matched but admin is logged in
-    if (admin) {
-      return { 
-        displayName: admin.name || t("common.admin"), 
-        displayRole: admin.role === 'SUPER_ADMIN' ? t("common.superAdmin") : t("common.subAdmin"), 
-        profileImage: admin.avatar || "/admin/system-admin.jpg" 
-      };
-    }
-
-    if (adminLoading || userLoading) {
-      return { displayName: "Loading...", displayRole: "Syncing...", profileImage: null };
-    }
-
+    // 3. Fallback to User if logged in
     if (user) {
       return {
         displayName: (user.firstName + (user.lastName ? ` ${user.lastName}` : "")) || user.email?.toLowerCase().split("@")[0] || t("common.guest"),
         displayRole: user.isUserSignUpForProvider ? (activePerspective === "provider" ? t("common.professional") : t("common.customer")) : t("common.customer"),
         profileImage: user.avatar,
+        email: user.email,
       };
     }
 
+    // 4. Fallback to Admin if logged in
     if (admin) {
-        return { 
-          displayName: admin.name || t("common.admin"), 
-          displayRole: admin.role === 'SUPER_ADMIN' ? t("common.superAdmin") : t("common.subAdmin"), 
-          profileImage: admin.avatar || "/admin/system-admin.jpg" 
-        };
-      }
+      return { 
+        displayName: admin.name || t("common.admin"), 
+        displayRole: admin.role === 'SUPER_ADMIN' ? t("common.superAdmin") : t("common.subAdmin"), 
+        profileImage: admin.avatar || "/admin/system-admin.jpg",
+        email: admin.email
+      };
+    }
 
-    return { displayName: t("common.guest"), displayRole: t("common.visitor"), profileImage: null };
+    if (adminLoading || userLoading) {
+      return { displayName: "Loading...", displayRole: "Syncing...", profileImage: null, email: "" };
+    }
+
+    return { displayName: t("common.guest"), displayRole: t("common.visitor"), profileImage: null, email: "" };
   };
 
-  const { displayName, displayRole, profileImage } = getUserInfo();
+  const { displayName, displayRole, profileImage, email } = getUserInfo();
   const isAdminView = pathname?.startsWith("/admin");
   const isProviderView = pathname?.startsWith("/provider");
 
@@ -179,6 +172,7 @@ export default function DashboardHeader({
                 { name: t("nav.dashboard"), href: "/dashboard" },
                 { name: t("nav.bookings"), href: "/bookings" },
                 { name: t("nav.earnings"), href: "/earnings" },
+                { name: t("nav.support"), href: "/support" },
                 { name: t("nav.aboutUs"), href: "/about" },
               ].map((link) => (
                 <Link 
@@ -325,7 +319,7 @@ export default function DashboardHeader({
               aria-label="Account menu"
             >
               <div className="relative">
-                {profileImage ? (
+                {profileImage && !profileImage.includes("dicebear.com") ? (
                   <CircularFrame
                     src={profileImage}
                     alt={displayName}
@@ -366,7 +360,12 @@ export default function DashboardHeader({
                 >
                   <div className="px-5 py-4 bg-secondary/30 rounded-2xl mb-2 border border-border/40">
                     <p className="text-sm font-black text-foreground truncate">{displayName}</p>
-                    <p className="text-[10px] font-bold text-text-hint uppercase tracking-[0.1em] mt-0.5 opacity-80">{displayRole}</p>
+                    {email && (
+                      <p className="text-[11px] font-medium text-text-secondary lowercase truncate mt-0.5 opacity-90">
+                        {email}
+                      </p>
+                    )}
+                    <p className="text-[10px] font-bold text-text-hint uppercase tracking-[0.1em] mt-1.5 opacity-80">{displayRole}</p>
                   </div>
 
                   <div className="space-y-1">

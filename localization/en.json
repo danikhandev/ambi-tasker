@@ -39,6 +39,14 @@
     "services": "Services",
     "joinAsPro": "Join as Provider"
   },
+  "support": {
+    "title": "AmbiTasker Support",
+    "welcomeTitle": "How can we help?",
+    "welcomeDesc": "Our support team is here to assist you with any questions or issues.",
+    "howCanWeHelp": "How can we help?",
+    "noConversations": "No support threads found",
+    "newThread": "New support thread"
+  },
   "categories": {
     "mechanic": {
       "name": "Mechanic",
@@ -553,6 +561,10 @@
     "providerPortal": "PROFESSIONAL PROVIDER PORTAL",
     "adminPortal": "SECURE ADMIN PORTAL",
     "noAccount": "Don't have an account?",
+    "areYouProfessional": "Are you a Professional?",
+    "signInAsProvider": "Sign in as Provider",
+    "lookingForService": "Looking for a Service?",
+    "signInAsUser": "Sign in as User",
     "experienceDifferenceHtml": "Experience the <br /> <span class='text-primary italic'>difference</span> with <br /> AmbiTasker"
   },
   "onboarding": {
@@ -1007,6 +1019,9 @@
     }
   },
   "admin": {
+    "supportInbox": "Support Inbox",
+    "systemPulse": "System Pulse",
+    "rootUplink": "Root Uplink",
     "dashboardLabel": "Admin Dashboard",
     "controlCenter": "Management Center",
     "totalUsers": "Total Users",
@@ -1036,8 +1051,6 @@
     "service": "Service",
     "distribution": "Distribution",
     "noRecentActivity": "No Recent Activity Found",
-    "systemPulse": "System Pulse",
-    "rootUplink": "System Link",
     "dashboard": {
       "title": "Admin",
       "highlight": "Dashboard",
@@ -1452,7 +1465,10 @@
     "previewNotAvailable": "Preview not available for this file type",
     "downloadFile": "Download File",
     "video": "Video",
-    "openCamera": "Open Camera"
+    "openCamera": "Open Camera",
+    "typing": "typing...",
+    "loadingMessages": "Loading messages...",
+    "retry": "Retry"
   },
   "verification": {
     "title": "Identity Verification",

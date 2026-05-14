@@ -76,11 +76,11 @@ export default function ChatPage() {
   const otherUserName = `${otherUser.firstName} ${otherUser.lastName}`;
 
   return (
-    <div className="h-screen bg-background pt-16">
+    <div className="flex-1 bg-background overflow-hidden">
       <div className="h-full flex relative">
         <div className="hidden lg:block lg:w-96 flex-shrink-0 h-full">
           <ChatSidebar
-            currentUserRole={currentUserRole as "consumer" | "provider"}
+            currentUserRole={currentUserRole}
           />
         </div>
         <div className="flex-1 h-full">

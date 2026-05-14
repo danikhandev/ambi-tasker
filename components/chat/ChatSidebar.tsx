@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, MoreVertical, CheckCircle2, MessageSquare, User2 } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, MoreVertical, CheckCircle2, MessageSquare, User2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 // All chat data is fetched from Supabase
 import { unbounded } from "@/app/fonts";
@@ -13,6 +13,7 @@ import { supabase } from "@/services/supabase";
 import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface ChatUser {
   id: string;
@@ -41,13 +42,14 @@ interface ChatSidebarProps {
 export default function ChatSidebar({
   currentUserRole,
 }: ChatSidebarProps) {
-  const { user } = useUser();
+  const { user, activePerspective } = useUser();
   const { admin } = useAdmin();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const { t, language } = useTranslation();
+  const router = useRouter();
 
   const currentId = admin?.id || user?.id;
 
@@ -115,10 +117,10 @@ export default function ChatSidebar({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return t("chat.now") || "Now";
-    if (diffMins < 60) return `${diffMins}${t("chat.min") || "m"}`;
-    if (diffHours < 24) return `${diffHours}${t("chat.hour") || "h"}`;
-    if (diffDays < 7) return `${diffDays}${t("chat.day") || "d"}`;
+    if (diffMins < 1) return t("chat.now");
+    if (diffMins < 60) return `${diffMins}${t("chat.min")}`;
+    if (diffHours < 24) return `${diffHours}${t("chat.hour")}`;
+    if (diffDays < 7) return `${diffDays}${t("chat.day")}`;
 
     return date.toLocaleDateString(language === "ur" ? "ur-PK" : "en-US", { month: 'short', day: 'numeric' });
   };
@@ -138,6 +140,13 @@ export default function ChatSidebar({
                 exit={{ opacity: 0, x: -10 }}
                 className={`${unbounded.className} text-xl font-bold text-foreground flex items-center gap-2`}
               >
+                <button
+                  onClick={() => router.push("/dashboard")}
+                  className="p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border"
+                  title={t("common.back") || "Back"}
+                >
+                  <ArrowLeft size={20} className={language === 'ur' ? 'rotate-180' : ''} />
+                </button>
                 {t("chat.chats") || "Chats"} <span className="w-6 h-6 bg-primary/10 text-primary text-[10px] rounded-xl flex items-center justify-center font-black">
                   {conversations.reduce((acc, c) => acc + getUnreadCount(c), 0)}
                 </span>
@@ -214,8 +223,12 @@ export default function ChatSidebar({
                   >
                     <div className="flex items-center gap-4">
                       <div className="relative flex-shrink-0">
-                        <div className={`w-14 h-14 rounded-2xl p-0.5 transition-all relative overflow-hidden ${isActive ? "bg-primary/10" : "bg-gray-100 group-hover:bg-primary/5"}`}>
-                          <Image src={otherUser.avatar || "/avatar-placeholder.png"} alt={otherUser.firstName || "User"} fill className="rounded-[14px] object-cover bg-card" />
+                        <div className={`w-14 h-14 rounded-2xl p-0.5 transition-all relative overflow-hidden flex items-center justify-center ${isActive ? "bg-primary/10" : "bg-gray-100 group-hover:bg-primary/5"}`}>
+                          {otherUser.avatar && !otherUser.avatar.includes("dicebear.com") ? (
+                            <Image src={otherUser.avatar} alt={otherUser.firstName || "User"} fill className="rounded-[14px] object-cover bg-card" />
+                          ) : (
+                            <User2 className="w-6 h-6 text-text-hint opacity-40" />
+                          )}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-card rounded-xl shadow-sm flex items-center justify-center">
                           <div className={`w-2.5 h-2.5 rounded-full ${otherUser.isOnline ? "bg-green-500" : "bg-gray-300"}`} />
@@ -275,9 +288,9 @@ export default function ChatSidebar({
           </div>
           {isOpen && (
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-0.5">{t("chat.currentRole") || "Current Role"}</p>
+              <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-0.5">{t("chat.currentRole")}</p>
               <p className="text-xs font-bold truncate capitalize">
-                {currentUserRole === "provider" ? (t("nav.professional") || "Professional") : (t("nav.customer") || "Customer")} {t("chat.account") || "Account"}
+                {currentUserRole === "admin" ? t("common.admin") : (currentUserRole === "provider" ? t("common.professional") : t("common.customer"))} {t("chat.account")}
               </p>
             </div>
           )}

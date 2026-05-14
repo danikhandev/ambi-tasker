@@ -47,7 +47,7 @@ export default function Footer() {
   }, []);
 
   // Don't show footer on focused pages (chat, onboarding, auth)
-  const hideOn = ["/chat", "/onboarding", "/register", "/login", "/splash"];
+  const hideOn = ["/onboarding", "/register", "/login", "/splash"];
   if (hideOn.some(path => pathname?.startsWith(path))) {
     return null;
   }

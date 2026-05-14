@@ -17,7 +17,8 @@ import {
   TrendingUp, 
   AlertCircle,
   PackageOpen,
-  UserCircle
+  UserCircle,
+  Headphones
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -239,13 +240,17 @@ export default function UserDashboardPage() {
                        </div>
                      ))}
                   </motion.div>
-               ) : activeRequests.length === 0 ? (
-                  <div className="py-10 bg-muted/20 border border-border border-dashed rounded-[32px] flex flex-col items-center justify-center text-center px-4">
-                     <PackageOpen size={32} className="text-text-disabled mb-4" />
-                     <h4 className="text-sm font-black text-foreground mb-1">No Active Bookings</h4>
-                     <p className="text-xs text-text-hint">Find a professional and get your tasks done efficiently.</p>
-                  </div>
-               ) : (
+                ) : activeRequests.length === 0 ? (
+                   <div className="py-10">
+                      <EmptyState 
+                        icon={PackageOpen}
+                        title="No Active Bookings"
+                        description="Find a professional and get your tasks done efficiently."
+                        actionText="Explore Services"
+                        onAction={() => router.push('/search')}
+                      />
+                   </div>
+                ) : (
                   activeRequests.map((req, i) => (
                      <motion.div 
                         key={req.id} 
@@ -269,10 +274,10 @@ export default function UserDashboardPage() {
                         </div>
                      </motion.div>
                   ))
-               )}
-            </AnimatePresence>
-         </div>
-      </section>
+                )}
+             </AnimatePresence>
+          </div>
+       </section>
 
     </div>
   );

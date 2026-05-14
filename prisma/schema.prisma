@@ -84,6 +84,7 @@ model User {
   reports          Report[]         @relation("SentReports")
   reviews          Review[]         @relation("UserToReview")
   supportTickets   SupportTicket[]
+  supportConversations SupportConversation[]
 
   @@map("profiles")
 }
@@ -518,6 +519,49 @@ model SupportTicket {
   updatedAt   DateTime      @updatedAt          @map("updated_at")
 
   @@map("support_tickets")
+}
+
+model SupportConversation {
+  id            String           @id @default(uuid())
+  userId        String?          @map("user_id")
+  user          User?            @relation(fields: [userId], references: [id])
+  subject       String?
+  category      String?
+  status        String           @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority      String           @default("MEDIUM") // LOW, MEDIUM, HIGH
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  lastMessageAt DateTime?      @map("last_message_at")
+  messages      SupportMessage[]
+
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id             String              @id @default(uuid())
+  conversationId String              @map("conversation_id")
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String              @map("sender_id") // Can be User.id or Admin.id
+  senderRole     String              @map("sender_role") // 'USER', 'PROVIDER', 'ADMIN'
+  content        String              @map("content")
+  attachments    SupportAttachment[]
+  isRead         Boolean             @default(false) @map("is_read")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  @@map("support_messages")
+}
+
+model SupportAttachment {
+  id        String         @id @default(uuid())
+  messageId String         @map("message_id")
+  message   SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fileUrl   String         @map("file_url")
+  fileName  String?        @map("file_name")
+  fileType  String?        @map("file_type")
+  fileSize  Int?           @map("file_size")
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@map("support_attachments")
 }
 
 model SystemSetting {

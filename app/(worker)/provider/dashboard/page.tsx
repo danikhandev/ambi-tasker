@@ -18,7 +18,9 @@ import {
   ShieldCheck,
   X,
   Plus,
-  Loader2
+  Loader2,
+  Headphones,
+  MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
@@ -394,6 +396,8 @@ export default function ProviderDashboardPage() {
                         icon={Briefcase}
                         title="Quiet at the moment"
                         description="You don't have any active jobs or requests right now. Ensure your services are active to get discovered."
+                        actionText="Browse Jobs Feed"
+                        onAction={() => router.push('/provider/bookings')}
                       />
                     </div>
                   )}

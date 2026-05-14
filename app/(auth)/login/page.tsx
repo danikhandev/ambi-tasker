@@ -211,11 +211,9 @@ function LoginContent() {
                 dangerouslySetInnerHTML={{ __html: t("auth.experienceDifferenceHtml") }}
               />
             ) : (
-              <h1 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter break-words whitespace-normal`}>
-                Experience the <br />
-                <span className="text-primary italic">difference</span> with <br />
-                AmbiTasker
-              </h1>
+              <h1 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter break-words whitespace-normal`}
+                dangerouslySetInnerHTML={{ __html: t("auth.experienceDifferenceHtml") }}
+              />
             )}
             <p className="text-gray-500 text-xl font-medium max-w-lg leading-relaxed">
               {t("auth.loginHeroDesc") || "Join thousands of satisfied users and verified providers today. Your bridge to professional excellence."}
@@ -383,13 +381,35 @@ function LoginContent() {
             </form>
 
             {/* Footer links */}
-            <div className="pt-6 text-center">
+            <div className="pt-6 text-center space-y-6">
               <p className="text-gray-400 text-sm font-medium">
                 {t("auth.noAccount") || "Don't have an account?"}{" "}
                 <Link href="/signup" onClick={() => playClickSound()} className="text-primary hover:underline font-bold ml-1">
                   {t("auth.createAccount") || "Create account"}
                 </Link>
               </p>
+
+              {roleParam !== "admin" && (
+                <div className="pt-4 border-t border-gray-100">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    {roleParam === "user" ? (
+                      <>
+                        {t("auth.areYouProfessional") || "Are you a Professional?"}{" "}
+                        <Link href="/login?role=provider" onClick={() => playClickSound()} className="text-primary hover:underline ml-1">
+                          {t("auth.signInAsProvider") || "Sign in as Provider"}
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        {t("auth.lookingForService") || "Looking for a Service?"}{" "}
+                        <Link href="/login?role=user" onClick={() => playClickSound()} className="text-primary hover:underline ml-1">
+                          {t("auth.signInAsUser") || "Sign in as User"}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

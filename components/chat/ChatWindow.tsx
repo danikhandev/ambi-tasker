@@ -5,14 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Paperclip, Mic, CheckCheck, Check,
   Menu, MoreVertical, Phone, Video, Smile, Clock,
-  AlertCircle, RefreshCw
+  AlertCircle, RefreshCw, User2, FileText, X, Camera
 } from "lucide-react";
 import Image from "next/image";
 import FileAttachmentPreview from "./FileAttachmentPreview";
 import MediaViewerModal from "./MediaViewerModal";
 import VoiceRecorder from "./VoiceRecorder";
 import CameraCapture from "../CameraCapture";
-import { Camera } from "lucide-react";
 import { unbounded } from "@/app/fonts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useChat } from "@/hooks/useChat";
@@ -51,7 +50,7 @@ export default function ChatWindow({
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<Attachment | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [localAttachments, setLocalAttachments] = useState<any[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -101,13 +100,18 @@ export default function ChatWindow({
   );
 
   const handleSend = useCallback(async () => {
-    if (!draftMessage.trim()) return;
+    if (!draftMessage.trim() && selectedFiles.length === 0) return;
     const text = draftMessage.trim();
+    
+    // In a real app, we would upload selectedFiles here
+    console.log("Sending message with files:", selectedFiles);
+    
     setDraftMessage("");
+    setSelectedFiles([]);
     sendTyping(false);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     await sendMessage(text);
-  }, [draftMessage, sendMessage, sendTyping]);
+  }, [draftMessage, selectedFiles, sendMessage, sendTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -117,21 +121,19 @@ export default function ChatWindow({
   };
 
   const handleSendFile = (file: File) => {
-    const newAttachment = {
-      id: `att-${Date.now()}`,
-      fileName: file.name,
-      fileUrl: URL.createObjectURL(file),
-      fileType: file.type,
-      fileSize: file.size,
-    };
-    setLocalAttachments(prev => [...prev, newAttachment]);
-    // TODO: upload to Supabase Storage and save attachment_url
+    setSelectedFiles(prev => [...prev, file]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleSendFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedFiles(prev => [...prev, ...files]);
+    }
     e.target.value = "";
+  };
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleVoiceRecordingComplete = (audioBlob: Blob) => {
@@ -191,13 +193,17 @@ export default function ChatWindow({
               </button>
             )}
             <div className="relative group cursor-pointer">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 p-0.5 transition-transform hover:scale-105 duration-300 relative overflow-hidden">
-                <Image
-                  src={userImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-                  alt={userName}
-                  fill
-                  className="rounded-[14px] object-cover bg-card"
-                />
+              <div className="w-12 h-12 rounded-2xl bg-secondary p-0.5 transition-transform hover:scale-105 duration-300 relative overflow-hidden flex items-center justify-center">
+                {userImage && !userImage.includes("dicebear.com") ? (
+                  <Image
+                    src={userImage}
+                    alt={userName}
+                    fill
+                    className="rounded-[14px] object-cover bg-card"
+                  />
+                ) : (
+                  <User2 className="w-6 h-6 text-text-hint opacity-40" />
+                )}
               </div>
               {isOnline && (
                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-xl shadow-sm" />
@@ -246,7 +252,7 @@ export default function ChatWindow({
             <div className="py-8 text-center">
               <div className="inline-flex items-center gap-2 text-xs text-text-hint font-medium">
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                Loading messages…
+                {t("chat.loadingMessages")}
               </div>
             </div>
           )}
@@ -276,20 +282,24 @@ export default function ChatWindow({
                 )}
 
                 <div className={`flex gap-4 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                  {!isOwn && (
-                    <div className="flex-shrink-0 w-10">
-                      {showAvatar && (
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 p-0.5 relative overflow-hidden">
-                          <Image
-                            src={userImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-                            alt={userName}
-                            fill
-                            className="rounded-[9px] object-cover bg-card"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    {!isOwn && (
+                      <div className="flex-shrink-0 w-10">
+                        {showAvatar && (
+                          <div className="w-10 h-10 rounded-xl bg-secondary p-0.5 relative overflow-hidden flex items-center justify-center">
+                            {userImage && !userImage.includes("dicebear.com") ? (
+                              <Image
+                                src={userImage}
+                                alt={userName}
+                                fill
+                                className="rounded-[9px] object-cover bg-card"
+                              />
+                            ) : (
+                              <User2 className="w-5 h-5 text-text-hint opacity-40" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   <div className={`max-w-[75%] md:max-w-[60%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
                     {msg.attachments?.map(att => (
@@ -316,7 +326,7 @@ export default function ChatWindow({
                             onClick={() => retryMessage(msg.id)}
                             className="flex items-center gap-1 mt-2 text-xs text-red-500 hover:text-red-700 font-bold"
                           >
-                            <RefreshCw className="w-3 h-3" /> Retry
+                            <RefreshCw className="w-3 h-3" /> {t("chat.retry")}
                           </button>
                         )}
                       </div>
@@ -345,13 +355,17 @@ export default function ChatWindow({
                 className="flex gap-4"
               >
                 <div className="flex-shrink-0 w-10">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 p-0.5 relative overflow-hidden">
-                    <Image
-                      src={userImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-                      alt={userName}
-                      fill
-                      className="rounded-[9px] object-cover bg-card"
-                    />
+                  <div className="w-10 h-10 rounded-xl bg-secondary p-0.5 relative overflow-hidden flex items-center justify-center">
+                    {userImage && !userImage.includes("dicebear.com") ? (
+                      <Image
+                        src={userImage}
+                        alt={userName}
+                        fill
+                        className="rounded-[9px] object-cover bg-card"
+                      />
+                    ) : (
+                      <User2 className="w-5 h-5 text-text-hint opacity-40" />
+                    )}
                   </div>
                 </div>
                 <div className="px-5 py-4 bg-card border border-border rounded-[24px] rounded-tl-none shadow-sm flex items-center gap-1.5">
@@ -367,49 +381,94 @@ export default function ChatWindow({
             )}
           </AnimatePresence>
 
+          {/* Selected Files Preview (Instagram Style) */}
+          <AnimatePresence>
+            {selectedFiles.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="px-6 py-4 bg-background/50 backdrop-blur-md border-t border-border overflow-hidden"
+              >
+                <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                  {selectedFiles.map((file, i) => {
+                    const isImg = file.type.startsWith("image/");
+                    const url = URL.createObjectURL(file);
+                    return (
+                      <motion.div
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="relative flex-shrink-0"
+                      >
+                        <div className="w-24 h-24 rounded-2xl bg-secondary overflow-hidden border border-border shadow-sm flex items-center justify-center">
+                          {isImg ? (
+                            <Image src={url} alt="preview" fill className="object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 p-2">
+                              <FileText size={24} className="text-text-hint" />
+                              <span className="text-[8px] font-black uppercase text-center truncate w-full px-2">
+                                {file.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => removeSelectedFile(i)}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-500 transition-colors z-10"
+                        >
+                          <X size={12} />
+                        </button>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Scroll anchor */}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="bg-card px-6 py-5 border-t border-border relative z-20">
-          <div className="flex items-end gap-3 max-w-5xl mx-auto">
-            <div className="flex items-center gap-1 mb-1">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 text-text-hint hover:text-primary hover:bg-muted rounded-xl transition-all"
-                title={t("chat.attachFile") || "Attach File"}
-              >
-                <Paperclip className="w-5 h-5" />
-                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
-              </button>
-              <button
-                className="p-2.5 text-text-hint hover:text-primary hover:bg-muted rounded-xl transition-all active:scale-95 duration-200"
-                title={t("chat.addEmoji") || "Add Emoji"}
-              >
-                <Smile className="w-5 h-5" />
-              </button>
+        {/* Input Area (Instagram Style) */}
+        <div className="bg-background/80 backdrop-blur-xl px-4 py-3 border-t border-border sticky bottom-0 z-30">
+          <div className="flex items-center gap-2 max-w-5xl mx-auto">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full transition-all shrink-0"
+              title={t("chat.attachFile") || "Attach File"}
+            >
+              <Paperclip className="w-5 h-5" />
+              <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileSelect} />
+            </button>
+            <div className="flex-1 relative group flex items-center bg-secondary/50 rounded-[28px] border border-border/40 focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all">
               <button
                 onClick={() => setShowCamera(true)}
-                className="p-2.5 text-text-hint hover:text-primary hover:bg-muted rounded-xl transition-all active:scale-95 duration-200"
+                className="ml-2 p-2 text-text-hint hover:text-primary transition-all active:scale-95"
                 title={t("chat.openCamera") || "Open Camera"}
               >
                 <Camera className="w-5 h-5" />
               </button>
-            </div>
-
-            <div className="flex-1 relative group">
               <textarea
                 value={draftMessage}
                 onChange={handleDraftChange}
                 onKeyDown={handleKeyDown}
-                placeholder={t("chat.typeMessage") || "Type your message here..."}
+                placeholder={t("chat.typeMessage") || "Message..."}
                 rows={1}
-                className="w-full px-5 py-4 text-sm bg-muted border border-transparent focus:bg-card focus:border-primary/20 rounded-[24px] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none max-h-40 no-scrollbar font-medium"
+                className="flex-1 px-3 py-2.5 text-[15px] bg-transparent border-none focus:ring-0 outline-none resize-none max-h-32 no-scrollbar font-medium placeholder:text-text-hint/50"
               />
+              <button
+                className="mr-1 p-2 text-text-hint hover:text-primary transition-all"
+                title={t("chat.addEmoji") || "Add Emoji"}
+              >
+                <Smile className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center shrink-0">
               <AnimatePresence mode="wait">
                 {draftMessage.trim() ? (
                   <motion.button
@@ -418,21 +477,23 @@ export default function ChatWindow({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     onClick={handleSend}
-                    className="p-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+                    className="text-primary font-bold text-sm px-3 hover:opacity-80 transition-opacity"
                   >
-                    <Send className="w-5 h-5" />
+                    {t("common.send") || "Send"}
                   </motion.button>
                 ) : (
-                  <motion.button
-                    key="mic"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    onClick={() => setShowVoiceRecorder(true)}
-                    className="p-3 bg-gray-900 text-white rounded-2xl shadow-lg shadow-gray-200 hover:bg-primary hover:shadow-primary/20 hover:-translate-y-0.5 transition-all"
-                  >
-                    <Mic className="w-5 h-5" />
-                  </motion.button>
+                  <div className="flex items-center gap-1">
+                    <motion.button
+                      key="mic"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      onClick={() => setShowVoiceRecorder(true)}
+                      className="p-2 text-text-hint hover:text-primary transition-all"
+                    >
+                      <Mic className="w-5 h-5" />
+                    </motion.button>
+                  </div>
                 )}
               </AnimatePresence>
             </div>

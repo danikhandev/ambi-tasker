@@ -13,6 +13,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import LocationGuard from "./LocationGuard";
+import SupportFloatingWidget from "./support/SupportFloatingWidget";
 
 /**
  * SharedShell - The ONLY layout wrapper for the entire application.
@@ -40,14 +41,16 @@ export default function SharedShell({ children }: { children: React.ReactNode })
                      pathname?.startsWith("/onboarding") || 
                      pathname?.startsWith("/splash") || 
                      pathname === "/admin" || 
-                     pathname?.startsWith("/admin/login");
+                     pathname?.startsWith("/admin/login") ||
+                     pathname?.startsWith("/messages") ||
+                     pathname?.startsWith("/chat") ||
+                     pathname?.startsWith("/support");
   
   // Dashboard/App-like pages (require sidebar)
   const isAppPage = (pathname?.startsWith("/dashboard") || 
                      pathname?.startsWith("/provider") || 
                      pathname?.startsWith("/user") ||
                      (pathname?.startsWith("/admin") && !pathname?.startsWith("/admin/login") && pathname !== "/admin") || 
-                     pathname?.startsWith("/chat") ||
                      ["/booking", "/requests", "/profile", "/settings", "/notifications", "/support", "/verify"].some(p => pathname?.includes(p))) &&
                      !isAuthPage;
 
@@ -117,7 +120,7 @@ export default function SharedShell({ children }: { children: React.ReactNode })
               </motion.div>
             </AnimatePresence>
             
-            {/* Shared Footer for Site Pages */}
+            {/* Shared Footer for All Site Pages */}
             {isSitePage && <Footer />}
           </main>
         </div>
@@ -138,6 +141,8 @@ export default function SharedShell({ children }: { children: React.ReactNode })
           </p>
         </div>
       )}
+      {/* 8. Support Floating Widget */}
+      <SupportFloatingWidget />
     </div>
   );
 }

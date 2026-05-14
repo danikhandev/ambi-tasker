@@ -58,12 +58,12 @@ function ChatContent() {
   }
 
   return (
-    <div className="h-screen bg-background pt-16">
+    <div className="flex-1 bg-background overflow-hidden">
       <div className="h-full flex">
         {/* Sidebar - Full width on mobile, dynamic width on desktop */}
         <div className="w-full lg:w-auto flex-shrink-0 h-full">
           <ChatSidebar
-            currentUserRole={currentUserRole as "consumer" | "provider"}
+            currentUserRole={currentUserRole}
           />
         </div>
 
