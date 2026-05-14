@@ -168,10 +168,10 @@ export default function LandingPage() {
              <div className="absolute -top-6 -left-6 w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white shadow-xl">
                 <Rocket size={32} />
              </div>
-             <h2 className={`${unbounded.className} text-4xl font-black leading-tight mb-8`}>
+             <h2 className={`${unbounded.className} text-4xl font-black leading-tight mb-8 text-white`}>
                 Ready to <span className="text-primary italic">Transform</span> your space?
              </h2>
-             <p className="text-lg opacity-70 mb-12 font-medium">Join thousands of satisfied customers who trust Ambi Tasker for their daily operational needs.</p>
+             <p className="text-lg text-white/80 mb-12 font-medium leading-relaxed">Join thousands of satisfied customers who trust Ambi Tasker for their daily operational needs.</p>
              <Link 
                href="/search" 
                className="inline-flex items-center gap-3 text-sm font-black uppercase tracking-widest group"
@@ -221,24 +221,7 @@ export default function LandingPage() {
         </div>
       </section>
       
-      {/* 6. Production Branding Section */}
-      <section className="py-24 px-6 bg-muted/30 border-t border-border/40">
-        <div className="max-w-7xl mx-auto text-center">
 
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="inline-block p-12 bg-white dark:bg-card rounded-[48px] shadow-2xl border border-border/60 relative group overflow-hidden"
-            >
-               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-               <Brand size="xl" className="relative z-10" />
-               <p className={`${unbounded.className} text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-8 opacity-60`}>
-                  Nodal Network Active
-               </p>
-            </motion.div>
-        </div>
-      </section>
     </div>
   );
 }

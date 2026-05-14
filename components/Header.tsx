@@ -271,8 +271,8 @@ export default function Header() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${isScrolled
-          ? "bg-background/70 backdrop-blur-2xl shadow-[0_4px_30px_-5px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.04)] border-b border-border/60 py-1"
-          : "bg-transparent py-4"
+          ? "bg-white/95 backdrop-blur-xl shadow-[0_4px_30px_-5px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.04)] border-b border-border/60"
+          : "bg-white border-b border-border/20 shadow-sm"
           }`}
       >
         <nav className="max-w-[1440px] mx-auto px-6 md:px-12 py-3">
