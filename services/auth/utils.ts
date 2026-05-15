@@ -115,22 +115,16 @@ export function isValidEmail(email: string): boolean {
 /**
  * Validate password strength
  * - At least 8 characters
- * - Contains at least one uppercase letter
- * - Contains at least one lowercase letter
  * - Contains at least one number
  * - Contains at least one special character
  */
 export function isValidPassword(password: string): boolean {
   const minLength = 8;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   return (
     password.length >= minLength &&
-    hasUpperCase &&
-    hasLowerCase &&
     hasNumber &&
     hasSpecialChar
   );

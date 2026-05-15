@@ -46,7 +46,8 @@ export default function VerificationScreen() {
     const [errorMsg, setErrorMsg] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [kycResultState, setKycResultState] = useState<{ status: string, message: string } | null>(null);
+    const [kycResultState, setKycResultState] = useState<{ status: string, message: string, confidence?: number } | null>(null);
+    const [idDetails, setIdDetails] = useState({ cnic: "", dob: "", expiry: "" });
 
     const handleNext = () => {
         setErrorMsg("");
@@ -92,16 +93,52 @@ export default function VerificationScreen() {
         fetchCategories();
     }, []);
 
-    const runMatchSimulation = () => {
+    const runRealMatch = async () => {
+        if (!selfieData || !cnicFront) {
+            setErrorMsg("Missing biometric signals. Please recapture selfie and ID.");
+            return;
+        }
+
         setIsMatching(true);
         setMatchResult(null);
+        setErrorMsg("");
         
-        // Technical simulation: Match takes 3.5 seconds
-        setTimeout(() => {
-            setIsMatching(false);
+        try {
+            // 1. Upload images first (we need URLs for the Vision API as per current implementation)
+            const [selfieUrl, cnicFrontUrl] = await Promise.all([
+                uploadBase64Image(selfieData, "selfie_temp"),
+                uploadBase64Image(cnicFront, "cnic_front_temp"),
+            ]);
+
+            // 2. Call a check endpoint or the main verify endpoint with a "check_only" flag
+            // For now, I'll use the main endpoint but the backend will handle it
+            const res = await fetch("/api/provider/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    selfieImage: selfieUrl,
+                    cnicFrontImage: cnicFrontUrl,
+                    cnicBackImage: cnicFrontUrl, // Placeholder for back if not captured yet
+                    checkOnly: true 
+                }),
+            });
+
+            const result = await res.json();
+            
+            if (!res.ok || !result.success) {
+                setMatchResult(false);
+                setErrorMsg(result.message || "Identity synchronization failed. Please ensure both photos are clear.");
+                return;
+            }
+
             setMatchResult(true);
-            showToast("Identity Synchronized: 98.4% Confidence Match", "success");
-        }, 3500);
+            showToast("Identity Synchronized: Verified with High Confidence", "success");
+        } catch (err: any) {
+            setErrorMsg("Biometric link failure: " + err.message);
+            setMatchResult(false);
+        } finally {
+            setIsMatching(false);
+        }
     };
 
     const { showToast } = useUI();
@@ -169,12 +206,20 @@ export default function VerificationScreen() {
             });
 
             const result = await res.json();
-            if (!res.ok || !result.success) throw new Error(result.error || "Failed to submit verification");
+            if (!res.ok || !result.success) {
+                // If it's a validation error from AI, show it clearly
+                if (result.kycStatus === "REJECTED") {
+                    setErrorMsg(result.message || "AI Verification failed. Please ensure your photos are clear and match your ID.");
+                    return;
+                }
+                throw new Error(result.error || "Failed to submit verification");
+            }
 
             await refetch();
             setKycResultState({
                 status: result.kycStatus || "UNDER_REVIEW",
-                message: result.message || "Your biometric data and documents have been successfully encrypted and submitted for internal audit. This usually takes 24 hours."
+                message: result.message || "Your biometric data and documents have been successfully encrypted and submitted for internal audit.",
+                confidence: result.confidenceScore
             });
             setIsSuccess(true);
         } catch (err: any) {
@@ -205,10 +250,16 @@ export default function VerificationScreen() {
                 </div>
                 <h2 className={`${unbounded.className} text-3xl font-black text-foreground mb-4 text-center tracking-tighter`}>
                     Verification <span className={isVerified ? "text-emerald-500 italic" : isRejected ? "text-red-500 italic" : "text-primary italic"}>
-                        {isVerified ? "Secured" : isRejected ? "Failed" : "Under Review"}
+                        {isVerified ? "Secured" : isRejected ? "Denied" : "Pending"}
                     </span>
                 </h2>
-                <p className="text-text-secondary text-sm mb-12 text-center max-w-md font-medium">{kycResultState.message}</p>
+                {kycResultState.confidence && (
+                    <div className="mb-6 px-4 py-2 bg-muted rounded-full border border-border flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Confidence Score: {kycResultState.confidence}%</span>
+                    </div>
+                )}
+                <p className="text-text-secondary text-sm mb-12 text-center max-w-md font-medium leading-relaxed">{kycResultState.message}</p>
                 <button
                     onClick={() => router.push(isRejected ? "/provider/verify" : "/provider/dashboard")}
                     className="w-full max-w-sm h-16 bg-gray-900 hover:bg-black text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.25em] shadow-xl active:scale-95 transition-all"
@@ -463,7 +514,7 @@ export default function VerificationScreen() {
 
                             {matchResult === null && !isMatching ? (
                                 <button
-                                    onClick={runMatchSimulation}
+                                    onClick={runRealMatch}
                                     className="w-full py-6 bg-primary text-white rounded-3xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 group"
                                 >
                                     <ShieldCheck className="group-hover:rotate-12 transition-transform" />

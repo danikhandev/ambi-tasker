@@ -131,6 +131,11 @@ model ProviderProfile {
   kycVerifiedAt       DateTime?          @map("kyc_verified_at")
   kycConfidenceScore Float?             @map("kyc_confidence_score")
   kycData            Json?              @map("kyc_data") // Stores OCR extracted info for audit
+  faceDetected       Boolean?           @map("face_detected")
+  idFaceDetected     Boolean?           @map("id_face_detected")
+  reviewedBy         String?            @map("reviewed_by")
+  faceMatchScore     Float?             @map("face_match_score")
+  ocrData            Json?              @map("ocr_data")
   
   earnings           Float              @default(0.0) @map("earnings_total")
   rating             Float              @default(0.0)

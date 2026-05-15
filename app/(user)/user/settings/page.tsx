@@ -451,15 +451,29 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
                                 ))}
-                                {passwordForm.newPassword && passwordForm.confirm && (
-                                    <div className={`flex items-center gap-2 text-xs font-semibold ${passwordForm.newPassword === passwordForm.confirm ? "text-green-600" : "text-red-500"}`}>
-                                        {passwordForm.newPassword === passwordForm.confirm ? (
-                                            <><CheckCircle2 className="w-4 h-4" /> {t("settings.passwordsMatch")}</>
-                                        ) : (
-                                            <><AlertCircle className="w-4 h-4" /> {t("settings.passwordsNotMatch")}</>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 px-1">
+                                            <div className="flex items-center gap-1.5">
+                                                {passwordForm.newPassword.length >= 8 ? <Check className="w-3 h-3 text-green-500" /> : <X className="w-3 h-3 text-red-500/50" />}
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${passwordForm.newPassword.length >= 8 ? "text-green-500" : "text-text-hint/50"}`}>8+ Chars</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                {/[0-9]/.test(passwordForm.newPassword) ? <Check className="w-3 h-3 text-green-500" /> : <X className="w-3 h-3 text-red-500/50" />}
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${/[0-9]/.test(passwordForm.newPassword) ? "text-green-500" : "text-text-hint/50"}`}>Number</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                {/[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.newPassword) ? <Check className="w-3 h-3 text-green-500" /> : <X className="w-3 h-3 text-red-500/50" />}
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${/[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.newPassword) ? "text-green-500" : "text-text-hint/50"}`}>Special (!@#)</span>
+                                            </div>
+                                        </div>
+                                        {passwordForm.newPassword && passwordForm.confirm && (
+                                            <div className={`flex items-center gap-2 text-xs font-semibold ${passwordForm.newPassword === passwordForm.confirm ? "text-green-600" : "text-red-500"}`}>
+                                                {passwordForm.newPassword === passwordForm.confirm ? (
+                                                    <><CheckCircle2 className="w-4 h-4" /> {t("settings.passwordsMatch")}</>
+                                                ) : (
+                                                    <><AlertCircle className="w-4 h-4" /> {t("settings.passwordsNotMatch")}</>
+                                                )}
+                                            </div>
                                         )}
-                                    </div>
-                                )}
                                 <button
                                     onClick={() => handleSave("Password")}
                                     disabled={saving || !passwordForm.current || !passwordForm.newPassword || passwordForm.newPassword !== passwordForm.confirm}

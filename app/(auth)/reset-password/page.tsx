@@ -26,26 +26,23 @@ function ResetPasswordContent() {
 
   const [passwordStrength, setPasswordStrength] = useState({
     hasMinLength: false,
-    hasUpperCase: false,
-    hasLowerCase: false,
     hasNumber: false,
+    hasSpecialChar: false,
   });
 
   // Check password strength
   useEffect(() => {
     setPasswordStrength({
       hasMinLength: formData.newPassword.length >= 8,
-      hasUpperCase: /[A-Z]/.test(formData.newPassword),
-      hasLowerCase: /[a-z]/.test(formData.newPassword),
       hasNumber: /[0-9]/.test(formData.newPassword),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword),
     });
   }, [formData.newPassword]);
 
   const isPasswordValid =
     passwordStrength.hasMinLength &&
-    passwordStrength.hasUpperCase &&
-    passwordStrength.hasLowerCase &&
-    passwordStrength.hasNumber;
+    passwordStrength.hasNumber &&
+    passwordStrength.hasSpecialChar;
 
   const isFormValid =
     formData.otp.length === 6 &&
@@ -332,29 +329,20 @@ function ResetPasswordContent() {
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         <div
-                          className={`w-2 h-2 rounded-full ${passwordStrength.hasUpperCase ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                        />
-                        <span className={passwordStrength.hasUpperCase ? "text-green-700" : "text-text/60"}>
-                          One uppercase letter
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div
-                          className={`w-2 h-2 rounded-full ${passwordStrength.hasLowerCase ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                        />
-                        <span className={passwordStrength.hasLowerCase ? "text-green-700" : "text-text/60"}>
-                          One lowercase letter
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div
                           className={`w-2 h-2 rounded-full ${passwordStrength.hasNumber ? "bg-green-500" : "bg-gray-300"
                             }`}
                         />
                         <span className={passwordStrength.hasNumber ? "text-green-700" : "text-text/60"}>
                           One number
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div
+                          className={`w-2 h-2 rounded-full ${passwordStrength.hasSpecialChar ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                        />
+                        <span className={passwordStrength.hasSpecialChar ? "text-green-700" : "text-text/60"}>
+                          One special character (!@#...)
                         </span>
                       </div>
                     </motion.div>

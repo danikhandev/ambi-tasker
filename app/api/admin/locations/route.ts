@@ -57,12 +57,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let type: string | undefined;
+  let name: string | undefined;
+  
   try {
     const guard = await adminGuard(req);
     if (!guard.success) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { type, name, parentId, code } = body;
+    type = body.type;
+    name = body.name;
+    const { parentId, code } = body;
 
     if (!type || !name) return NextResponse.json({ success: false, error: 'Type and name are required' }, { status: 400 });
 
@@ -86,7 +91,16 @@ export async function POST(req: NextRequest) {
         break;
       case 'area':
         if (!parentId) return NextResponse.json({ success: false, error: 'parentId is required' }, { status: 400 });
-        result = await prisma.area.create({ data: { name, cityId: parentId } });
+        
+        // Handle bulk creation if name contains commas
+        if (name.includes(',')) {
+          const names = name.split(',').map((n: string) => n.trim()).filter((n: string) => n.length > 0);
+          result = await prisma.area.createMany({
+            data: names.map((n: string) => ({ name: n, cityId: parentId }))
+          });
+        } else {
+          result = await prisma.area.create({ data: { name, cityId: parentId } });
+        }
         break;
       default:
         return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
@@ -95,6 +109,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     logger.error("Admin Locations POST Error:", error);
+    
+    // Handle Prisma unique constraint error
+    if (error.code === 'P2002' && type && name) {
+      const label = type === 'city' ? 'Tehsil' : type.charAt(0).toUpperCase() + type.slice(1);
+      return NextResponse.json({ 
+        success: false, 
+        error: `A ${label} with the name "${name}" already exists in this location.` 
+      }, { status: 400 });
+    }
+
+    // Handle Foreign Key constraint error (Parent not found)
+    if (error.code === 'P2003') {
+      return NextResponse.json({ 
+        success: false, 
+        error: "The parent location for this node could not be found. Please refresh and try again." 
+      }, { status: 400 });
+    }
+    
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

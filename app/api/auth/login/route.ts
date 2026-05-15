@@ -64,8 +64,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── Find user in database ───────────────────────────────────
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    const identifier = normalizedEmail;
+    let user = await prisma.user.findUnique({
+      where: { email: identifier },
       include: {
         providerProfile: true,
         district: true,
@@ -73,13 +74,36 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // STEP 1 & 2: Check if User Exists
-    console.log("USER FOUND:", user);
+    if (!user) {
+      // Try finding by CNIC for providers
+      // Clean identifier from dashes if any
+      const cleanedIdentifier = identifier.replace(/-/g, "");
+      const profile = await prisma.providerProfile.findUnique({
+        where: { cnicNumber: identifier }, // Try with dashes
+      });
+
+      const profileWithoutDashes = profile ? null : await prisma.providerProfile.findUnique({
+        where: { cnicNumber: cleanedIdentifier },
+      });
+
+      const targetProfile = profile || profileWithoutDashes;
+
+      if (targetProfile) {
+        user = await prisma.user.findUnique({
+          where: { id: targetProfile.userId },
+          include: {
+            providerProfile: true,
+            district: true,
+            area: true,
+          },
+        });
+      }
+    }
 
     if (!user) {
-      recordFailedAttempt(normalizedEmail);
+      recordFailedAttempt(identifier);
       return NextResponse.json(
-        { success: false, error: "Invalid email or password" },
+        { success: false, error: "Invalid credentials. Please check your email/CNIC or password." },
         { status: 401 }
       );
     }

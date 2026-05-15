@@ -31,7 +31,7 @@ import { Suspense } from "react";
 
 function LoginContent() {
   const { login: userLogin } = useUser();
-  const { login: adminLogin, clearAdmin } = useAdmin();
+  const { login: adminLogin, clearAdmin, isAdmin } = useAdmin();
   const { language, setLanguage } = useUI();
   const { t, isRTL } = useTranslation();
   const { playClickSound } = useSound();
@@ -44,10 +44,18 @@ function LoginContent() {
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
   const [otp, setOtp] = useState("");
   const [showOTP, setShowOTP] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
   const [stats, setStats] = useState({ badgeText: "", formattedCount: "" });
+
+  // Redirect if already admin
+  useEffect(() => {
+    if (isAdmin) {
+      router.push("/admin/dashboard");
+    }
+  }, [isAdmin, router]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -65,9 +73,15 @@ function LoginContent() {
   const validateField = (name: string, value: string) => {
     let err = "";
     if (name === "email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!value) err = t("auth.emailRequired") || "Email is required";
-      else if (!emailRegex.test(value)) err = t("auth.invalidEmail") || "Enter a valid email";
+      if (roleParam === "provider") {
+        const cnicRegex = /^\d{5}-\d{7}-\d{1}$|^\d{13}$/;
+        if (!value) err = t("auth.cnicRequired") || "CNIC Number is required";
+        else if (!cnicRegex.test(value)) err = t("auth.invalidCnic") || "Enter a valid 13-digit CNIC Number";
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value) err = t("auth.emailRequired") || "Email is required";
+        else if (!emailRegex.test(value)) err = t("auth.invalidEmail") || "Enter a valid email";
+      }
     } else if (name === "password") {
       if (!value) err = t("auth.passwordRequired") || "Password is required";
     }
@@ -75,9 +89,16 @@ function LoginContent() {
     if (err) setError("");
   };
 
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, formData[name as keyof typeof formData]);
+  };
+
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (fieldErrors[name as keyof typeof fieldErrors]) validateField(name, value);
+    if (touched[name as keyof typeof touched]) {
+      validateField(name, value);
+    }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -85,11 +106,16 @@ function LoginContent() {
     playClickSound();
     setError("");
 
-    const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? "" : (t("auth.invalidEmail") || "Enter a valid email");
+    // Mark all as touched on submit
+    setTouched({ email: true, password: true });
+
+    const identifierError = roleParam === "provider"
+      ? (/^\d{5}-\d{7}-\d{1}$|^\d{13}$/.test(formData.email) ? "" : (t("auth.invalidCnic") || "Enter a valid 13-digit CNIC"))
+      : (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? "" : (t("auth.invalidEmail") || "Enter a valid email"));
     const passError = formData.password ? "" : (t("auth.passwordRequired") || "Password is required");
 
-    if (emailError || passError) {
-      setFieldErrors({ email: emailError, password: passError });
+    if (identifierError || passError) {
+      setFieldErrors({ email: identifierError, password: passError });
       return;
     }
 
@@ -208,15 +234,17 @@ function LoginContent() {
             {isRTL ? (
               <h1 
                 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.3] tracking-tighter break-words whitespace-normal`}
-                dangerouslySetInnerHTML={{ __html: t("auth.experienceDifferenceHtml") }}
+                dangerouslySetInnerHTML={{ __html: roleParam === "admin" ? t("auth.adminHeroHeading") : t("auth.experienceDifferenceHtml") }}
               />
             ) : (
               <h1 className={`${unbounded.className} text-5xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter break-words whitespace-normal`}
-                dangerouslySetInnerHTML={{ __html: t("auth.experienceDifferenceHtml") }}
+                dangerouslySetInnerHTML={{ __html: roleParam === "admin" ? t("auth.adminHeroHeading") : t("auth.experienceDifferenceHtml") }}
               />
             )}
             <p className="text-gray-500 text-xl font-medium max-w-lg leading-relaxed">
-              {t("auth.loginHeroDesc") || "Join thousands of satisfied users and verified providers today. Your bridge to professional excellence."}
+              {roleParam === "admin" 
+                ? (t("auth.adminHeroDesc") || "Managing a secure, reliable ecosystem connecting professionals with those who need them most.")
+                : (t("auth.loginHeroDesc") || "Join thousands of satisfied users and verified providers today. Your bridge to professional excellence.")}
             </p>
           </div>
 
@@ -230,7 +258,9 @@ function LoginContent() {
               ))}
             </div>
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-              {stats.badgeText || t("landing.hero.badge") || "Trusted by 10k+ people"}
+              {roleParam === "admin" 
+                ? (t("auth.adminHeroBadge") || "OVERSEEING 1.0K+ ACTIVE USERS")
+                : (stats.badgeText || t("landing.hero.badge") || "Trusted by 10k+ people")}
             </p>
           </div>
         </motion.div>
@@ -250,9 +280,16 @@ function LoginContent() {
           </Link>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:block px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">
-              {portalName}
-            </div>
+            {roleParam === "admin" ? (
+              <div className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-slate-100 shadow-xl shadow-slate-900/10">
+                <ShieldCheck size={14} className="text-blue-400" />
+                {portalName}
+              </div>
+            ) : (
+              <div className="hidden sm:block px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">
+                {portalName}
+              </div>
+            )}
           </div>
         </div>
 
@@ -263,8 +300,17 @@ function LoginContent() {
             className="w-full space-y-10 py-12"
           >
             <div>
-              <h2 className={`${unbounded.className} text-4xl font-black text-gray-900 mb-3`}>
-                {roleLabel} {t("auth.signIn") || "Sign In"}
+              <h2 className={`${unbounded.className} text-4xl font-black text-gray-900 mb-3 flex items-center gap-3`}>
+                {roleParam === "admin" ? (
+                  <>
+                    <ShieldCheck className="w-10 h-10 text-primary" />
+                    {t("auth.adminLoginHeading") || "Administrator Sign In"}
+                  </>
+                ) : (
+                  <>
+                    {roleLabel} {t("auth.signIn") || "Sign In"}
+                  </>
+                )}
               </h2>
               <p className="text-gray-400 font-medium text-lg">
                 {roleParam === "admin"
@@ -276,36 +322,56 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                  {t("auth.emailAddress") || "Email Address"}
-                </label>
-                <div className="relative group">
-                  <Mail className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder={t("auth.email") || "Enter your email"}
-                    className={`w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ${isRTL ? "pe-14 ps-6" : "ps-14 pe-6"} text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none`}
-                    required
-                  />
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    {roleParam === "provider" ? (t("auth.cnicNumber") || "CNIC Number") : (t("auth.emailAddress") || "Email Address")}
+                  </label>
+                  {roleParam === "provider" && (
+                    <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                      {t("auth.forKycVerification") || "For KYC Verification"}
+                    </span>
+                  )}
                 </div>
-                {fieldErrors.email && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.email}</p>}
-              </div>
+                <div className="relative group">
+                  {roleParam === "provider" ? (
+                    <ShieldCheck className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
+                  ) : (
+                    <Mail className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
+                  )}
+                    <input
+                      type={roleParam === "provider" ? "text" : "email"}
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      onBlur={() => handleBlur("email")}
+                      placeholder={roleParam === "provider" ? "00000-0000000-0" : (t("auth.email") || "Enter your email")}
+                      className={`w-full h-16 bg-[#eff6ff]/50 border rounded-2xl ${isRTL ? "pe-14 ps-6" : "ps-14 pe-6"} text-gray-900 text-sm font-bold focus:bg-white transition-all outline-none ${fieldErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-transparent focus:border-primary/30'}`}
+                      required
+                    />
+                  </div>
+                  <AnimatePresence mode="wait">
+                    {fieldErrors.email && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        className="text-[10px] font-bold text-red-500 ps-2 flex items-center gap-1.5"
+                      >
+                        <AlertCircle size={12} />
+                        {fieldErrors.email}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
 
               {/* Password */}
               <div className="space-y-2">
-                <div className="flex justify-between items-end ml-1">
+                <div className="flex justify-between items-center px-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    {t("auth.password") || "Password"}
+                    {t("auth.passwordLabel") || "Password"}
                   </label>
-                  <Link
-                    href="/forgot-password"
-                    onClick={() => playClickSound()}
-                    className="text-[11px] font-bold text-primary hover:underline"
-                  >
-                    {t("auth.forgotPassword") || "Forgot Password?"}
-                  </Link>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                    {t("auth.passwordHint") || "8+ Chars"}
+                  </span>
                 </div>
                 <div className="relative group">
                   <Lock className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
@@ -313,8 +379,9 @@ function LoginContent() {
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    placeholder={t("auth.passwordLabel") || "Enter your password"}
-                    className={`w-full h-16 bg-[#eff6ff]/50 border border-transparent rounded-2xl ${isRTL ? "pe-14 ps-14" : "ps-14 pe-14"} text-gray-900 text-sm font-bold focus:bg-white focus:border-primary/30 transition-all outline-none`}
+                    onBlur={() => handleBlur("password")}
+                    placeholder="••••••••"
+                    className={`w-full h-16 bg-[#eff6ff]/50 border rounded-2xl ${isRTL ? "pe-14 ps-14" : "ps-14 pe-14"} text-gray-900 text-sm font-bold focus:bg-white transition-all outline-none ${fieldErrors.password ? 'border-red-500/50 focus:border-red-500' : 'border-transparent focus:border-primary/30'}`}
                     required
                   />
                   <button
@@ -325,7 +392,28 @@ function LoginContent() {
                     {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                   </button>
                 </div>
-                {fieldErrors.password && <p className="text-[10px] font-bold text-red-500 ps-2">{fieldErrors.password}</p>}
+                <div className="flex justify-end">
+                  <Link
+                    href="/forgot-password"
+                    onClick={() => playClickSound()}
+                    className="text-[11px] font-bold text-primary hover:underline"
+                  >
+                    {t("auth.forgotPassword") || "Forgot Password?"}
+                  </Link>
+                </div>
+                <AnimatePresence mode="wait">
+                  {fieldErrors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0, y: -10 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -10 }}
+                      className="text-[10px] font-bold text-red-500 ps-2 flex items-center gap-1.5"
+                    >
+                      <AlertCircle size={12} />
+                      {fieldErrors.password}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* 2FA OTP (admin) */}
@@ -373,7 +461,11 @@ function LoginContent() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    <span>{t("auth.signIn") || "SIGN IN"} AS {roleLabel}</span>
+                    <span>
+                      {roleParam === "admin" 
+                        ? (t("auth.adminLoginBtn")?.toUpperCase() || "INITIALIZE ADMIN SESSION") 
+                        : (t("auth.signIn") || "SIGN IN") + " AS " + roleLabel}
+                    </span>
                     <ArrowRight className={`w-4 h-4 group-hover:translate-x-1.5 transition-transform ${isRTL ? "rotate-180" : ""}`} />
                   </>
                 )}
@@ -382,12 +474,14 @@ function LoginContent() {
 
             {/* Footer links */}
             <div className="pt-6 text-center space-y-6">
-              <p className="text-gray-400 text-sm font-medium">
-                {t("auth.noAccount") || "Don't have an account?"}{" "}
-                <Link href="/signup" onClick={() => playClickSound()} className="text-primary hover:underline font-bold ml-1">
-                  {t("auth.createAccount") || "Create account"}
-                </Link>
-              </p>
+              {roleParam !== "admin" && (
+                <p className="text-gray-400 text-sm font-medium">
+                  {t("auth.noAccount") || "Don't have an account?"}{" "}
+                  <Link href="/signup" onClick={() => playClickSound()} className="text-primary hover:underline font-bold ml-1">
+                    {t("auth.createAccount") || "Create account"}
+                  </Link>
+                </p>
+              )}
 
               {roleParam !== "admin" && (
                 <div className="pt-4 border-t border-gray-100">

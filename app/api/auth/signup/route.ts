@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: "Strong password required: 8+ chars, uppercase, lowercase, number, and special character",
+          error: "Strong password required: 8+ chars, number, and special character",
           code: "AUTH_PASSWORD_WEAK"
         },
         { status: 400 }

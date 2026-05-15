@@ -1,6 +1,6 @@
 import { prisma } from "@/services/prisma";
 import { logger } from "@/utils/logger";
-import { validateDocumentOCR } from "./ocr";
+import { GoogleVisionService } from "./googleVision";
 
 export type KycStatus = "NOT_SUBMITTED" | "PENDING" | "UNDER_REVIEW" | "VERIFIED" | "REJECTED";
 
@@ -14,96 +14,126 @@ export interface KycVerificationResult {
 }
 
 /**
- * AI-Powered KYC Verification Engine
- * 
- * 1. Document Validation (Clarity, Fake detection)
- * 2. OCR Data Extraction
- * 3. Face Matching (Selfie vs CNIC)
- * 4. Decision Engine
+ * AI-Powered KYC Verification Engine (Production Level)
  */
 export class KycEngine {
   
   static async verify(
     providerId: string, 
     files: { front: string; back: string; selfie: string },
-    providedCnicNumber?: string
+    providedCnicNumber?: string,
+    checkOnly: boolean = false
   ): Promise<KycVerificationResult> {
     try {
-      logger.info(`Starting AI KYC verification for provider: ${providerId}`);
+      logger.info(`Starting Production KYC verification for provider: ${providerId}`);
 
-      // 1. Get Expected Name (from Profile)
-      const user = await prisma.user.findUnique({ where: { id: providerId } });
+      // 1. Get User Data
+      const user = await prisma.user.findUnique({ 
+        where: { id: providerId },
+        include: { providerProfile: true }
+      });
       if (!user) throw new Error("Provider not found");
 
-      // 2. OCR Validation (Extracts data)
-      const ocrResult = await validateDocumentOCR(files.front, user.name || "");
-      const extractedCnic = ocrResult.extractedText.match(/\d{5}-\d{7}-\d{1}/)?.[0] || providedCnicNumber || `00000-0000000-${Math.floor(Math.random()*9)}`;
+      // 2. Selfie Validation
+      const selfieResult = await GoogleVisionService.detectFaces(files.selfie);
+      
+      if (!selfieResult.isPerson) {
+        return this.rejection(providerId, "Invalid selfie. Please ensure you are taking a photo of yourself, not an object or a screen.");
+      }
+      if (!selfieResult.faceDetected) {
+        return this.rejection(providerId, "No face detected in selfie. Please ensure your face is clearly visible.");
+      }
+      if (selfieResult.faceCount > 1) {
+        return this.rejection(providerId, "Multiple faces detected in selfie. Please take a photo with only your face visible.");
+      }
+      if (selfieResult.confidence < 0.8) {
+        return this.rejection(providerId, "Selfie quality is too low. Please use better lighting and ensure focus.");
+      }
+      if (selfieResult.isBlurred) {
+        return this.rejection(providerId, "Selfie is blurry. Please hold the camera still.");
+      }
 
-      // 3. Duplicate Check
+      // 3. ID Card Face Detection
+      const idFaceResult = await GoogleVisionService.detectFaces(files.front);
+      const idFaceDetected = idFaceResult.faceDetected;
+      
+      if (!idFaceDetected) {
+        return this.rejection(providerId, "No face detected on the ID card. Please ensure the card is clear and well-lit.");
+      }
+
+      // 4. Face Similarity Check
+      const similarityScore = GoogleVisionService.compareFaces(selfieResult, idFaceResult);
+      logger.info(`Face Similarity Score: ${similarityScore}%`);
+
+      // 5. OCR Data Extraction
+      const ocrResult = await GoogleVisionService.extractText(files.front);
+      if (!ocrResult.fullText) {
+        return this.rejection(providerId, "Could not read ID card. Please ensure the text is legible.");
+      }
+
+      // 6. Data Validation
+      const extractedCnic = ocrResult.cnic || providedCnicNumber;
+      if (!extractedCnic) {
+        return this.rejection(providerId, "Could not extract CNIC number from ID card.");
+      }
+
+      // 7. Duplicate Check
       const isDuplicate = await this.checkDuplicateCnic(providerId, extractedCnic);
       if (isDuplicate) {
-        return this.rejection(providerId, "CNIC already in use by another provider");
+        return this.rejection(providerId, "This CNIC is already registered with another account.");
       }
 
-      // 4. Document Validation & Face Matching
-      const { blurScore, validDocument } = await this.validateDocument(files.front, files.back);
-      if (!validDocument) {
-        return this.rejection(providerId, "Image is blurry or poorly cropped. Please upload clear documents.");
+      // 8. Decision Logic
+      let finalStatus: KycStatus = "VERIFIED";
+      let confidenceScore = Math.round((selfieResult.confidence * 0.4 + (similarityScore / 100) * 0.6) * 100);
+      let message = "Your identity has been successfully verified.";
+      let resultMode: "PASS" | "FAIL" | "REVIEW" = "PASS";
+
+      // Strict Rejection Rules
+      if (similarityScore < 75) {
+          return this.rejection(providerId, "Face match failed. The selfie does not match the ID card portrait.");
       }
 
-      // 5. Face Detection & Matching (AWS Rekognition / FaceNet Simulation)
-      const faceMatchScore = await this.matchFaces(files.selfie, files.front);
-
-      // 6. Decision Engine
-      let finalStatus: KycStatus = "PENDING";
-      let confidenceScore = Math.round((ocrResult.confidence * 100 + faceMatchScore) / 2);
-      let message = "";
-      let nextAction = "";
-      let resultMode: "PASS" | "FAIL" | "REVIEW" = "REVIEW";
-
-      const faceMatch = faceMatchScore > 85;
-      const validOcr = ocrResult.matchedName;
-      
-      if (faceMatch && validDocument && validOcr) {
-        finalStatus = "VERIFIED";
-        message = "Your KYC is verified. You can now receive bookings.";
-        nextAction = "None";
-        resultMode = "PASS";
-      } else if (faceMatchScore > 60 || (validOcr && faceMatchScore > 50)) {
+      // If confidence is moderate or OCR data is missing key fields, send to review instead of instant verify
+      if (similarityScore < 85 || !ocrResult.cnic || !ocrResult.name) {
         finalStatus = "UNDER_REVIEW";
-        message = "Your documents are under review. This may take some time.";
-        nextAction = "Wait for admin approval";
+        message = "Your documents are under review for additional manual validation.";
         resultMode = "REVIEW";
-      } else {
-        finalStatus = "REJECTED";
-        message = "Verification failed. Please upload clear and valid documents.";
-        nextAction = "Please re-upload clear documents";
-        resultMode = "FAIL";
       }
 
-      // 7. Store Results
-      await prisma.providerProfile.update({
-        where: { userId: providerId },
-        data: {
-          verificationStatus: finalStatus as any,
-          kycConfidenceScore: confidenceScore,
-          cnicNumber: extractedCnic,
-          rejectionReason: finalStatus === "REJECTED" ? message : null,
-          kycVerifiedAt: finalStatus === "VERIFIED" ? new Date() : null,
-          kycData: {
-            extractedAt: new Date().toISOString(),
-            faceMatchScore,
-            documentValid: validDocument,
-            blurScore,
-            ocrData: {
-              name: user.name,
-              cnic: extractedCnic,
-              extractedText: ocrResult.extractedText
-            },
-            status: finalStatus
-          }
-        }
-      });
+      // 9. Persistent Storage
+      if (!checkOnly) {
+          await prisma.providerProfile.update({
+            where: { userId: providerId },
+            data: {
+              verificationStatus: finalStatus as any,
+              kycConfidenceScore: confidenceScore,
+              cnicNumber: extractedCnic,
+              faceDetected: selfieResult.faceDetected,
+              idFaceDetected: idFaceDetected,
+              faceMatchScore: similarityScore,
+              ocrData: ocrResult as any,
+              rejectionReason: finalStatus === "REJECTED" ? message : null,
+              kycVerifiedAt: finalStatus === "VERIFIED" ? new Date() : null,
+              kycData: {
+                extractedAt: new Date().toISOString(),
+                similarityScore,
+                ocrData: ocrResult,
+                selfieQuality: {
+                    confidence: selfieResult.confidence,
+                    isBlurred: selfieResult.isBlurred,
+                    isUnderExposed: selfieResult.isUnderExposed,
+                    faceCount: selfieResult.faceCount
+                },
+                idQuality: {
+                    faceDetected: idFaceDetected,
+                    confidence: idFaceResult.confidence
+                },
+                engine: "Google Cloud Vision v1 + Heuristic Matcher"
+              }
+            }
+          });
+      }
 
       return {
         providerId,
@@ -111,11 +141,11 @@ export class KycEngine {
         confidenceScore,
         result: resultMode,
         message,
-        nextAction
+        nextAction: finalStatus === "VERIFIED" ? "Proceed to Dashboard" : "Wait for Review"
       };
 
     } catch (error: any) {
-      logger.error("KYC AI Engine Error:", error);
+      logger.error("KYC Engine Fatal Error:", error);
       throw error;
     }
   }
@@ -130,30 +160,19 @@ export class KycEngine {
     return !!existing;
   }
 
-  private static async validateDocument(front: string, back: string) {
-    // In production, this would use OpenCV or Vision API to detect blur and cropping
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return {
-      blurScore: 10, // 0 = blurry, 100 = sharp
-      validDocument: true // Fallback to true
-    };
-  }
-
-  private static async matchFaces(selfie: string, cnicFront: string): Promise<number> {
-    // Simulated Face Match (AWS Rekognition / FaceNet)
-    // We simulate a high score > 85% by default, or random depending on length to seem realistic
-    await new Promise(resolve => setTimeout(resolve, 600));
-    return 92; // Default to passing for simulation
-  }
-
-  private static rejection(providerId: string, message: string, score: number = 0): KycVerificationResult {
+  private static rejection(providerId: string, message: string): KycVerificationResult {
+    // Persistent record of rejection if possible, or just return result
+    // For production, we log it
+    logger.warn(`KYC Rejected for ${providerId}: ${message}`);
+    
     return {
       providerId,
       kycStatus: "REJECTED",
-      confidenceScore: score,
+      confidenceScore: 0,
       result: "FAIL",
       message,
-      nextAction: "Please re-upload clear documents"
+      nextAction: "Re-upload documents"
     };
   }
 }
+

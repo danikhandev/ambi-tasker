@@ -4,10 +4,12 @@ import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/services/supabase";
+import Link from "next/link";
+import { unbounded } from "@/app/fonts";
 
 export default function ChatPage() {
   const { user, loading: userLoading, activePerspective } = useUser();
@@ -16,6 +18,7 @@ export default function ChatPage() {
   const otherUserId = params.userId as string;
 
   const [conversation, setConversation] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [otherUser, setOtherUser] = useState<{
     id: string;
     firstName: string;
@@ -39,6 +42,7 @@ export default function ChatPage() {
       if (!currentId || !otherUserId) return;
 
       try {
+        setError(null);
         const res = await fetch("/api/messages/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -56,16 +60,61 @@ export default function ChatPage() {
             email: "",
             isOnline: json.data.otherUser.isOnline
           });
+        } else {
+          setError(json.error || "User not found or unavailable");
         }
       } catch (err) {
         console.error("Chat resolution failed:", err);
+        setError("Failed to initialize chat. Please check your connection.");
       }
     };
 
     resolveChat();
   }, [currentId, otherUserId]);
 
-  if (loading || (!user && !admin) || !conversation || !otherUser) {
+  if (loading || (!user && !admin)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // Handle Error / User Not Found State
+  if (error || (!conversation && !loading && currentId && otherUserId)) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle className="w-10 h-10 text-red-500" />
+        </div>
+        <h2 className={`${unbounded.className} text-2xl font-black mb-2 text-foreground`}>
+          Chat Unavailable
+        </h2>
+        <p className="text-text-secondary max-w-sm mb-8 font-medium">
+          {error === "Target user not found" 
+            ? "The user you are trying to reach is no longer available in our active network."
+            : (error || "We couldn't establish a connection with this user. Please try again later.")}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link 
+            href="/messages" 
+            className="px-8 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+          >
+            Back to Messages
+          </Link>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-8 py-4 bg-muted text-foreground border border-border rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-95"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Still resolving conversation data
+  if (!conversation || !otherUser) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -96,4 +145,4 @@ export default function ChatPage() {
       </div>
     </div>
   );
-}
+}

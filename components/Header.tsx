@@ -678,12 +678,6 @@ export default function Header() {
                               <p className="text-[10px] font-medium text-text-hint truncate mt-0.5 tracking-tighter">
                                 {user.email?.toLowerCase()}
                               </p>
-                              {user.email?.toLowerCase() === "adminambitasker@gmail.com" && (
-                                <div className="mt-2 flex items-center gap-1.5 px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-                                  <Shield className="w-3 h-3 text-indigo-600" />
-                                  <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Platform Super Admin</span>
-                                </div>
-                              )}
                             </div>
 
                             <Link 
@@ -709,17 +703,6 @@ export default function Header() {
                                   <Zap className="w-4 h-4" />
                                   {activePerspective === "consumer" ? "Enter Provider Dashboard" : "Enter Customer Dashboard"}
                                 </button>
-                              )}
-                              
-                              {/* Enter Admin Dashboard for Super Admin */}
-                              {user.email?.toLowerCase() === "adminambitasker@gmail.com" && (
-                                <Link 
-                                  href="/admin/dashboard"
-                                  className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                                >
-                                  <ShieldCheck className="w-4 h-4" />
-                                  Enter Admin Dashboard
-                                </Link>
                               )}
                               
                               {user.role === "USER" && !user.isUserSignUpForProvider && (

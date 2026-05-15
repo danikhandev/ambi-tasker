@@ -23,6 +23,13 @@ interface DashboardStats {
   active_bookings: number;
   total_revenue: number;
   pending_approvals: number;
+  trends: {
+    users: string;
+    providers: string;
+    revenue: string;
+    services: string;
+    jobs: string;
+  };
 }
 
 
@@ -72,11 +79,11 @@ export default function AdminDashboardPage() {
   };
 
   const stats = useMemo(() => [
-    { label: t("admin.totalUsers") || "Total Users", value: (dbStats?.total_users || 0).toLocaleString(), trend: "+12.4%", icon: Users, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: t("admin.totalProviders") || "Providers", value: (dbStats?.total_providers || 0).toLocaleString(), trend: "+8.2%", icon: Briefcase, color: "text-purple-500", bg: "bg-purple-50" },
-    { label: t("admin.totalServices") || "Services", value: (dbStats?.total_services || 0).toLocaleString(), trend: "+4.1%", icon: Layers, color: "text-indigo-500", bg: "bg-indigo-50" },
-    { label: t("admin.activeJobs") || "Active Jobs", value: (dbStats?.active_bookings || 0).toLocaleString(), trend: "Optimal", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
-    { label: t("admin.revenue") || "Revenue", value: `${t("common.currency")} ${(Number(dbStats?.total_revenue || 0) / 1000).toFixed(1)}k`, trend: "+18.1%", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50" },
+    { label: t("admin.totalUsers") || "Total Users", value: (dbStats?.total_users || 0).toLocaleString(), trend: dbStats?.trends?.users || "0%", icon: Users, color: "text-blue-500", bg: "bg-blue-50" },
+    { label: t("admin.totalProviders") || "Providers", value: (dbStats?.total_providers || 0).toLocaleString(), trend: dbStats?.trends?.providers || "0%", icon: Briefcase, color: "text-purple-500", bg: "bg-purple-50" },
+    { label: t("admin.totalServices") || "Services", value: (dbStats?.total_services || 0).toLocaleString(), trend: dbStats?.trends?.services || "+4.1%", icon: Layers, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { label: t("admin.activeJobs") || "Active Jobs", value: (dbStats?.active_bookings || 0).toLocaleString(), trend: dbStats?.trends?.jobs || "Optimal", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
+    { label: t("admin.revenue") || "Revenue", value: `${t("common.currency")} ${(Number(dbStats?.total_revenue || 0) / 1000).toFixed(1)}k`, trend: dbStats?.trends?.revenue || "0%", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50" },
   ], [dbStats, t]);
 
   return (
@@ -152,79 +159,93 @@ export default function AdminDashboardPage() {
               <span className="w-3 h-3 rounded-full bg-primary" />
             </div>
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dbRevenueData}>
-                <defs>
-                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" strokeOpacity={0.5} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} dy={10} />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} 
-                  tickFormatter={(value) => `Rs.${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip 
-                  cursor={{ stroke: '#d4af37', strokeWidth: 2, strokeDasharray: '5 5' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-gray-950 text-white p-4 rounded-2xl shadow-2xl border border-white/10">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">{payload[0].payload.name}</p>
-                          <p className="text-sm font-black text-primary">{t("common.currency")} {payload[0].value?.toLocaleString()}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area type="monotone" dataKey="revenue" stroke="#d4af37" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" animationDuration={1500} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            {dbRevenueData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dbRevenueData}>
+                  <defs>
+                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" strokeOpacity={0.5} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} dy={10} />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} 
+                    tickFormatter={(value) => value >= 1000 ? `Rs.${(value / 1000).toFixed(1)}k` : `Rs.${value}`}
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: '#d4af37', strokeWidth: 2, strokeDasharray: '5 5' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-gray-950 text-white p-4 rounded-2xl shadow-2xl border border-white/10">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">{payload[0].payload.name}</p>
+                            <p className="text-sm font-black text-primary">{t("common.currency")} {payload[0].value?.toLocaleString()}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#d4af37" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" animationDuration={1500} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center gap-4 text-text-hint opacity-40">
+                <BarChart className="w-12 h-12" />
+                <p className="text-[10px] font-black uppercase tracking-widest">{t("admin.noDataAvailable") || "Awaiting Data Uplink"}</p>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="bg-card dark:bg-gray-900 rounded-[48px] border border-border dark:border-white/10 p-8 relative overflow-hidden group shadow-sm">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity" />
           <h3 className={`${unbounded.className} text-xl font-black mb-8`}>{t("admin.service")} <span className="text-primary italic">{t("admin.distribution")}</span></h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dbProviderActivity}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" strokeOpacity={0.5} />
-                <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} />
-                <Tooltip 
-                   cursor={{fill: 'rgba(212, 175, 55, 0.05)'}}
-                   content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-gray-950 text-white p-4 rounded-2xl shadow-2xl border border-white/10">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">{payload[0].payload.category}</p>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between gap-6">
-                              <span className="text-[9px] font-bold uppercase text-white/70">Active</span>
-                              <span className="text-xs font-black text-white">{payload[0].value}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-6">
-                              <span className="text-[9px] font-bold uppercase text-white/70">Pending</span>
-                              <span className="text-xs font-black text-primary">{payload[1].value}</span>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            {dbProviderActivity.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dbProviderActivity}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" strokeOpacity={0.5} />
+                  <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} />
+                  <Tooltip 
+                     cursor={{fill: 'rgba(212, 175, 55, 0.05)'}}
+                     content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-gray-950 text-white p-4 rounded-2xl shadow-2xl border border-white/10">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">{payload[0].payload.category}</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between gap-6">
+                                <span className="text-[9px] font-bold uppercase text-white/70">Active</span>
+                                <span className="text-xs font-black text-white">{payload[0].value}</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-6">
+                                <span className="text-[9px] font-bold uppercase text-white/70">Pending</span>
+                                <span className="text-xs font-black text-primary">{payload[1].value}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="active" fill="#111" radius={[8, 8, 0, 0]} barSize={24} />
-                <Bar dataKey="pending" fill="#d4af37" radius={[8, 8, 0, 0]} barSize={8} />
-              </BarChart>
-            </ResponsiveContainer>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="active" fill="#111" radius={[8, 8, 0, 0]} barSize={24} />
+                  <Bar dataKey="pending" fill="#d4af37" radius={[8, 8, 0, 0]} barSize={8} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center gap-4 text-text-hint opacity-40">
+                <Layers className="w-12 h-12" />
+                <p className="text-[10px] font-black uppercase tracking-widest">{t("admin.noDataAvailable") || "Awaiting Data Uplink"}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -292,9 +313,9 @@ export default function AdminDashboardPage() {
            <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl">
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px]" />
               <h3 className={`${unbounded.className} text-white text-lg font-black mb-6`}>{t("admin.quick")} <span className="text-primary italic">{t("admin.actions")}</span></h3>
-              <div className="grid grid-cols-2 gap-3 relative z-10">
+              <div className="grid grid-cols-2 gap-4 relative z-10">
                   {[
-                    { icon: RefreshCw, label: t("admin.syncData") || "Sync Data", action: () => { fetchDashboardData(true); showToast("Dashboard data refreshed", "success"); }, spin: isSyncing },
+                    { icon: RefreshCw, label: t("admin.syncData") || "Refresh Data", action: () => { fetchDashboardData(true); showToast("Dashboard data refreshed", "success"); }, spin: isSyncing },
                     { icon: Bell, label: t("admin.alerts") || "Alerts", action: () => router.push("/admin/notifications") },
                     { icon: Database, label: t("admin.databaseLabel") || "Database", action: () => router.push("/admin/activity") },
                     { icon: Shield, label: t("admin.permissions") || "Permissions", action: () => router.push("/admin/sub-admins") },
@@ -304,34 +325,52 @@ export default function AdminDashboardPage() {
                     <button 
                       key={i} 
                       onClick={action.action} 
-                      className="p-5 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-primary/20 hover:border-primary/20 transition-all group active:scale-95 text-center relative overflow-hidden"
+                      className="aspect-square p-4 bg-white/[0.03] border border-white/5 rounded-[24px] flex flex-col items-center justify-center gap-3 hover:bg-primary/20 hover:border-primary/20 transition-all group active:scale-95 text-center relative overflow-hidden"
                     >
                       {action.spin && (
-                        <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center">
-                          <RefreshCw className="w-5 h-5 text-white animate-spin" />
+                        <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-20">
+                          <RefreshCw className="w-6 h-6 text-white animate-spin" />
                         </div>
                       )}
-                      <action.icon size={18} className={`text-primary group-hover:text-white transition-colors ${action.spin ? 'opacity-0' : ''}`} />
-                      <span className={`text-[10px] font-bold text-white/50 group-hover:text-white tracking-tight leading-tight ${action.spin ? 'opacity-0' : ''}`}>{action.label}</span>
+                      <div className="w-10 h-10 rounded-xl bg-white/[0.02] flex items-center justify-center group-hover:scale-110 transition-all">
+                        <action.icon size={20} className={`text-primary/70 group-hover:text-white transition-colors ${action.spin ? 'opacity-0' : ''}`} />
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-white transition-colors leading-tight ${action.spin ? 'opacity-0' : ''}`}>{action.label}</span>
                     </button>
                   ))}
               </div>
 
               {/* System Health Pulse */}
-              <div className="mt-8 p-5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between shadow-inner relative z-10">
-                <div className="flex items-center gap-3">
+              <div className="mt-10 p-8 bg-white/[0.03] border border-white/5 rounded-[32px] relative z-10 overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl" />
+                
+                <div className="flex flex-col items-center text-center gap-6">
                    <div className="relative">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                      </div>
+                      <span className="absolute top-0 right-0 w-4 h-4 bg-emerald-400 rounded-full border-4 border-slate-900 animate-ping" />
+                      <span className="absolute top-0 right-0 w-4 h-4 bg-emerald-400 rounded-full border-4 border-slate-900" />
                    </div>
-                   <div>
-                      <p className="text-[10px] font-black uppercase text-white/40 tracking-wider">{t("admin.health.systemHealth")}</p>
-                      <p className="text-xs font-bold text-white">{systemHealth.toFixed(1)}% {t("admin.health.nominal")}</p>
+                   
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase text-white/30 tracking-[0.3em]">{t("admin.health.systemHealth")}</p>
+                      <h4 className={`${unbounded.className} text-2xl font-black text-white`}>{systemHealth.toFixed(1)}%</h4>
+                      <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest">{t("admin.health.nominal")}</p>
                    </div>
-                </div>
-                <div className="text-right">
-                   <p className="text-[10px] font-black uppercase text-white/20 tracking-wider">{t("admin.health.uptime")}</p>
-                   <p className="text-[10px] font-bold text-emerald-400">99.9%</p>
+
+                   <div className="w-full h-px bg-white/5" />
+
+                   <div className="flex justify-between w-full">
+                      <div className="text-left">
+                         <p className="text-[10px] font-black uppercase text-white/20 tracking-wider mb-1">{t("admin.health.uptime")}</p>
+                         <p className={`${unbounded.className} text-sm font-black text-white/80`}>99.9%</p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-[10px] font-black uppercase text-white/20 tracking-wider mb-1">Response</p>
+                         <p className={`${unbounded.className} text-sm font-black text-emerald-400`}>12ms</p>
+                      </div>
+                   </div>
                 </div>
               </div>
            </div>

@@ -213,7 +213,7 @@ export default function BookingsPage() {
                         </Link>
                       )}
                       <Link 
-                        href={`/messages/${b.providerId}`} 
+                        href={`/messages/${b.provider?.userId}`} 
                         className="px-6 py-3 bg-muted text-foreground border border-border rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center gap-2"
                       >
                         Message

@@ -424,7 +424,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                 {type === "selfie" ? (
                                     <div className="relative w-[75%] h-[85%] sm:w-[320px] sm:h-[400px]">
                                         {/* Scanner Frame */}
-                                        <div className="absolute inset-0 border-[2px] border-primary/40 rounded-[140px] shadow-[0_0_0_2000px_rgba(0,0,0,0.6)]" />
+                                        <div className="absolute inset-0 border-[3px] border-primary/60 rounded-[160px] shadow-[0_0_0_2000px_rgba(0,0,0,0.7)]" />
 
                                         {/* Moving Laser Line */}
                                         <motion.div
@@ -433,47 +433,35 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                             className="absolute left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent blur-[1px] z-10"
                                         />
 
+                                        {/* Instruction Overlay */}
+                                        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-full text-center">
+                                            <p className="text-white text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md py-3 px-6 rounded-2xl border border-white/10">
+                                                Center your face & keep it steady
+                                            </p>
+                                        </div>
+
                                         {/* Technical Overlays */}
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2.5 bg-primary text-white text-[8px] font-black uppercase tracking-[0.3em] rounded-full shadow-2xl border border-white/30 whitespace-nowrap">
-                                            {t("camera.livenessScan")}
+                                            {t("camera.livenessScan") || "LIVENESS_PROBE_v3"}
                                         </div>
 
                                         <div className="absolute top-10 left-10 flex flex-col gap-2">
                                             <div className="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-3 text-white border border-white/10 shadow-xl">
                                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-white/80">{t("camera.secureFeed") || "SECURE_FEED_v2.04"}</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-white/80">{t("camera.secureFeed") || "ENCRYPTED_SIGNAL"}</span>
                                             </div>
-
-                                            <div className="bg-black/40 backdrop-blur-lg px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest text-white/40 border border-white/5">
-                                                LATENCY: 14ms | AUTH_KEY: AES_GCM
-                                            </div>
-                                        </div>
-
-
-                                        <div className="absolute -left-6 top-1/4 -translate-y-1/2 flex flex-col gap-1">
-                                            {[1, 2, 3, 4].map(i => (
-                                                <div key={i} className="w-1 h-3 bg-primary/40 rounded-full" />
-                                            ))}
-                                        </div>
-
-                                        {/* Mock HUD Metadata */}
-                                        <div className="absolute -right-8 top-10 flex flex-col gap-2 text-[6px] font-black text-primary/40 uppercase tracking-widest whitespace-nowrap hidden sm:flex">
-                                            <span>FOCAL: 28MM</span>
-                                            <span>ISO: 400</span>
-                                            <span>FPS: 30.00</span>
-                                            <span>TEMP: 32C</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="relative w-[88%] h-[58%]">
+                                    <div className="relative w-[90%] h-[60%]">
                                         {/* Scanner Frame */}
-                                        <div className="absolute inset-0 border-[2px] border-white/40 rounded-[28px] shadow-[0_0_0_2000px_rgba(0,0,0,0.6)]" />
+                                        <div className="absolute inset-0 border-[3px] border-white/60 rounded-[32px] shadow-[0_0_0_2000px_rgba(0,0,0,0.7)]" />
 
                                         {/* Corner Accents */}
-                                        <div className={`absolute -top-1 ${isRTL ? "-right-1" : "-left-1"} w-8 h-8 border-t-4 ${isRTL ? "border-r-4" : "border-l-4"} border-primary ${isRTL ? "rounded-tr-2xl" : "rounded-tl-2xl"}`} />
-                                        <div className={`absolute -top-1 ${isRTL ? "-left-1" : "-right-1"} w-8 h-8 border-t-4 ${isRTL ? "border-l-4" : "border-r-4"} border-primary ${isRTL ? "rounded-tl-2xl" : "rounded-tr-2xl"}`} />
-                                        <div className={`absolute -bottom-1 ${isRTL ? "-right-1" : "-left-1"} w-8 h-8 border-b-4 ${isRTL ? "border-r-4" : "border-l-4"} border-primary ${isRTL ? "rounded-br-2xl" : "rounded-bl-2xl"}`} />
-                                        <div className={`absolute -bottom-1 ${isRTL ? "-left-1" : "-right-1"} w-8 h-8 border-b-4 ${isRTL ? "border-l-4" : "border-r-4"} border-primary ${isRTL ? "rounded-bl-2xl" : "rounded-br-2xl"}`} />
+                                        <div className={`absolute -top-2 ${isRTL ? "-right-2" : "-left-2"} w-10 h-10 border-t-4 ${isRTL ? "border-r-4" : "border-l-4"} border-primary ${isRTL ? "rounded-tr-2xl" : "rounded-tl-2xl"}`} />
+                                        <div className={`absolute -top-2 ${isRTL ? "-left-2" : "-right-2"} w-10 h-10 border-t-4 ${isRTL ? "border-l-4" : "border-r-4"} border-primary ${isRTL ? "rounded-tl-2xl" : "rounded-tr-2xl"}`} />
+                                        <div className={`absolute -bottom-2 ${isRTL ? "-right-2" : "-left-2"} w-10 h-10 border-b-4 ${isRTL ? "border-r-4" : "border-l-4"} border-primary ${isRTL ? "rounded-br-2xl" : "rounded-bl-2xl"}`} />
+                                        <div className={`absolute -bottom-2 ${isRTL ? "-left-2" : "-right-2"} w-10 h-10 border-b-4 ${isRTL ? "border-l-4" : "border-r-4"} border-primary ${isRTL ? "rounded-bl-2xl" : "rounded-br-2xl"}`} />
 
                                         {/* Moving Laser Line */}
                                         <motion.div
@@ -483,7 +471,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                         />
 
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2.5 bg-white text-black text-[8px] font-black uppercase tracking-[0.3em] rounded-full shadow-2xl whitespace-nowrap">
-                                            {t("camera.ocrAlignment")}
+                                            {t("camera.ocrAlignment") || "DOCUMENT_OCR_SCAN"}
                                         </div>
                                     </div>
                                 )}
@@ -493,11 +481,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         <div className={`absolute top-8 ${isRTL ? "right-8" : "left-8"} flex items-center gap-4 z-20`}>
                             <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-3 text-white text-[9px] font-black uppercase tracking-widest border border-white/10 shadow-xl">
                                 <Shield className="w-4 h-4 text-primary" />
-                                {t("camera.secureFeed")}
+                                {t("camera.secureFeed") || "SECURE_UPLINK"}
                             </div>
                             {isCameraReady && !isVerifying && (
                                 <div className="px-3 py-2 bg-green-500/80 backdrop-blur-xl rounded-2xl text-[8px] font-black text-white uppercase tracking-widest animate-pulse border border-white/10">
-                                    {t("camera.live")}
+                                    {t("camera.live") || "LIVE"}
                                 </div>
                             )}
                         </div>
@@ -547,7 +535,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                             ))}
                                         </div>
                                         <div className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em] mt-2">
-                                            SECURE_AES_256_ACTIVE
+                                            AI_VERIFICATION_PROBE
                                         </div>
                                     </div>
                                 </motion.div>
@@ -562,8 +550,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                     className="text-white text-[10px] font-black uppercase tracking-widest bg-black/60 backdrop-blur-2xl inline-block py-4 px-10 rounded-3xl border border-white/10 shadow-2xl"
                                 >
                                     {type === "selfie"
-                                        ? t("camera.alignFace")
-                                        : type === 'cnic-front' ? t("camera.alignCnicFront") : t("camera.alignCnicBack")
+                                        ? "Align your face within the frame"
+                                        : type === 'cnic-front' ? "Position CNIC front-side inside markers" : "Position CNIC back-side inside markers"
                                     }
                                 </motion.div>
                             </div>

@@ -411,7 +411,7 @@ export default function ProviderDetailPage() {
                       </button>
                     )}
                     <Link 
-                      href={user ? `/messages/${worker.id}` : "/login"}
+                      href={user ? `/messages/${worker.userId}` : "/login"}
                       className="w-full py-6 bg-white/5 text-white font-black rounded-3xl border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
                     >
                       <MessageCircle size={18} />

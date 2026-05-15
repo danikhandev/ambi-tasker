@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       category,
       bio,
       cnicNumber,
+      checkOnly = false
     } = body;
 
     // Validate required image URLs
@@ -102,54 +103,54 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user personal details
-    const userUpdateData: Record<string, unknown> = {};
-    if (firstName && lastName) userUpdateData.name = `${firstName} ${lastName}`.trim();
-    if (phoneNumber) userUpdateData.phone = phoneNumber;
-    if (gender) userUpdateData.gender = gender.toUpperCase();
-    if (address) userUpdateData.address = address;
+    if (!checkOnly) {
+        const userUpdateData: Record<string, unknown> = {};
+        if (firstName && lastName) userUpdateData.name = `${firstName} ${lastName}`.trim();
+        if (phoneNumber) userUpdateData.phone = phoneNumber;
+        if (gender) userUpdateData.gender = gender.toUpperCase();
+        if (address) userUpdateData.address = address;
 
-    if (Object.keys(userUpdateData).length > 0) {
-      await prisma.user.update({
-        where: { id: guard.user.id },
-        data: userUpdateData,
-      });
+        if (Object.keys(userUpdateData).length > 0) {
+        await prisma.user.update({
+            where: { id: guard.user.id },
+            data: userUpdateData,
+        });
+        }
+
+        // Update provider profile with KYC documents and professional details
+        const providerUpdateData: Record<string, unknown> = {
+        cnicFrontUrl: cnicFrontImage,
+        cnicBackUrl: cnicBackImage,
+        selfieUrl: selfieImage,
+        verificationStatus: "PENDING",
+        };
+
+        if (bio) providerUpdateData.serviceDescription = bio;
+        if (category) providerUpdateData.professionalTitle = category;
+        if (experience) {
+        const expMap: Record<string, number> = {
+            "< 1 Year": 0,
+            "1–3 Years": 2,
+            "3–5 Years": 4,
+            "5+ Years": 6,
+        };
+        providerUpdateData.experienceYears = expMap[experience] ?? 0;
+        }
+
+        await prisma.providerProfile.update({
+        where: { id: provider.id },
+        data: providerUpdateData,
+        });
     }
-
-    // Update provider profile with KYC documents and professional details
-    const providerUpdateData: Record<string, unknown> = {
-      cnicFrontUrl: cnicFrontImage,
-      cnicBackUrl: cnicBackImage,
-      selfieUrl: selfieImage,
-      verificationStatus: "PENDING",
-    };
-
-    if (bio) providerUpdateData.serviceDescription = bio;
-    if (category) providerUpdateData.professionalTitle = category;
-    if (experience) {
-      const expMap: Record<string, number> = {
-        "< 1 Year": 0,
-        "1–3 Years": 2,
-        "3–5 Years": 4,
-        "5+ Years": 6,
-      };
-      providerUpdateData.experienceYears = expMap[experience] ?? 0;
-    }
-
-    await prisma.providerProfile.update({
-      where: { id: provider.id },
-      data: providerUpdateData,
-    });
 
     // Run AI KYC Verification
-    // This executes the async verification logic. If confidence > 85%, they are verified instantly.
-    // If not, they are sent to manual review or rejected.
     let kycResult;
     try {
         kycResult = await KycEngine.verify(guard.user.id, {
             front: cnicFrontImage,
             back: cnicBackImage,
             selfie: selfieImage
-        }, cnicNumber);
+        }, cnicNumber, checkOnly);
     } catch (engineError) {
         logger.error("KYC Engine failed during verification:", engineError);
         // Fallback to manual review if engine fails

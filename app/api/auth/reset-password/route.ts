@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { logger } from "@/utils/logger";
+import { isValidPassword } from "@/services/auth/utils";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +18,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json({ success: false, error: "Password must be at least 8 characters" }, { status: 400 });
+    if (!isValidPassword(newPassword)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Password does not meet requirements: 8+ chars, number, and special character" 
+      }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();

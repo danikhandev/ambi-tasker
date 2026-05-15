@@ -269,7 +269,7 @@ export default function TrackingPage() {
                             <a href={`tel:${provider.contact}`} className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-primary shadow-sm border border-border hover:scale-105 transition-all">
                                 <Phone className="w-5 h-5" />
                             </a>
-                            <Link href={`/messages/${provider.id}`} className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-text-hint shadow-sm border border-border hover:scale-105 transition-all">
+                            <Link href={`/messages/${provider.userId}`} className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-text-hint shadow-sm border border-border hover:scale-105 transition-all">
                                 <MessageSquare className="w-5 h-5" />
                             </Link>
                         </div>

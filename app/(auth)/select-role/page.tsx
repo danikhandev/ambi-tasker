@@ -101,6 +101,13 @@ export default function SelectRolePage() {
     }
   }, []);
 
+  // Redirect if already admin
+  useEffect(() => {
+    if (isAdmin) {
+      router.push("/admin/dashboard");
+    }
+  }, [isAdmin, router]);
+
   const handleRoleSelection = (role: RoleType) => {
     setSelectedRole(role);
     localStorage.setItem("serve_u_last_selected_role", role);
@@ -197,20 +204,6 @@ export default function SelectRolePage() {
                 isRTL={isRTL}
               />
             </motion.div>
-
-            {isAdmin && (
-              <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                <RoleCard
-                  role="admin"
-                  title={t("auth.asAdmin")}
-                  description={t("auth.asAdminDesc")}
-                  icon={ShieldCheck}
-                  isSelected={selectedRole === "admin"}
-                  onSelect={handleRoleSelection}
-                  isRTL={isRTL}
-                />
-              </motion.div>
-            )}
           </motion.div>
         </div>
 

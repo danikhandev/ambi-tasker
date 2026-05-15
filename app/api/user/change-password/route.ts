@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { userGuard } from "@/services/auth/guards";
+import { isValidPassword } from "@/services/auth/utils";
 import bcrypt from "bcryptjs";
 import { logger } from "@/utils/logger";
 
@@ -18,8 +19,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing password fields" }, { status: 400 });
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json({ success: false, error: "New password must be at least 8 characters" }, { status: 400 });
+    if (!isValidPassword(newPassword)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "New password must meet requirements: 8+ chars, number, and special character" 
+      }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { id: guard.user.id } });

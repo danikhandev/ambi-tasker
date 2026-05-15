@@ -141,12 +141,17 @@ export default function SupportChatWindow({
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5 px-2">
-                  <span className="text-[9px] font-black text-text-hint uppercase tracking-tighter">
+                  {!isOwn && isSupport && (
+                    <span className="text-[10px] font-black text-primary uppercase tracking-tighter">
+                      Ambi Tasker
+                    </span>
+                  )}
+                  <span className="text-[9px] font-bold text-text-hint uppercase tracking-widest opacity-60">
                     {format(new Date(msg.createdAt), "HH:mm")}
                   </span>
                   {!isOwn && isSupport && (
-                    <span className="text-[9px] font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded-full uppercase">
-                      Support Agent
+                    <span className="text-[8px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">
+                      Support
                     </span>
                   )}
                 </div>

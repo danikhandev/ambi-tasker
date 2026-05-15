@@ -25,6 +25,14 @@ interface Breadcrumb {
 
 const LEVEL_ORDER: LocationLevel[] = ["country", "province", "district", "city", "area"];
 
+const LEVEL_LABELS: Record<LocationLevel, string> = {
+  country: "Country",
+  province: "Province",
+  district: "District",
+  city: "Tehsil",
+  area: "Area"
+};
+
 export default function LocationsManagementPage() {
   const { showToast, setPageTitle } = useUI();
   
@@ -45,9 +53,11 @@ export default function LocationsManagementPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    setData([]);
     try {
       const parentId = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].id : null;
-      let url = `/api/admin/locations?type=${currentLevel === 'country' ? 'countries' : currentLevel + 's'}`;
+      let typeParam = currentLevel === 'country' ? 'countries' : (currentLevel === 'city' ? 'cities' : currentLevel + 's');
+      let url = `/api/admin/locations?type=${typeParam}`;
       if (parentId) {
         url += `&parentId=${parentId}`;
       }
@@ -107,14 +117,14 @@ export default function LocationsManagementPage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this location? Note: You cannot delete locations that have sub-locations or are in use.")) return;
+    if (!window.confirm(`Are you sure you want to delete this ${LEVEL_LABELS[currentLevel]}? Note: You cannot delete locations that have sub-locations or are in use.`)) return;
     
     setIsProcessing(true);
     try {
       const res = await fetch(`/api/admin/locations?type=${currentLevel}&id=${id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
-        showToast("Location deleted successfully", "success");
+        showToast(`${LEVEL_LABELS[currentLevel]} deleted successfully`, "success");
         fetchData();
       } else {
         throw new Error(json.error);
@@ -163,7 +173,7 @@ export default function LocationsManagementPage() {
       
       const json = await res.json();
       if (json.success) {
-        showToast(`${currentLevel} ${editingItem ? "updated" : "added"} successfully`, "success");
+        showToast(`${LEVEL_LABELS[currentLevel]} ${editingItem ? "updated" : "added"} successfully`, "success");
         fetchData();
         closeModal();
       } else {
@@ -230,12 +240,12 @@ export default function LocationsManagementPage() {
           onClick={() => openModal()}
           className="flex items-center gap-3 px-6 h-12 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-primary transition-all shadow-lg shadow-gray-950/20 active:scale-95"
         >
-          <Plus size={18} /> Add {currentLevel}
+          <Plus size={18} /> Add {LEVEL_LABELS[currentLevel]}
         </button>
       </div>
 
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar px-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar px-2">
         <button 
           onClick={() => handleBreadcrumbClick(-1)}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${breadcrumbs.length === 0 ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-muted text-text-secondary hover:bg-muted-foreground/10"}`}
@@ -258,7 +268,7 @@ export default function LocationsManagementPage() {
       <div className="bg-card rounded-[40px] border border-border overflow-hidden shadow-xl">
         <div className="p-6 border-b border-border bg-muted/20 flex justify-between items-center">
           <h3 className="text-sm font-bold text-foreground capitalize">
-            {currentLevel}s 
+            {LEVEL_LABELS[currentLevel]}s 
             <span className="text-text-hint font-medium ml-2">({data.length})</span>
           </h3>
           {currentLevel !== "area" && (
@@ -269,7 +279,7 @@ export default function LocationsManagementPage() {
           columns={columns} 
           data={data} 
           isLoading={loading} 
-          emptyDescription={`No ${currentLevel}s found. Add one to get started.`}
+          emptyDescription={`No ${LEVEL_LABELS[currentLevel]}s found. Add one to get started.`}
           onRowClick={currentLevel !== "area" ? handleRowClick : undefined}
         />
       </div>
@@ -277,7 +287,7 @@ export default function LocationsManagementPage() {
       {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={closeModal}
@@ -287,21 +297,39 @@ export default function LocationsManagementPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-card rounded-[40px] border border-border p-10 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-card rounded-[48px] border border-border p-10 shadow-2xl overflow-hidden"
             >
               <h2 className={`${unbounded.className} text-2xl font-black text-foreground mb-8 capitalize`}>
-                {editingItem ? "Edit" : "Add"} <span className="text-primary italic">{currentLevel}</span>
+                {editingItem ? "Edit" : "Add"} <span className="text-primary italic">{LEVEL_LABELS[currentLevel]}</span>
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">{currentLevel} Name</label>
-                  <input 
-                    required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full h-14 bg-muted/30 border border-border rounded-2xl px-6 text-sm font-bold focus:border-primary/30 focus:outline-none transition-all"
-                    placeholder={`e.g. ${currentLevel === 'country' ? 'Pakistan' : currentLevel === 'city' ? 'Haripur' : currentLevel === 'area' ? 'Shah Maqsood' : 'Name'}`}
-                    autoFocus
-                  />
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">{LEVEL_LABELS[currentLevel]} Name</label>
+                    {currentLevel === 'area' && !editingItem && (
+                      <span className="text-[9px] font-bold text-primary uppercase">Bulk Add Supported</span>
+                    )}
+                  </div>
+                  
+                  {currentLevel === 'area' && !editingItem ? (
+                    <div className="space-y-3">
+                      <textarea 
+                        required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                        className="w-full min-h-[120px] bg-muted/30 border border-border rounded-2xl p-6 text-sm font-bold focus:border-primary/30 focus:outline-none transition-all resize-none"
+                        placeholder="Enter area names separated by commas (e.g. Model Town, Gulberg, Defence)"
+                        autoFocus
+                      />
+                      <p className="text-[9px] text-text-hint italic">Separate multiple areas with commas to initialize them in bulk.</p>
+                    </div>
+                  ) : (
+                    <input 
+                      required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full h-14 bg-muted/30 border border-border rounded-2xl px-6 text-sm font-bold focus:border-primary/30 focus:outline-none transition-all"
+                      placeholder={`e.g. ${LEVEL_LABELS[currentLevel]}`}
+                      autoFocus
+                    />
+                  )}
                 </div>
                 
                 {currentLevel === 'country' && !editingItem && (
@@ -326,7 +354,7 @@ export default function LocationsManagementPage() {
                     className="flex-1 h-14 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                   >
                     {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                    {editingItem ? "Save Changes" : "Add Node"}
+                    {editingItem ? "Save Changes" : "Initialize Node"}
                   </button>
                 </div>
               </form>

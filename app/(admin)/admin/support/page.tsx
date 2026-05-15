@@ -90,7 +90,7 @@ export default function AdminSupportPage() {
                   conversationId={activeConv.id}
                   currentUserId={admin?.id || "unknown"}
                   role="ADMIN"
-                  userName={admin?.name || "Support Agent"}
+                  userName="Ambi Tasker"
                 />
               </div>
 

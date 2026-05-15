@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   Briefcase, Search, ShieldCheck, ShieldAlert, Star, MapPin, 
-  CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Eye, Verified, Globe, Zap, Image as ImageIcon, ImageOff, Camera
+  CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Eye, Verified, Globe, Zap, Image as ImageIcon, ImageOff, Camera, Plus, Mail, Lock, Phone, User, Landmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { unbounded } from "@/app/fonts";
@@ -31,6 +31,27 @@ export default function ProviderManagementPage() {
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Add Provider State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    professionalTitle: "",
+    districtId: "",
+    cityId: "",
+    areaId: "",
+    verificationStatus: "PENDING",
+    cnicNumber: ""
+  });
+
+  // Location data for modal
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [areas, setAreas] = useState<any[]>([]);
+
   // Image management state
   const [providerImages, setProviderImages] = useState<ProviderImages | null>(null);
   const [imagesLoading, setImagesLoading] = useState(false);
@@ -40,7 +61,60 @@ export default function ProviderManagementPage() {
   useEffect(() => {
     setPageTitle("Provider Matrix", "");
     fetchProviders();
+    fetchDistricts();
   }, [page, statusFilter, setPageTitle]);
+
+  const fetchDistricts = async () => {
+    try {
+      const res = await fetch("/api/locations?type=districts");
+      const json = await res.json();
+      if (json.success) setDistricts(json.data);
+    } catch (err) { console.error("Error fetching districts:", err); }
+  };
+
+  const fetchCities = async (districtId: string) => {
+    try {
+      const res = await fetch(`/api/locations?type=cities&parentId=${districtId}`);
+      const json = await res.json();
+      if (json.success) setCities(json.data);
+    } catch (err) { console.error("Error fetching cities:", err); }
+  };
+
+  const fetchAreas = async (cityId: string) => {
+    try {
+      const res = await fetch(`/api/locations?type=areas&parentId=${cityId}`);
+      const json = await res.json();
+      if (json.success) setAreas(json.data);
+    } catch (err) { console.error("Error fetching areas:", err); }
+  };
+
+  const handleCreateProvider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/admin/manage-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, role: "PROVIDER" })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast("Provider created successfully", "success");
+        setIsAddModalOpen(false);
+        fetchProviders();
+        setFormData({
+          name: "", email: "", password: "", phone: "", professionalTitle: "",
+          districtId: "", cityId: "", areaId: "", verificationStatus: "PENDING", cnicNumber: ""
+        });
+      } else {
+        throw new Error(json.error || "Failed to create provider");
+      }
+    } catch (error: any) {
+      showToast(error.message, "error");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   // Debounced search
   useEffect(() => {
@@ -292,28 +366,37 @@ export default function ProviderManagementPage() {
 
   return (
     <div className="space-y-10 pb-20">
-      <div className="flex flex-wrap items-center gap-4 mb-8">
-        <div className="relative group min-w-[300px]">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-hint/50 group-focus-within:text-primary transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search specialists, services, or locations..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-card border border-border rounded-[20px] focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm"
-          />
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex flex-wrap items-center gap-4 flex-1">
+          <div className="relative group min-w-[300px]">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-hint/50 group-focus-within:text-primary transition-colors" />
+            <input 
+              type="text" 
+              placeholder="Search specialists, services, or locations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-14 pr-6 py-4 bg-card border border-border rounded-[20px] focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm"
+            />
+          </div>
+          
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-6 py-4 bg-card border border-border rounded-[20px] text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="PENDING">Pending KYC</option>
+            <option value="VERIFIED">Verified Only</option>
+            <option value="REJECTED">Flagged Nodes</option>
+          </select>
         </div>
-        
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-6 py-4 bg-card border border-border rounded-[20px] text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:scale-95"
         >
-          <option value="ALL">All Statuses</option>
-          <option value="PENDING">Pending KYC</option>
-          <option value="VERIFIED">Verified Only</option>
-          <option value="REJECTED">Flagged Nodes</option>
-        </select>
+          <Plus size={16} /> New Provider
+        </button>
       </div>
 
       {/* Main Table */}
@@ -329,6 +412,198 @@ export default function ProviderManagementPage() {
         emptyTitle="No Professionals Detected"
         emptyDescription="System analysis did not reveal any matching workforce modules."
       />
+
+      {/* Add Provider Modal */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              onClick={() => setIsAddModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100]" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 m-auto w-full max-w-2xl h-fit max-h-[90vh] bg-card border border-border rounded-[48px] shadow-2xl z-[110] overflow-hidden flex flex-col"
+            >
+              <div className="p-10 border-b border-border bg-muted/30 flex justify-between items-center">
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                       <Plus size={24} />
+                    </div>
+                    <div>
+                       <h3 className={`${unbounded.className} text-xl font-black`}>Initialize <span className="text-primary italic">Professional</span></h3>
+                       <p className="text-[10px] font-bold text-text-hint uppercase tracking-widest mt-1">Direct system-level provider creation</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setIsAddModalOpen(false)} className="p-3 hover:bg-muted rounded-2xl transition-all">
+                    <XCircle size={24} className="text-text-hint" />
+                 </button>
+              </div>
+
+              <form onSubmit={handleCreateProvider} className="p-10 overflow-y-auto space-y-6" autoComplete="off">
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Full Name</label>
+                       <div className="relative group">
+                          <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                          <input 
+                            required type="text" placeholder="Provider Name"
+                            autoComplete="new-password"
+                            value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Email Address</label>
+                       <div className="relative group">
+                          <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                          <input 
+                            required type="email" placeholder="email@example.com"
+                            autoComplete="new-password"
+                            value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Initial Password</label>
+                       <div className="relative group">
+                          <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                          <input 
+                            required type="password" placeholder="••••••••"
+                            autoComplete="new-password"
+                            value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Phone Number</label>
+                       <div className="relative group">
+                          <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                          <input 
+                            required type="tel" placeholder="+92 3XX XXXXXXX"
+                            autoComplete="new-password"
+                            value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Professional Title / Specialization</label>
+                    <div className="relative group">
+                       <Briefcase className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                       <input 
+                         required type="text" placeholder="e.g., Expert Mechanic, Master Electrician"
+                         autoComplete="off"
+                         value={formData.professionalTitle} onChange={e => setFormData({...formData, professionalTitle: e.target.value})}
+                         className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                       />
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">CNIC Number</label>
+                       <div className="relative group">
+                          <Landmark className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+                          <input 
+                            type="text" placeholder="XXXXX-XXXXXXX-X"
+                            autoComplete="new-password"
+                            value={formData.cnicNumber} onChange={e => setFormData({...formData, cnicNumber: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl focus:border-primary transition-all font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Initial KYC Status</label>
+                       <div className="relative group">
+                          <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors z-10" />
+                          <select 
+                            value={formData.verificationStatus} 
+                            onChange={e => setFormData({...formData, verificationStatus: e.target.value})}
+                            className="w-full pl-12 pr-6 py-3.5 bg-muted/50 border border-border rounded-2xl text-xs font-bold focus:border-primary transition-all outline-none appearance-none"
+                          >
+                             <option value="PENDING">Pending (Standard)</option>
+                             <option value="VERIFIED">Verified (Direct Auth)</option>
+                             <option value="NOT_SUBMITTED">Not Submitted</option>
+                             <option value="REJECTED">Flagged / Rejected</option>
+                          </select>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">District</label>
+                       <select 
+                         required
+                         value={formData.districtId} 
+                         onChange={e => {
+                            setFormData({...formData, districtId: e.target.value, cityId: "", areaId: ""});
+                            fetchCities(e.target.value);
+                         }}
+                         className="w-full px-4 py-3.5 bg-muted/50 border border-border rounded-2xl text-xs font-bold focus:border-primary transition-all outline-none"
+                       >
+                          <option value="">Select</option>
+                          {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">City</label>
+                       <select 
+                         required
+                         disabled={!formData.districtId}
+                         value={formData.cityId} 
+                         onChange={e => {
+                            setFormData({...formData, cityId: e.target.value, areaId: ""});
+                            fetchAreas(e.target.value);
+                         }}
+                         className="w-full px-4 py-3.5 bg-muted/50 border border-border rounded-2xl text-xs font-bold focus:border-primary transition-all outline-none disabled:opacity-50"
+                       >
+                          <option value="">Select</option>
+                          {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-hint ml-2">Area</label>
+                       <select 
+                         required
+                         disabled={!formData.cityId}
+                         value={formData.areaId} 
+                         onChange={e => setFormData({...formData, areaId: e.target.value})}
+                         className="w-full px-4 py-3.5 bg-muted/50 border border-border rounded-2xl text-xs font-bold focus:border-primary transition-all outline-none disabled:opacity-50"
+                       >
+                          <option value="">Select</option>
+                          {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                       </select>
+                    </div>
+                 </div>
+
+                 <div className="pt-4 pb-2">
+                    <button 
+                      type="submit"
+                      disabled={isCreating}
+                      className="w-full py-5 bg-primary text-white rounded-[24px] font-black uppercase text-[12px] tracking-[0.3em] shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4"
+                    >
+                      {isCreating ? <Loader2 className="animate-spin w-5 h-5" /> : <ShieldCheck size={20} />}
+                      Authorize & Create Professional
+                    </button>
+                 </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Provider Details Sidebar */}
       <AnimatePresence>

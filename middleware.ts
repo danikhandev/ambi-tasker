@@ -36,9 +36,9 @@ export async function middleware(req: NextRequest) {
 
     try {
       const { payload } = await jwtVerify(userToken, JWT_SECRET_KEY);
-      // Ensure the role is PROVIDER (or ADMIN acting as provider)
-      // Exception: Allow USER role to access /provider/verify for onboarding/KYC
-      if (payload.role !== "PROVIDER" && payload.role !== "ADMIN" && pathname !== "/provider/verify") {
+      // Ensure the role is PROVIDER
+      // ADMIN role is restricted to admin routes only
+      if (payload.role !== "PROVIDER" && pathname !== "/provider/verify") {
         return NextResponse.redirect(new URL("/login?role=provider", req.url));
       }
     } catch (err) {

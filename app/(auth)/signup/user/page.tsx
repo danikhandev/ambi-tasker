@@ -28,6 +28,7 @@ export default function UserSignupPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -55,7 +56,6 @@ export default function UserSignupPage() {
       else if (!phoneRegex.test(value.replace(/\s/g, ""))) error = "Invalid number";
     } else if (name === "password") {
       if (value.length < 8) error = t("auth.passwordTooShort") || "Too short";
-      else if (!/[A-Z]/.test(value)) error = "Need 1 uppercase";
       else if (!/[0-9]/.test(value)) error = "Need 1 number";
       else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) error = "Need 1 special character (!@#$...)";
     } else if (name === "confirmPassword") {
@@ -66,20 +66,25 @@ export default function UserSignupPage() {
     if (error) setError("");
   };
 
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, (formData as any)[name]);
+  };
+
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
+    if (touched[name]) {
+      validateField(name, value);
     }
   };
 
   const handleNextStep = (e?: React.FormEvent) => {
     e?.preventDefault();
-    setError("");
+
+    // Mark all as touched
+    const allTouched: Record<string, boolean> = {};
+    Object.keys(formData).forEach(key => allTouched[key] = true);
+    setTouched(allTouched);
 
     // Validate all step 1 fields
     const errors: Record<string, string> = {};
@@ -88,7 +93,6 @@ export default function UserSignupPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = t("auth.invalidEmail") || "Invalid Email";
     if (!formData.phone.trim()) errors.phone = "Required";
     if (formData.password.length < 8) errors.password = t("auth.passwordTooShort") || "Too short";
-    else if (!/[A-Z]/.test(formData.password)) errors.password = "Need 1 uppercase letter";
     else if (!/[0-9]/.test(formData.password)) errors.password = "Need 1 number";
     else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) errors.password = "Need 1 special character (!@#$...)";
     if (formData.password !== formData.confirmPassword) errors.confirmPassword = t("auth.passwordsDoNotMatch") || "Mismatch";
@@ -142,7 +146,6 @@ export default function UserSignupPage() {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isPasswordValid = formData.password.length >= 8 &&
-    /[A-Z]/.test(formData.password) &&
     /[0-9]/.test(formData.password) &&
     /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password);
   const isStep1Invalid = !formData.firstName.trim() || 
@@ -238,13 +241,24 @@ export default function UserSignupPage() {
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      onBlur={() => validateField("firstName", formData.firstName)}
+                      onBlur={() => handleBlur("firstName")}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), document.getElementById('lastName')?.focus())}
                       required
-                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.firstName ? 'border-red-500' : 'border-border'}`}
+                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.firstName ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                       placeholder={isRTL ? "دانیال" : "Danyal"}
                     />
-                    {fieldErrors.firstName && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.firstName}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.firstName && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.firstName}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-text-hint block">
@@ -255,13 +269,24 @@ export default function UserSignupPage() {
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      onBlur={() => validateField("lastName", formData.lastName)}
+                      onBlur={() => handleBlur("lastName")}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), document.getElementById('email')?.focus())}
                       required
-                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.lastName ? 'border-red-500' : 'border-border'}`}
+                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.lastName ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                       placeholder={isRTL ? "خان" : "Khan"}
                     />
-                    {fieldErrors.lastName && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.lastName}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.lastName && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.lastName}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -274,14 +299,25 @@ export default function UserSignupPage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      onBlur={() => validateField("email", formData.email)}
+                      onBlur={() => handleBlur("email")}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), document.getElementById('phone')?.focus())}
                       required
                       dir="ltr"
-                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.email ? 'border-red-500' : 'border-border'}`}
+                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                       placeholder="danyal@email.com"
                     />
-                    {fieldErrors.email && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.email}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.email && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.email}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-text-hint block">
@@ -292,14 +328,25 @@ export default function UserSignupPage() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
-                      onBlur={() => validateField("phone", formData.phone)}
+                      onBlur={() => handleBlur("phone")}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), document.getElementById('password')?.focus())}
                       required
                       dir="ltr"
-                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.phone ? 'border-red-500' : 'border-border'}`}
+                      className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm ${fieldErrors.phone ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                       placeholder="0300 1234567"
                     />
-                    {fieldErrors.phone && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.phone}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.phone && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.phone}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -313,11 +360,11 @@ export default function UserSignupPage() {
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
-                        onBlur={() => validateField("password", formData.password)}
+                        onBlur={() => handleBlur("password")}
                         onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), document.getElementById('confirmPassword')?.focus())}
                         required
                         dir="ltr"
-                        className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm pe-12 ${fieldErrors.password ? 'border-red-500' : 'border-border'}`}
+                        className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm pe-12 ${fieldErrors.password ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                         placeholder="••••••••"
                       />
                       <button
@@ -334,19 +381,26 @@ export default function UserSignupPage() {
                         <span className={`text-[9px] font-black uppercase tracking-widest ${formData.password.length >= 8 ? "text-green-500" : "text-text-hint/50"}`}>8+ Chars</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {/[A-Z]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${/[A-Z]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Uppercase</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
                         {/[0-9]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
                         <span className={`text-[9px] font-black uppercase tracking-widest ${/[0-9]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Number</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Special (!@#)</span>
+                        {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Special (!@#)</span>
                       </div>
                     </div>
-                    {fieldErrors.password && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.password}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.password && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.password}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-text-hint block">
@@ -358,11 +412,11 @@ export default function UserSignupPage() {
                         type={showPassword ? "text" : "password"}
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                        onBlur={() => validateField("confirmPassword", formData.confirmPassword)}
+                        onBlur={() => handleBlur("confirmPassword")}
                         onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
                         required
                         dir="ltr"
-                        className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm pe-12 ${fieldErrors.confirmPassword ? 'border-red-500' : 'border-border'}`}
+                        className={`w-full px-6 py-4 rounded-2xl border bg-muted focus:bg-card transition-all font-bold text-sm pe-12 ${fieldErrors.confirmPassword ? 'border-red-500/50 focus:border-red-500' : 'border-border focus:border-primary/30'}`}
                         placeholder="••••••••"
                       />
                       <button
@@ -373,7 +427,18 @@ export default function UserSignupPage() {
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
-                    {fieldErrors.confirmPassword && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">{fieldErrors.confirmPassword}</p>}
+                    <AnimatePresence mode="wait">
+                      {fieldErrors.confirmPassword && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0, y: -5 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -5 }}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-1 mt-1"
+                        >
+                          <AlertCircle size={10} /> {fieldErrors.confirmPassword}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
