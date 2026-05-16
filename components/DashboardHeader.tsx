@@ -80,7 +80,7 @@ export default function DashboardHeader({
     // 1. If on Admin path, prioritize Admin info
     if (isAdminPath && admin) {
       return { 
-        displayName: admin.name || t("common.admin"), 
+        displayName: (admin.name && admin.name.toLowerCase().includes("primary admin")) ? t("common.superAdmin") : (admin.name || t("common.admin")), 
         displayRole: admin.role === 'SUPER_ADMIN' ? t("common.superAdmin") : t("common.subAdmin"), 
         profileImage: admin.avatar || "/admin/system-admin.jpg",
         email: admin.email
@@ -141,7 +141,7 @@ export default function DashboardHeader({
   } = useUI();
   const displayTitle = title || contextTitle;
   const displaySubtitle = subtitle || contextSubtitle;
-  const unreadMessages = useUnreadCount(user?.id || "");
+  const unreadMessages = useUnreadCount(isAdminView ? admin?.masterId : (user?.id || ""));
 
   return (
     <header
@@ -257,7 +257,7 @@ export default function DashboardHeader({
         <div className="flex items-center gap-4 md:gap-6">
           {/* Quick Actions Group */}
           <div className="flex items-center gap-1.5 md:gap-3">
-            {!isAdminView && user?.isUserSignUpForProvider && (
+            {!isAdminView && user?.isUserSignUpForProvider && user.role !== 'ADMIN' && (
               <div className="flex items-center gap-2">
                 {/* Active Perspective Badge */}
                 <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl border ${

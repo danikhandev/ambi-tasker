@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
     if (guard.error) return guard.error;
 
     let userId = guard.user.id;
-
-    // ─── Support Unification: If admin, use the master support ID ────
+    
+    // ─── Support Unification: All Admins act as 'Ambi Tasker' (Master Support) ────
     if (guard.user.role === "ADMIN") {
       const masterSupport = await prisma.user.findFirst({
         where: { role: "ADMIN" },
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, data: formatted });
+    return NextResponse.json({ success: true, data: formatted, masterId: userId });
   } catch (error: unknown) {
     logger.error("Conversations GET error:", error);
     return NextResponse.json(
@@ -170,6 +170,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         id: conversation.id,
+        authorizedId: currentId,
         otherUser: {
           id: otherUser.id,
           name: otherUser.role === "ADMIN" ? "Ambi Tasker" : otherUser.name,

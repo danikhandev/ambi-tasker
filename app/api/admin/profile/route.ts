@@ -30,7 +30,17 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Admin not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, admin });
+        const masterSupport = await prisma.user.findFirst({
+            where: { role: "ADMIN" },
+            orderBy: { createdAt: "asc" },
+            select: { id: true }
+        });
+
+        return NextResponse.json({ 
+            success: true, 
+            admin, 
+            masterId: masterSupport?.id 
+        });
     } catch (error: any) {
         console.error("Admin profile fetch error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

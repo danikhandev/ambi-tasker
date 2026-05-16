@@ -1125,7 +1125,8 @@
       "subAdmins": "Admins",
       "auditLogs": "Logs",
       "settings": "Settings",
-      "messaging": "Messages"
+      "messaging": "Messages",
+      "supportChat": "Support Chat"
     },
     "messaging": {
       "title": "System",

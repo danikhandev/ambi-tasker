@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   Users, Search, Filter, MoreVertical, Shield, ShieldAlert, CheckCircle2, XCircle, 
-  Trash2, Mail, Phone, Calendar, MapPin, Briefcase, Star, AlertCircle, Loader2, ArrowRight, Edit3, Save
+  Trash2, Mail, Phone, Calendar, MapPin, Briefcase, Star, AlertCircle, Loader2, ArrowRight, Edit3, Save, MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSound } from "@/contexts/SoundContext";
@@ -433,6 +433,14 @@ export default function UserManagementPage() {
                      </button>
                    </>
                  )}
+              </div>
+              <div className="p-8 pt-0 bg-card">
+                 <button 
+                  onClick={() => window.location.href = `/messages/${selectedUser.id}`}
+                  className="w-full py-5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95"
+                 >
+                   Open Support Chat <MessageSquare size={16} />
+                 </button>
               </div>
             </motion.div>
           </>

@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Headphones, X, MessageSquare, Send, Minus } from "lucide-react";
+import { Headphones, X, MessageSquare, Send, Minus, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import SupportChatWindow from "./SupportChatWindow";
 import { usePathname } from "next/navigation";
 import { unbounded } from "@/app/fonts";
+import Link from "next/link";
 
 /**
  * SupportFloatingWidget - A production-level floating chat widget
@@ -18,7 +19,9 @@ export default function SupportFloatingWidget() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [conversation, setConversation] = useState<any>(null);
+  const [view, setView] = useState<"list" | "chat">("list");
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Visibility Logic: Hide on admin pages, support page, and auth pages
@@ -30,21 +33,27 @@ export default function SupportFloatingWidget() {
                      pathname?.startsWith("/messages");
 
   useEffect(() => {
-    if (isOpen && user && !conversation) {
-      fetchConversation();
+    if (isOpen && user) {
+      fetchConversations();
     }
   }, [isOpen, user]);
 
-  const fetchConversation = async () => {
+  const fetchConversations = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/support/conversations");
       const json = await res.json();
-      if (json.success && json.data.length > 0) {
-        setConversation(json.data[0]);
+      if (json.success) {
+        setConversations(json.data);
+        if (json.data.length === 1) {
+          setSelectedId(json.data[0].id);
+          setView("chat");
+        } else if (json.data.length > 1) {
+          setView("list");
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch support conversation", err);
+      console.error("Failed to sync support inbox", err);
     } finally {
       setLoading(false);
     }
@@ -56,14 +65,16 @@ export default function SupportFloatingWidget() {
       const res = await fetch("/api/support/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: "Quick Support Widget", category: "GENERAL" })
+        body: JSON.stringify({ subject: "Direct Support Inquiry", category: "GENERAL" })
       });
       const json = await res.json();
       if (json.success) {
-        setConversation(json.data);
+        setConversations(prev => [json.data, ...prev]);
+        setSelectedId(json.data.id);
+        setView("chat");
       }
     } catch (err) {
-      console.error("Failed to start support conversation", err);
+      console.error("Failed to initialize support node", err);
     } finally {
       setLoading(false);
     }
@@ -84,37 +95,94 @@ export default function SupportFloatingWidget() {
             {/* Widget Header */}
             <div className="p-5 bg-gradient-to-r from-primary to-indigo-600 text-white flex items-center justify-between flex-none">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10">
-                  <Headphones size={20} />
-                </div>
+                {view === "chat" && conversations.length > 0 ? (
+                  <button 
+                    onClick={() => setView("list")}
+                    className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/30 transition-all"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                ) : (
+                  <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10">
+                    <Headphones size={20} />
+                  </div>
+                )}
                 <div>
-                  <h4 className="font-black text-sm tracking-tight">AmbiTasker Support</h4>
+                  <h4 className="font-black text-sm tracking-tight leading-none mb-1">AmbiTasker Support</h4>
                   <div className="flex items-center gap-1.5">
                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                     <p className="text-[9px] opacity-90 uppercase font-black tracking-widest">Active Assistant</p>
+                     <p className="text-[9px] opacity-90 uppercase font-black tracking-widest leading-none">
+                       {view === "chat" ? "Live Session" : "Active Assistant"}
+                     </p>
                   </div>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all"
-                aria-label="Minimize"
-              >
-                <Minus size={20} strokeWidth={3} />
-              </button>
+              <div className="flex items-center gap-1">
+                <Link 
+                  href="/messages" 
+                  className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all"
+                  title="Full Message Center"
+                >
+                  <MessageSquare size={16} />
+                </Link>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all"
+                  aria-label="Minimize"
+                >
+                  <Minus size={20} strokeWidth={3} />
+                </button>
+              </div>
             </div>
 
             {/* Widget Content */}
             <div className="flex-1 overflow-hidden relative bg-background/50">
-              {conversation ? (
+              {loading && conversations.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                </div>
+              ) : view === "chat" && selectedId ? (
                 <SupportChatWindow
-                  conversationId={conversation.id}
+                  conversationId={selectedId}
                   currentUserId={user.id}
                   role={user.role as any}
                   userName={user.firstName}
                   userImage={user.profileImage}
                   hideHeader={true}
                 />
+              ) : conversations.length > 0 ? (
+                <div className="h-full flex flex-col">
+                  <div className="flex-1 overflow-y-auto no-scrollbar">
+                    {conversations.map((conv, i) => (
+                      <button
+                        key={conv.id}
+                        onClick={() => {
+                          setSelectedId(conv.id);
+                          setView("chat");
+                        }}
+                        className="w-full p-4 border-b border-border/40 flex items-center gap-4 hover:bg-primary/5 transition-all group"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-text-hint shrink-0 group-hover:scale-105 transition-transform">
+                          <MessageSquare size={24} />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <h5 className="text-xs font-black uppercase tracking-tight text-foreground truncate">
+                            Support Ticket #{conv.id.slice(-6).toUpperCase()}
+                          </h5>
+                          <p className="text-[10px] font-bold text-text-hint truncate">
+                            {conv.subject || "General Support Inquiry"}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={startNewConversation}
+                    className="p-4 bg-muted/50 border-t border-border text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all"
+                  >
+                    Start New Inquiry
+                  </button>
+                </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center p-10 text-center">
                   <div className="relative mb-8">
@@ -128,19 +196,19 @@ export default function SupportFloatingWidget() {
                     {t("support.howCanWeHelp") || "How can we help?"}
                   </h5>
                   <p className="text-xs text-text-hint font-medium mb-10 max-w-[240px] mx-auto leading-relaxed">
-                    Connect with our support experts for real-time assistance with your account.
+                    Connect with our support experts for real-time assistance.
                   </p>
                   
                   <button
                     onClick={startNewConversation}
                     disabled={loading}
-                    className="w-full py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:shadow-2xl hover:shadow-primary/30 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-3 overflow-hidden group"
+                    className="w-full py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:shadow-2xl hover:shadow-primary/30 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-3"
                   >
                     {loading ? (
                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Send size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        <Send size={14} />
                         <span>Initialize Chat</span>
                       </>
                     )}

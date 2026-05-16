@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   Briefcase, Search, ShieldCheck, ShieldAlert, Star, MapPin, 
-  CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Eye, Verified, Globe, Zap, Image as ImageIcon, ImageOff, Camera, Plus, Mail, Lock, Phone, User, Landmark
+  CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Eye, Verified, Globe, Zap, Image as ImageIcon, ImageOff, Camera, Plus, Mail, Lock, Phone, User, Landmark, MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { unbounded } from "@/app/fonts";
@@ -723,10 +723,10 @@ export default function ProviderManagementPage() {
 
               <div className="p-8 border-t border-border bg-card">
                  <button 
-                  onClick={() => window.location.href = `/admin/messaging?to=${selectedProvider.id}`}
-                  className="w-full py-5 bg-muted hover:bg-muted/80 text-text-secondary rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95"
+                  onClick={() => window.location.href = `/messages/${selectedProvider.id}`}
+                  className="w-full py-5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95"
                  >
-                   Establish Secure Messaging Link <ArrowRight size={16} />
+                   Open Support Chat <MessageSquare size={16} />
                  </button>
               </div>
             </motion.div>

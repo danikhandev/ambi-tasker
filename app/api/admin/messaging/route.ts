@@ -26,8 +26,18 @@ export async function GET(req: NextRequest) {
 
     const formatted = conversations.map(c => ({
        id: c.id,
-       user: c.user,
-       provider: c.provider,
+       user: {
+         ...c.user,
+         name: (c.user.role === "ADMIN" && c.user.name && c.user.name.toLowerCase().includes("primary admin")) 
+           ? "Super Admin" 
+           : c.user.name
+       },
+       provider: {
+         ...c.provider,
+         name: (c.provider.role === "ADMIN" && c.provider.name && c.provider.name.toLowerCase().includes("primary admin")) 
+           ? "Super Admin" 
+           : c.provider.name
+       },
        lastMessageAt: c.lastMessageAt,
        messageCount: c._count.messages
     }));

@@ -32,6 +32,7 @@ interface UserProfile {
   districtId?: string;
   cityId?: string;
   areaId?: string;
+  role?: string;
 }
 
 export default function UserProfileTab({ user, onSuccess, onError }: { user: UserProfile, onSuccess: (msg: string) => void, onError?: (msg: string) => void }) {
@@ -264,7 +265,7 @@ export default function UserProfileTab({ user, onSuccess, onError }: { user: Use
         </div>
 
         <div className="flex gap-2">
-          {user && (
+          {user && user.role !== 'ADMIN' && (
             <button
               onClick={async () => {
                 if (!user.isUserSignUpForProvider) {

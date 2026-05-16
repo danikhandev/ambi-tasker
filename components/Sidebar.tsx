@@ -28,7 +28,8 @@ import {
   ShieldAlert,
   HelpCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -115,8 +116,10 @@ export default function Sidebar({ type }: SidebarProps) {
     {
       group: t("admin.sidebar.operations"),
       items: [
+        { icon: MessageCircle, label: t("admin.sidebar.supportChat"), href: USER_ROUTES.MESSAGES, requiredPerm: "reports.view" },
         { icon: ShieldCheck, label: t("admin.sidebar.verifications"), href: ADMIN_ROUTES.VERIFICATIONS, requiredPerm: "providers.manage" },
         { icon: ShieldAlert, label: t("admin.sidebar.reports"), href: ADMIN_ROUTES.REPORTS, requiredPerm: "reports.view" },
+        { icon: Activity, label: t("admin.sidebar.messaging"), href: ADMIN_ROUTES.MESSAGING, requiredPerm: "reports.view" },
         { icon: Bell, label: t("admin.sidebar.notifications"), href: ADMIN_ROUTES.NOTIFICATIONS, requiredPerm: "notifications.manage" },
       ]
     },

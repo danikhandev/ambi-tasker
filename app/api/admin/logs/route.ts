@@ -37,9 +37,19 @@ export async function GET(req: NextRequest) {
       prisma.adminLog.count(),
     ]);
 
+    const formattedLogs = logs.map(log => ({
+      ...log,
+      admin: log.admin ? {
+        ...log.admin,
+        name: (log.admin.name && log.admin.name.toLowerCase().includes("primary admin")) 
+          ? "Super Admin" 
+          : log.admin.name
+      } : null
+    }));
+
     return NextResponse.json({
       success: true,
-      data: logs,
+      data: formattedLogs,
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error: unknown) {

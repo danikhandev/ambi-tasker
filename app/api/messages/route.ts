@@ -71,12 +71,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
       }
     }
-
+    
     let where: any = {};
+
     if (bookingId) {
       where.bookingId = bookingId;
     } else if (conversationId) {
-      // OPTIMIZATION: Parallel fetch of conversation and master support
+      // Support Unification: Fetch conversation and check if it involves an Admin
       const [conv, masterSupport] = await Promise.all([
         prisma.conversation.findUnique({
           where: { id: conversationId },
@@ -132,8 +133,7 @@ export async function GET(req: NextRequest) {
     // Mark received messages as read
     await prisma.message.updateMany({
       where: {
-        bookingId,
-        conversationId,
+        ...(bookingId ? { bookingId } : { conversationId: conversationId as string }),
         receiverId: currentUserId,
         isRead: false,
       },

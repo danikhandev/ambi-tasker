@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(true);
+  const [authorizedId, setAuthorizedId] = useState<string | null>(null);
   const [otherUser, setOtherUser] = useState<{
     id: string;
     firstName: string;
@@ -32,7 +33,7 @@ export default function ChatPage() {
   } | null>(null);
 
   const loading = userLoading || adminLoading;
-  const currentId = admin?.id || user?.id;
+  const currentId = user?.id || admin?.id;
 
   const currentUserRole = admin 
     ? 'admin' 
@@ -67,6 +68,7 @@ export default function ChatPage() {
 
         if (json.success && json.data) {
           setConversation(json.data);
+          setAuthorizedId(json.data.authorizedId || null);
           setOtherUser({
             id: json.data.otherUser?.id || "",
             firstName: json.data.otherUser?.name?.split(' ')[0] || "User",
@@ -165,7 +167,7 @@ export default function ChatPage() {
           userName={otherUserName}
           userImage={otherUser.profileImage}
           isOnline={!!otherUser.isOnline}
-          currentUserId={currentId || ""}
+          currentUserId={authorizedId || currentId || ""}
           currentUserRole={currentUserRole as "consumer" | "provider" | "admin"}
           otherUserRole={otherUser.role}
         />

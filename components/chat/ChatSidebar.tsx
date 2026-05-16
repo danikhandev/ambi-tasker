@@ -50,10 +50,11 @@ export default function ChatSidebar({
   const [isOpen, setIsOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [masterId, setMasterId] = useState<string | null>(null);
   const { t, language } = useTranslation();
   const router = useRouter();
 
-  const currentId = admin?.id || user?.id;
+  const currentId = user?.id || admin?.id;
 
   const fetchConversations = useCallback(async () => {
     if (!currentId) return;
@@ -85,6 +86,7 @@ export default function ChatSidebar({
       }));
 
       setConversations(mapped);
+      if (json.masterId) setMasterId(json.masterId);
     } catch (err) {
       console.error("Chat fetch error:", err);
     } finally {
@@ -98,18 +100,34 @@ export default function ChatSidebar({
     fetchConversations();
 
     // ─── Real-time Subscriptions ─────────────────────────────────────
-    // Listen for new messages or conversation updates to keep list fresh
+    // Listen for new messages to keep list fresh
+    const subscriptionId = masterId || currentId;
     const channel = supabase
-      .channel(`chat-sidebar-${currentId}`)
+      .channel(`chat-sidebar-${subscriptionId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        () => fetchConversations()
+        { 
+          event: "INSERT", 
+          schema: "public", 
+          table: "messages"
+        },
+        (payload) => {
+          const newMessage = payload.new;
+          // Refresh if message is for us or from us
+          if (newMessage.receiver_id === subscriptionId || newMessage.sender_id === subscriptionId) {
+            fetchConversations();
+          }
+        }
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages" },
-        () => fetchConversations()
+        (payload) => {
+          const updated = payload.new;
+          if (updated.receiver_id === subscriptionId || updated.sender_id === subscriptionId) {
+            fetchConversations();
+          }
+        }
       )
       .subscribe();
 

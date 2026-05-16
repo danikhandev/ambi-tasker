@@ -22,7 +22,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ conv
       }
     });
 
-    return NextResponse.json({ success: true, data: messages });
+    const formatted = messages.map(msg => ({
+      ...msg,
+      sender: {
+        ...msg.sender,
+        name: (msg.sender.role === "ADMIN" && msg.sender.name && msg.sender.name.toLowerCase().includes("primary admin")) 
+          ? "Super Admin" 
+          : msg.sender.name
+      }
+    }));
+
+    return NextResponse.json({ success: true, data: formatted });
   } catch (error: unknown) {
     logger.error("Admin Messages GET error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch messages" }, { status: 500 });

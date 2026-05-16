@@ -20,6 +20,7 @@ interface Admin {
   avatar?: string;
   permissions?: string[];
   requiresPasswordChange?: boolean;
+  masterId?: string;
 }
 
 interface AdminContextType {
@@ -81,11 +82,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             const adminUser: Admin = {
               id: result.admin.id,
               email: result.admin.email,
-              name: result.admin.name === "AmbiTasker Primary Admin" ? "Super Admin" : (result.admin.name || "Administrator"),
+              name: (result.admin.name && result.admin.name.toLowerCase().includes("primary admin")) ? "Super Admin" : (result.admin.name || "Administrator"),
               role: result.admin.role,
               avatar: result.admin.avatar || "/admin/system-admin.jpg",
               permissions: result.admin.permissions || [],
               requiresPasswordChange: result.admin.requiresPasswordChange || false,
+              masterId: result.masterId
             };
             setAdmin(adminUser);
             localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(adminUser));
@@ -156,11 +158,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const adminUser: Admin = {
         id: result.admin.id,
         email: result.admin.email,
-        name: result.admin.name === "AmbiTasker Primary Admin" ? "Super Admin" : (result.admin.name || "Administrator"),
+        name: (result.admin.name && result.admin.name.toLowerCase().includes("primary admin")) ? "Super Admin" : (result.admin.name || "Administrator"),
         role: result.admin.role,
         avatar: "/admin/system-admin.jpg",
         permissions: result.admin.permissions || [],
         requiresPasswordChange: result.admin.requiresPasswordChange || false,
+        masterId: result.masterId
       };
 
       setAdmin(adminUser);

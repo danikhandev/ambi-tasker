@@ -142,6 +142,7 @@ export async function POST(req: NextRequest) {
           permissions: adminRecord.permissions || [],
           requiresPasswordChange: adminRecord.requiresPasswordChange || false,
         },
+        masterId: userRecord.id
       });
 
       // Set Admin Auth Cookie
