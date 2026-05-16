@@ -131,11 +131,33 @@ export default function ChatSidebar({
       )
       .subscribe();
 
+    // Listen for presence/status changes in profiles table
+    const statusChannel = supabase
+      .channel("global-user-presence")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          setConversations(prev => prev.map(conv => {
+            if (conv.otherUser && conv.otherUser.id === updated.id) {
+              return {
+                ...conv,
+                otherUser: { ...conv.otherUser, isOnline: updated.is_online }
+              } as Conversation;
+            }
+            return conv;
+          }));
+        }
+      )
+      .subscribe();
+
     // Poll as occasional fallback (less frequent)
-    const interval = setInterval(fetchConversations, 30000);
+    const interval = setInterval(fetchConversations, 60000); // 1 minute polling is enough with realtime
     
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(statusChannel);
       clearInterval(interval);
     };
   }, [currentId, fetchConversations]);

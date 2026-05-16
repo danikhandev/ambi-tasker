@@ -14,6 +14,8 @@ import EmptyState from "@/components/EmptyState";
 import { useUI } from "@/contexts/UIContext";
 import { useUser } from "@/contexts/UserContext";
 import LocationSelector from "@/components/LocationSelector";
+import OnlineDot from "@/components/OnlineDot";
+import { supabase } from "@/lib/supabaseClient";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -134,6 +136,25 @@ function SearchContent() {
     return () => clearTimeout(handler);
   }, [query]);
 
+  // Real-time Status Subscriptions
+  useEffect(() => {
+    const statusChannel = supabase
+      .channel("search-user-status")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          setFilteredWorkers(prev => prev.map(w => w.id === updated.id ? { ...w, isOnline: updated.is_online } : w));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+  }, []);
+
   // Fetch providers from backend via our new API
   useEffect(() => {
     const fetchFromInternalAPI = async () => {
@@ -247,6 +268,9 @@ function SearchContent() {
           <div className="flex items-end gap-3 -mt-14 mb-4 relative z-10">
             <div className="w-20 h-20 rounded-3xl border-4 border-card bg-muted overflow-hidden shadow-xl group-hover:scale-105 transition-transform relative">
               <Image src={worker.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${worker.id}`} fill sizes="80px" className="object-cover" alt={worker.name} />
+              <div className="absolute bottom-1 right-1 z-10">
+                <OnlineDot isOnline={worker.isOnline} size={14} />
+              </div>
             </div>
             <div className="pb-1">
               <h4 className="text-xs font-black text-foreground uppercase tracking-tight flex items-center gap-1.5">

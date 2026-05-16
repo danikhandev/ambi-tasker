@@ -113,7 +113,7 @@ export class KycEngine {
               idFaceDetected: idFaceDetected,
               faceMatchScore: similarityScore,
               ocrData: ocrResult as any,
-              rejectionReason: finalStatus === "REJECTED" ? message : null,
+              rejectionReason: (finalStatus as string) === "REJECTED" ? message : null,
               kycVerifiedAt: finalStatus === "VERIFIED" ? new Date() : null,
               kycData: {
                 extractedAt: new Date().toISOString(),
@@ -130,7 +130,7 @@ export class KycEngine {
                     confidence: idFaceResult.confidence
                 },
                 engine: "Google Cloud Vision v1 + Heuristic Matcher"
-              }
+              } as any
             }
           });
       }

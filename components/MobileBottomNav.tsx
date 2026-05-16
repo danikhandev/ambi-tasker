@@ -7,7 +7,7 @@ import {
     Home, Search, LayoutDashboard,
     MessageSquare, User, Hammer
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUser } from "@/contexts/UserContext";
 
@@ -18,60 +18,68 @@ import { useUser } from "@/contexts/UserContext";
  */
 const MobileBottomNav = React.memo(() => {
     const pathname = usePathname();
-    const { t, isRTL } = useTranslation();
+    const { t } = useTranslation();
     const { user, activePerspective } = useUser();
 
-    // Define navigation items based on role
+    // 1. Visibility Logic
+    const hideOn = ["/login", "/register", "/splash", "/provider/onboarding", "/onboarding"];
+    const shouldHide = hideOn.some(path => pathname?.startsWith(path));
+    if (shouldHide) return null;
+
+    // 2. Dynamic Navigation Items
     const navItems = [
-        { icon: Home, label: t("common.home") || "Home", href: "/" },
-        { icon: Search, label: t("header.services") || "Explore", href: "/search" },
+        { icon: Home, label: t("common.home"), href: "/" },
+        { icon: Search, label: t("header.services"), href: "/search" },
         {
             icon: activePerspective === "provider" ? Hammer : LayoutDashboard,
-            label: activePerspective === "provider" ? t("header.workerPanel") : t("nav.dashboard"),
+            label: activePerspective === "provider" ? "Panel" : "Hub",
             href: activePerspective === "provider" ? "/provider/dashboard" : "/user/dashboard"
         },
-        { icon: MessageSquare, label: t("nav.messages") || "Chat", href: "/messages" },
-        { icon: User, label: t("nav.profile") || "Profile", href: user ? "/user/profile" : "/login" }
+        { icon: MessageSquare, label: t("nav.messages"), href: "/messages" },
+        { icon: User, label: t("nav.profile"), href: user ? "/user/profile" : "/login" }
     ];
 
-    // Hide on specific pages where it might be intrusive
-    const hideOn = ["/login", "/register", "/splash", "/provider/onboarding", "/onboarding"];
-    if (hideOn.some(path => pathname?.startsWith(path))) return null;
-
     return (
-        <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
-            <nav className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[32px] px-4 py-3 flex items-center justify-between relative overflow-hidden">
-                {/* Background active pill decoration */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] safe-area-bottom">
+            <nav className="w-full bg-white/98 backdrop-blur-2xl border-t border-border/40 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] px-2 pt-2 pb-6 flex items-center justify-between relative overflow-hidden">
+                {/* Minimal Accent Line */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
 
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="relative flex flex-col items-center justify-center w-14 h-14 group"
+                            className="relative flex-1 flex flex-col items-center justify-center h-10 transition-all active:scale-95"
                         >
+                            <div className="relative z-10 flex flex-col items-center justify-center">
+                                <item.icon
+                                    size={isActive ? 20 : 18}
+                                    className={`transition-all duration-300 ${isActive ? "text-primary filter drop-shadow-[0_0_5px_rgba(var(--primary-rgb),0.3)]" : "text-text-hint opacity-50"}`}
+                                    strokeWidth={isActive ? 2.5 : 2}
+                                />
+                                <AnimatePresence>
+                                    {isActive && (
+                                        <motion.span
+                                            initial={{ opacity: 0, y: 4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 4 }}
+                                            className="text-[7px] font-black uppercase tracking-[0.1em] text-primary mt-1"
+                                        >
+                                            {item.label}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Active Indicator (Underline Dot) */}
                             {isActive && (
                                 <motion.div
-                                    layoutId="bottom-nav-active"
-                                    className="absolute inset-0 bg-primary/10 rounded-2xl border border-primary/5"
-                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                    layoutId="bottom-nav-indicator"
+                                    className="absolute bottom-0 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
+                                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
                                 />
-                            )}
-                            <item.icon
-                                size={22}
-                                className={`transition-all duration-300 ${isActive ? "text-primary scale-110" : "text-text-hint group-hover:text-text-secondary"}`}
-                                strokeWidth={isActive ? 2.5 : 2}
-                            />
-                            {isActive && (
-                                <motion.span
-                                    initial={{ opacity: 0, y: 5 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-[9px] font-black uppercase tracking-tighter text-primary mt-1"
-                                >
-                                    {item.label}
-                                </motion.span>
                             )}
                         </Link>
                     );

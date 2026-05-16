@@ -16,6 +16,11 @@ import CameraCapture from "../CameraCapture";
 import { unbounded } from "@/app/fonts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useChat } from "@/hooks/useChat";
+import { formatDistanceToNow } from 'date-fns';
+import { enUS } from 'date-fns/locale';
+// Fallback: 'ur' locale is missing in current date-fns version
+const ur = enUS;
+import { supabase } from "@/lib/supabaseClient";
 
 interface Attachment {
   id?: string;
@@ -33,7 +38,9 @@ interface ChatWindowProps {
   userName: string;
   userImage?: string;
   isOnline: boolean;
+  lastActiveAt?: string;
   currentUserId: string;
+  otherUserId: string;
   currentUserRole: "provider" | "consumer" | "admin";
   otherUserRole?: string;
   onToggleSidebar?: () => void;
@@ -44,7 +51,9 @@ export default function ChatWindow({
   userName,
   userImage,
   isOnline,
+  lastActiveAt,
   currentUserId,
+  otherUserId,
   currentUserRole,
   otherUserRole,
   onToggleSidebar,
@@ -56,6 +65,8 @@ export default function ChatWindow({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [unreadWhileScrolledUp, setUnreadWhileScrolledUp] = useState(0);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [liveLastActive, setLiveLastActive] = useState<string | undefined>(lastActiveAt);
+  const [liveIsOnline, setLiveIsOnline] = useState<boolean>(isOnline);
   const prevMessagesCount = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -118,6 +129,36 @@ export default function ChatWindow({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setUnreadWhileScrolledUp(0);
   };
+
+  // ─── Real-time Status Sync ──────────────────────────────────────
+  useEffect(() => {
+    setLiveIsOnline(isOnline);
+    setLiveLastActive(lastActiveAt);
+  }, [isOnline, lastActiveAt]);
+
+  useEffect(() => {
+    // ─── Real-time Status Subscriptions ──────────────────────────────
+    const statusChannel = supabase
+      .channel(`chat-header-status-${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.id === otherUserId) {
+            setLiveIsOnline(updated.is_online);
+            if (!updated.is_online) {
+              setLiveLastActive(updated.last_active_at);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+  }, [conversationId, otherUserId]);
 
   // ─── Mark as read when window is focused / conversation opens ─────
   useEffect(() => {
@@ -252,7 +293,7 @@ export default function ChatWindow({
                   <User2 className="w-6 h-6 text-gray-400" />
                 )}
               </div>
-              {isOnline && (
+              {liveIsOnline && (
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm" />
               )}
             </div>
@@ -269,10 +310,17 @@ export default function ChatWindow({
                     {t("chat.typing") || "typing..."}
                   </p>
                 ) : (
-                  <p className={`text-[11px] font-medium ${isOnline ? "text-green-500" : "text-gray-400"}`}>
-                    {isOnline 
+                  <p className={`text-[11px] font-medium ${liveIsOnline ? "text-green-500" : "text-gray-400"}`}>
+                    {liveIsOnline 
                       ? (t("chat.activeNow") || "Active Now") 
-                      : (otherUserRole === "ADMIN" ? "Support" : (t("chat.offline") || "Offline"))
+                      : (otherUserRole === "ADMIN" 
+                          ? "Support" 
+                          : liveLastActive 
+                            ? `Last seen ${formatDistanceToNow(new Date(liveLastActive), { 
+                                addSuffix: true,
+                                locale: language === 'ur' ? ur : enUS 
+                              })}`
+                            : (t("chat.offline") || "Offline"))
                     }
                   </p>
                 )}

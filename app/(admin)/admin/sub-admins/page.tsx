@@ -28,6 +28,8 @@ const ALL_PERMISSIONS = [
   { value: "reports.view", label: "View System Disputes" },
   { value: "reports.manage", label: "Resolve Case Files" },
   { value: "notifications.manage", label: "Orchestrate Broadcasts" },
+  { value: "admins.manage", label: "Nodal Authority Control" },
+  { value: "admins.logs", label: "Audit Log Surveillance" },
   { value: "settings.view", label: "View System Settings" },
   { value: "settings.manage", label: "Modify Base Config" },
 ];
@@ -49,8 +51,10 @@ export default function SubAdminManagementPage() {
     permissions: [] as string[]
   });
 
+  const [showConfirmDelete, setShowConfirmDelete] = useState<{id: string, email: string} | null>(null);
+
   useEffect(() => {
-    setPageTitle("Admin Control", "");
+    setPageTitle("Admin Control", "Regulate nodal authority and access clearace.");
     fetchAdmins();
   }, [setPageTitle]);
 
@@ -70,6 +74,11 @@ export default function SubAdminManagementPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name || !formData.email || (!selectedAdmin && !formData.password)) {
+      showToast("Identity verification failed: Missing mandatory fields", "error");
+      return;
+    }
+    
     setIsProcessing(true);
     try {
       const isNew = !selectedAdmin;
@@ -84,7 +93,7 @@ export default function SubAdminManagementPage() {
       });
       const json = await res.json();
       if (json.success) {
-        showToast(`Admin ${isNew ? 'registered' : 'updated'} successfully`, "success");
+        showToast(`Node ${isNew ? 'initialized' : 'synchronized'} successfully`, "success");
         fetchAdmins();
         setIsEditing(false);
       } else {
@@ -97,19 +106,20 @@ export default function SubAdminManagementPage() {
     }
   };
 
-  const handleDelete = async (id: string, email: string) => {
-    if (!window.confirm(`Permanently revoke access for ${email}?`)) return;
+  const handleDelete = async () => {
+    if (!showConfirmDelete) return;
     setIsProcessing(true);
     try {
       const res = await fetch("/api/admin/manage-admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "remove", targetId: id })
+        body: JSON.stringify({ action: "remove", targetId: showConfirmDelete.id })
       });
       const json = await res.json();
       if (json.success) {
-        showToast("Access revoked and node purged", "success");
+        showToast("Authority node purged and access revoked", "success");
         fetchAdmins();
+        setShowConfirmDelete(null);
       } else throw new Error(json.error);
     } catch (error: any) {
       showToast(error.message, "error");
@@ -181,7 +191,7 @@ export default function SubAdminManagementPage() {
            </button>
            {a.role !== 'SUPER_ADMIN' && (
              <button 
-              onClick={() => handleDelete(a.id, a.email)}
+              onClick={() => setShowConfirmDelete({ id: a.id, email: a.email })}
               className="p-2 hover:bg-red-50 text-text-hint hover:text-red-500 rounded-xl transition-all"
              >
                 <Trash2 size={16} />
@@ -331,6 +341,38 @@ export default function SubAdminManagementPage() {
                      )}
                    </button>
                 </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmDelete && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConfirmDelete(null)} className="fixed inset-0 bg-black/60 backdrop-blur-md z-[80]" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="fixed inset-0 m-auto w-full max-w-md h-fit bg-card border border-border rounded-[40px] shadow-2xl z-[90] p-10 text-center space-y-6"
+            >
+               <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto">
+                  <ShieldAlert size={40} />
+               </div>
+               <div className="space-y-2">
+                  <h3 className={`${unbounded.className} text-xl font-black`}>Revoke Authority?</h3>
+                  <p className="text-xs text-text-hint font-medium leading-relaxed">
+                    You are about to permanently purge the authority node for <span className="text-foreground font-black">{showConfirmDelete.email}</span>. This action is irreversible.
+                  </p>
+               </div>
+               <div className="flex gap-3 pt-4">
+                  <button onClick={() => setShowConfirmDelete(null)} className="flex-1 py-4 bg-muted rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-muted/80 transition-all">Cancel</button>
+                  <button 
+                    onClick={handleDelete}
+                    disabled={isProcessing}
+                    className="flex-1 py-4 bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
+                  >
+                    {isProcessing ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Purge Node'}
+                  </button>
+               </div>
             </motion.div>
           </>
         )}

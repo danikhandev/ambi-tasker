@@ -30,10 +30,10 @@ export async function GET(req: NextRequest) {
       },
       include: {
         user: {
-          select: { id: true, name: true, profileImage: true, isOnline: true, role: true },
+          select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true },
         },
         provider: {
-          select: { id: true, name: true, profileImage: true, isOnline: true, role: true },
+          select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true },
         },
         messages: {
           orderBy: { createdAt: "desc" },
@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
           avatar: otherUser.profileImage,
           isOnline: otherUser.isOnline,
           role: otherUser.role,
+          lastActiveAt: otherUser.lastActiveAt,
         },
         lastMessage: c.messages[0]?.messageText || "No messages yet",
         lastMessageAt: c.messages[0]?.createdAt || c.updatedAt,
@@ -143,8 +144,8 @@ export async function POST(req: NextRequest) {
         },
       },
       include: {
-        user: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true } },
-        provider: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true } },
+        user: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true } },
+        provider: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true } },
       },
     });
 
@@ -155,8 +156,8 @@ export async function POST(req: NextRequest) {
           providerId: convoProviderId,
         },
         include: {
-          user: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true } },
-          provider: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true } },
+          user: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true } },
+          provider: { select: { id: true, name: true, profileImage: true, isOnline: true, role: true, lastActiveAt: true } },
         },
       });
     }
@@ -177,6 +178,7 @@ export async function POST(req: NextRequest) {
           avatar: otherUser.profileImage,
           isOnline: otherUser.isOnline,
           role: otherUser.role,
+          lastActiveAt: otherUser.lastActiveAt,
         },
       },
     });

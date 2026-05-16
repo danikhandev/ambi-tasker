@@ -13,6 +13,8 @@ import AdminTable from "@/components/AdminTable";
 import { Skeleton } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
 import CircularFrame from "@/components/CircularFrame";
+import OnlineDot from "@/components/OnlineDot";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function UserManagementPage() {
   const { setPageTitle, showToast } = useUI();
@@ -40,6 +42,28 @@ export default function UserManagementPage() {
     }, 500);
     return () => clearTimeout(handler);
   }, [search]);
+
+  useEffect(() => {
+    // ─── Real-time Status Subscriptions ──────────────────────────────
+    const statusChannel = supabase
+      .channel("admin-user-status")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          setUsers(prev => prev.map(u => u.id === updated.id ? { ...u, isOnline: updated.is_online } : u));
+          if (selectedUser?.id === updated.id) {
+            setSelectedUser((prev: any) => ({ ...prev, isOnline: updated.is_online }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+  }, [selectedUser?.id]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -149,7 +173,12 @@ export default function UserManagementPage() {
       header: "User",
       accessor: (user: any) => (
         <div className="flex items-center gap-4">
-          <CircularFrame src={user.profileImage} alt={user.name[0]} size={42} border={true} />
+          <div className="relative">
+            <CircularFrame src={user.profileImage} alt={user.name[0]} size={42} border={true} />
+            <div className="absolute -bottom-0.5 -right-0.5 z-10">
+               <OnlineDot isOnline={user.isOnline} size={10} />
+            </div>
+          </div>
           <div className="flex flex-col">
             <span className="text-foreground font-black uppercase text-[11px] tracking-tight">{user.name}</span>
             <span className="text-text-hint text-[10px] font-bold lowercase">{user.email}</span>
@@ -278,8 +307,8 @@ export default function UserManagementPage() {
                 <div className="text-center space-y-6 mb-12">
                    <div className="relative inline-block">
                       <CircularFrame src={selectedUser.profileImage} alt={selectedUser.name[0]} size={120} border={true} className="mx-auto" />
-                      <div className={`absolute bottom-2 right-2 w-8 h-8 rounded-full border-4 border-card flex items-center justify-center ${selectedUser.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                         <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      <div className="absolute bottom-2 right-2">
+                         <OnlineDot isOnline={selectedUser.isOnline} size={24} />
                       </div>
                    </div>
                    

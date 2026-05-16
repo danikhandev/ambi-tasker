@@ -150,16 +150,16 @@ export default function DashboardHeader({
         : "bg-background/40 backdrop-blur-md border-b border-border/30"
         }`}
     >
-      <div className="relative h-[80px] px-4 md:px-8 lg:px-10 max-w-[1600px] mx-auto flex items-center justify-between gap-4 md:gap-6">
+      <div className="relative h-[56px] sm:h-[64px] md:h-[72px] lg:h-[80px] px-3 sm:px-4 md:px-8 lg:px-10 max-w-[1600px] mx-auto flex items-center justify-between gap-2 sm:gap-3 md:gap-6">
         {/* Left Side */}
-        <div className={`flex items-center gap-3 md:gap-8 ${isAdminView ? 'w-auto' : 'flex-1'}`}>
+        <div className={`flex items-center gap-2 sm:gap-3 md:gap-8 min-w-0 ${isAdminView ? 'w-auto' : 'flex-1'}`}>
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="lg:hidden w-10 h-10 flex items-center justify-center text-text-hint hover:text-primary bg-secondary/30 border border-border/40 rounded-xl transition-all"
+            className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center text-text-hint hover:text-primary bg-secondary/30 border border-border/40 rounded-xl transition-all flex-shrink-0"
             aria-label="Open Menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           {/* Brand Identity */}
@@ -192,22 +192,22 @@ export default function DashboardHeader({
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-4"
+              className="hidden md:flex items-center gap-4 min-w-0"
             >
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-col justify-center min-w-0">
                 {contextHighlight ? (
-                  <h1 className={`${unbounded.className} text-[20px] md:text-[28px] font-black text-foreground leading-none tracking-tight flex items-center gap-2 flex-wrap`}>
+                  <h1 className={`${unbounded.className} text-[18px] lg:text-[28px] font-black text-foreground leading-none tracking-tight flex items-center gap-2 flex-wrap`}>
                     <span className="opacity-40">{displayTitle}</span>
-                    <span className="bg-gradient-to-r from-primary via-indigo-600 to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x">
+                    <span className="bg-gradient-to-r from-primary via-indigo-600 to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x truncate">
                       {contextHighlight}
                     </span>
                   </h1>
                 ) : (
-                  <h1 className={`${unbounded.className} text-[20px] md:text-[28px] font-black text-foreground leading-none tracking-tight`}>
+                  <h1 className={`${unbounded.className} text-[18px] lg:text-[28px] font-black text-foreground leading-none tracking-tight truncate`}>
                     {displayTitle}
                   </h1>
                 )}
-                {displaySubtitle && <p className="text-[10px] md:text-[11px] font-black text-text-hint/60 uppercase tracking-[0.2em] mt-2">{displaySubtitle}</p>}
+                {displaySubtitle && <p className="text-[10px] md:text-[11px] font-black text-text-hint/60 uppercase tracking-[0.2em] mt-2 truncate">{displaySubtitle}</p>}
               </div>
             </motion.div>
           ) : null}
@@ -254,13 +254,13 @@ export default function DashboardHeader({
         )}
 
         {/* Right Side */}
-        <div className="flex items-center gap-4 md:gap-6">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-6 flex-shrink-0">
           {/* Quick Actions Group */}
-          <div className="flex items-center gap-1.5 md:gap-3">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3">
             {!isAdminView && user?.isUserSignUpForProvider && user.role !== 'ADMIN' && (
-              <div className="flex items-center gap-2">
-                {/* Active Perspective Badge */}
-                <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl border ${
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Active Perspective Badge — hidden on very small, compact on sm, full on md+ */}
+                <div className={`hidden md:flex items-center gap-2 px-3 lg:px-4 py-1.5 lg:py-2 rounded-2xl border ${
                   user.role === 'ADMIN'
                   ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-600"
                   : activePerspective === 'provider' 
@@ -277,11 +277,11 @@ export default function DashboardHeader({
 
                 <button
                   onClick={handleSwitchPerspective}
-                  className="flex items-center gap-2.5 group px-4 py-2 bg-secondary/30 hover:bg-primary rounded-2xl transition-all duration-400 border border-border/60 hover:border-primary shadow-sm hover:shadow-primary/20"
+                  className="flex items-center gap-1.5 sm:gap-2 group px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-secondary/30 hover:bg-primary rounded-xl sm:rounded-2xl transition-all duration-400 border border-border/60 hover:border-primary shadow-sm hover:shadow-primary/20"
                   aria-label={`${t("header.switchTo")} ${activePerspective === 'consumer' ? t("common.professional") : t("common.customer")} ${t("header.mode")}`}
                 >
                   <Repeat className="w-3.5 h-3.5 text-text-hint group-hover:text-white transition-all duration-300" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-text-secondary group-hover:text-white transition-colors">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-text-secondary group-hover:text-white transition-colors hidden sm:inline">
                     {activePerspective === 'consumer' ? t("header.proMode") : t("header.userMode")}
                   </span>
                 </button>
@@ -293,17 +293,17 @@ export default function DashboardHeader({
             {!isAdminView && (
               <Link
                 href="/messages"
-                className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40"
+                className="w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl sm:rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40"
                 aria-label={t("nav.messages")}
               >
-                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <MessageSquare className="w-4 h-4 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                 <AnimatePresence>
                   {unreadMessages > 0 && (
                     <motion.span
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-background shadow-md"
+                      className="absolute -top-1 -right-1 min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] bg-red-500 text-white text-[8px] sm:text-[9px] font-black rounded-full flex items-center justify-center px-0.5 sm:px-1 border-2 border-background shadow-md"
                     >
                       {unreadMessages > 99 ? "99+" : unreadMessages}
                     </motion.span>
@@ -322,30 +322,43 @@ export default function DashboardHeader({
           </div>
 
           {/* Separator */}
-          <div className="hidden md:block w-px h-10 bg-gradient-to-b from-transparent via-border to-transparent" />
+          <div className="hidden md:block w-px h-8 lg:h-10 bg-gradient-to-b from-transparent via-border to-transparent" />
 
           {/* User Profile */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => { setShowProfileMenu(!showProfileMenu); }}
-              className="flex items-center gap-4 group p-1.5 pr-3 bg-secondary/30 hover:bg-secondary/50 rounded-2xl border border-border/40 transition-all active:scale-95"
+              className="flex items-center gap-2 sm:gap-3 md:gap-4 group p-1 sm:p-1.5 sm:pr-2 md:pr-3 bg-secondary/30 hover:bg-secondary/50 rounded-xl sm:rounded-2xl border border-border/40 transition-all active:scale-95"
               aria-label="Account menu"
             >
               <div className="relative">
                 {profileImage && !profileImage.includes("dicebear.com") ? (
-                  <CircularFrame
-                    src={profileImage}
-                    alt={displayName}
-                    size={42}
-                    border={true}
-                    className="group-hover:ring-4 ring-primary/10 transition-all shadow-md"
-                  />
+                  <>
+                    <div className="hidden sm:block">
+                      <CircularFrame
+                        src={profileImage}
+                        alt={displayName}
+                        size={42}
+                        border={true}
+                        className="group-hover:ring-4 ring-primary/10 transition-all shadow-md"
+                      />
+                    </div>
+                    <div className="block sm:hidden">
+                      <CircularFrame
+                        src={profileImage}
+                        alt={displayName}
+                        size={32}
+                        border={true}
+                        className="group-hover:ring-2 ring-primary/10 transition-all shadow-sm"
+                      />
+                    </div>
+                  </>
                 ) : (
-                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-md group-hover:shadow-lg group-hover:border-primary/20 transition-all">
-                    <User2 className="w-5 h-5 text-primary" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-md group-hover:shadow-lg group-hover:border-primary/20 transition-all">
+                    <User2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-background rounded-full z-10 shadow-sm" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-background rounded-full z-10 shadow-sm" />
               </div>
 
               {/* Hide name text if it's already in the main title to avoid duplication */}

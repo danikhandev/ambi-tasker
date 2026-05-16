@@ -13,6 +13,7 @@ import Image from "next/image";
 import Logo from "./ui/Logo";
 import Brand from "./ui/Brand";
 import CircularFrame from "./CircularFrame";
+import OnlineDot from "./OnlineDot";
 import { SERVICES_LIST, type ServiceItem } from "@/constants/services";
 import NotificationBell from "./notifications/NotificationBell";
 import BrandText from "./BrandText";
@@ -275,7 +276,7 @@ export default function Header() {
           : "bg-white border-b border-border/20 shadow-sm"
           }`}
       >
-        <nav className="max-w-[1440px] mx-auto px-6 md:px-12 py-3">
+        <nav className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Logo & Branding - Grouped as one unit */}
             <div className="flex-none flex items-center">
@@ -629,7 +630,9 @@ export default function Header() {
                                <User2 className="w-4 h-4" />
                              </div>
                            )}
-                           <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary border-2 border-white rounded-full shadow-sm" />
+                           <div className="absolute -top-0.5 -right-0.5 z-10">
+                              <OnlineDot isOnline={true} size={10} />
+                           </div>
                         </div>
                       </button>
 
@@ -712,25 +715,25 @@ export default function Header() {
             </div>
 
             {/* Mobile Toggle & Search */}
-            <div className="flex items-center gap-3 lg:hidden">
+            <div className="flex items-center gap-2 sm:gap-3 lg:hidden">
               <button
                 onClick={toggleLanguage}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted/40 border border-border"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl bg-muted/40 border border-border"
               >
-                <span className="text-[10px] font-black text-primary">{language === "en" ? "اردو" : "EN"}</span>
+                <span className="text-[9px] sm:text-[10px] font-black text-primary">{language === "en" ? "اردو" : "EN"}</span>
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="w-12 h-12 flex items-center justify-center rounded-[18px] bg-foreground text-background shadow-md border border-border/10"
+                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl sm:rounded-[18px] bg-foreground text-background shadow-md border border-border/10"
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
                     <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-                      <X className="w-6 h-6" />
+                      <X className="w-5 h-5 sm:w-6 sm:h-6" />
                     </motion.div>
                   ) : (
                     <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-                      <Menu className="w-6 h-6" />
+                      <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
                     </motion.div>
                   )}
                 </AnimatePresence>

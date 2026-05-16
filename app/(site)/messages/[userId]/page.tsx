@@ -30,6 +30,7 @@ export default function ChatPage() {
     email: string;
     isOnline?: boolean;
     role?: string;
+    lastActiveAt?: string;
   } | null>(null);
 
   const loading = userLoading || adminLoading;
@@ -76,7 +77,8 @@ export default function ChatPage() {
             profileImage: json.data.otherUser?.avatar || "",
             email: "",
             isOnline: json.data.otherUser?.isOnline,
-            role: json.data.otherUser?.role
+            role: json.data.otherUser?.role,
+            lastActiveAt: json.data.otherUser?.lastActiveAt
           });
         } else {
           setError(json.error || "User not found or unavailable");
@@ -167,7 +169,9 @@ export default function ChatPage() {
           userName={otherUserName}
           userImage={otherUser.profileImage}
           isOnline={!!otherUser.isOnline}
+          lastActiveAt={otherUser.lastActiveAt}
           currentUserId={authorizedId || currentId || ""}
+          otherUserId={otherUserId}
           currentUserRole={currentUserRole as "consumer" | "provider" | "admin"}
           otherUserRole={otherUser.role}
         />

@@ -5,8 +5,8 @@ import { AdminProvider } from "./AdminContext";
 import { NotificationProvider } from "./NotificationContext";
 import { UIProvider } from "./UIContext";
 import { SettingsProvider } from "./SettingsContext";
-
 import { SoundProvider } from "./SoundContext";
+import PresenceHandler from "@/components/PresenceHandler";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -25,6 +25,7 @@ export default function Providers({ children }: ProvidersProps) {
           <SoundProvider>
             <UIProvider>
               <NotificationProvider>
+                <PresenceHandler />
                 {children}
               </NotificationProvider>
             </UIProvider>
