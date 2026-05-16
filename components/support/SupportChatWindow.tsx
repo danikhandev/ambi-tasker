@@ -78,10 +78,10 @@ export default function SupportChatWindow({
     <div className="flex flex-col h-full bg-background border-l border-border">
       {/* Support Header */}
       {!hideHeader && (
-        <div className="px-6 py-4 border-b border-border bg-card/50 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-              <Headphones size={24} />
+        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/50 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+              <Headphones className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <h3 className="font-bold text-foreground flex items-center gap-2">
@@ -94,15 +94,15 @@ export default function SupportChatWindow({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2.5 hover:bg-muted text-text-hint rounded-xl transition-all">
-              <Info size={20} />
+            <button className="p-2 sm:p-2.5 hover:bg-muted text-text-hint rounded-xl transition-all">
+              <Info className="w-5 h-5" />
             </button>
           </div>
         </div>
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 space-y-4 sm:space-y-6">
         {isLoading && (
           <div className="flex justify-center py-10">
             <RefreshCw className="animate-spin text-primary/40" />
@@ -132,8 +132,8 @@ export default function SupportChatWindow({
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
             >
-              <div className={`max-w-[80%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
-                <div className={`px-5 py-3.5 rounded-[24px] text-sm shadow-sm ${
+              <div className={`max-w-[85%] sm:max-w-[80%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
+                <div className={`px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-[20px] sm:rounded-[24px] text-sm shadow-sm ${
                   isOwn 
                     ? "bg-primary text-white rounded-tr-none" 
                     : "bg-card border border-border rounded-tl-none"
@@ -173,7 +173,7 @@ export default function SupportChatWindow({
       </div>
 
       {/* Input Area (Instagram Style) */}
-      <div className="bg-background/80 backdrop-blur-xl px-4 py-3 border-t border-border sticky bottom-0 z-30">
+      <div className="bg-background/80 backdrop-blur-xl px-3 py-2.5 sm:px-4 sm:py-3 border-t border-border sticky bottom-0 z-30 safe-area-bottom">
         {selectedFiles.length > 0 && (
            <div className="flex gap-2 overflow-x-auto pb-3 mb-2 no-scrollbar">
               {selectedFiles.map((f, i) => (
@@ -184,10 +184,10 @@ export default function SupportChatWindow({
               ))}
            </div>
         )}
-        <div className="flex items-center gap-2 max-w-5xl mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 max-w-5xl mx-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full transition-all shrink-0"
+            className="p-2 sm:p-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full transition-all shrink-0"
           >
             <Paperclip className="w-5 h-5" />
             <input ref={fileInputRef} type="file" className="hidden" multiple onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} />
@@ -200,9 +200,9 @@ export default function SupportChatWindow({
               onKeyDown={handleKeyDown}
               placeholder={t("chat.typeMessage") || "Describe your issue..."}
               rows={1}
-              className="flex-1 px-4 py-2.5 text-[15px] bg-transparent border-none focus:ring-0 outline-none resize-none max-h-32 no-scrollbar font-medium placeholder:text-text-hint/50"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-2.5 text-[14px] sm:text-[15px] bg-transparent border-none focus:ring-0 outline-none resize-none max-h-24 sm:max-h-32 no-scrollbar font-medium placeholder:text-text-hint/50"
             />
-            <button className="mr-1 p-2 text-text-hint hover:text-primary transition-all">
+            <button className="mr-1 p-1.5 sm:p-2 text-text-hint hover:text-primary transition-all">
               <Smile className="w-5 h-5" />
             </button>
           </div>

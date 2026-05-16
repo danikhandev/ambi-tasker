@@ -20,6 +20,7 @@ export const ADMIN_ROUTES = {
   PROVIDERS: "/admin/providers",
   BOOKINGS: "/admin/bookings",
   SERVICES: "/admin/services",
+  APPLICATIONS: "/admin/applications",
   LOCATIONS: "/admin/locations",
   PAYMENTS: "/admin/payments",
   ANALYTICS: "/admin/analytics",

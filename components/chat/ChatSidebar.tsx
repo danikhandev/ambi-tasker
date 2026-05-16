@@ -193,7 +193,7 @@ export default function ChatSidebar({
 
   return (
     <div
-      className={`h-full bg-card border-r border-border flex flex-col transition-all duration-500 ease-in-out relative z-10 ${isOpen ? "w-80 xl:w-96" : "w-24"
+      className={`h-full bg-card border-r border-border flex flex-col transition-all duration-500 ease-in-out relative z-10 ${isOpen ? "w-full md:w-80 xl:w-96" : "w-24"
         }`}
     >
       <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-10">

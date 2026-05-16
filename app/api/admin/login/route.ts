@@ -73,7 +73,11 @@ export async function POST(req: NextRequest) {
       }
 
       // ─── Generate and Send OTP ──────────────────────────────────
-      const otpResult = await createAndSendOtp(normalizedEmail, "ADMIN_LOGIN", adminRecord.name);
+      const displayAdminName = (adminRecord.name && adminRecord.name.toLowerCase().includes("primary admin")) 
+        ? "Super Admin" 
+        : (adminRecord.name || "Administrator");
+        
+      const otpResult = await createAndSendOtp(normalizedEmail, "ADMIN_LOGIN", displayAdminName);
 
       if (!otpResult.success) {
         return NextResponse.json({ success: false, error: "Failed to deliver security code" }, { status: 500 });

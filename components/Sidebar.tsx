@@ -29,7 +29,8 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Activity
+  Activity,
+  FileText
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -103,6 +104,7 @@ export default function Sidebar({ type }: SidebarProps) {
         { icon: Briefcase, label: t("admin.sidebar.providers"), href: ADMIN_ROUTES.PROVIDERS, requiredPerm: "providers.view" },
         { icon: BookOpen, label: t("admin.sidebar.bookings"), href: ADMIN_ROUTES.BOOKINGS, requiredPerm: "bookings.view" },
         { icon: Layers, label: t("admin.sidebar.services"), href: ADMIN_ROUTES.SERVICES, requiredPerm: "services.view" },
+        { icon: FileText, label: "Applications", href: ADMIN_ROUTES.APPLICATIONS, requiredPerm: "services.view" },
         { icon: MapPin, label: t("admin.sidebar.locations"), href: ADMIN_ROUTES.LOCATIONS, requiredPerm: "locations.view" },
       ]
     },
@@ -177,13 +179,21 @@ export default function Sidebar({ type }: SidebarProps) {
       {/* Mobile Sidebar Drawer */}
       <AnimatePresence>
         {isMobileOpen && (
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed inset-y-0 left-0 w-[280px] z-50 flex flex-col lg:hidden ${type === 'admin' ? 'bg-secondary text-white' : 'bg-card border-e border-border/40'}`}
-          >
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] lg:hidden"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className={`fixed inset-y-0 left-0 w-[280px] z-[100] flex flex-col lg:hidden ${type === 'admin' ? 'bg-secondary text-white' : 'bg-card border-e border-border/40'}`}
+            >
             <div className="p-8 flex items-center justify-between">
               <Brand size="md" />
               <button onClick={() => setIsMobileOpen(false)} className="p-2 hover:bg-muted rounded-xl transition-all">
@@ -231,6 +241,7 @@ export default function Sidebar({ type }: SidebarProps) {
               </button>
             </div>
           </motion.aside>
+          </>
         )}
       </AnimatePresence>
 

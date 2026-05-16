@@ -158,6 +158,8 @@ model ProviderProfile {
   longitude          Float?             @map("longitude")
   locationUpdatedAt  DateTime?          @map("location_updated_at")
 
+  serviceApplications ServiceApplication[]
+
   @@map("providers")
 }
 
@@ -242,6 +244,22 @@ model Service {
   createdAt   DateTime  @default(now())
   
   bookings    Booking[]
+}
+
+model ServiceApplication {
+  id          String          @id @default(uuid())
+  providerId  String          @map("provider_id")
+  provider    ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name        String
+  category    String
+  price       Float
+  description String
+  status      String          @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?     @map("rejection_reason")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@map("service_applications")
 }
 
 model Booking {

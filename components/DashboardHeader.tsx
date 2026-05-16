@@ -219,7 +219,7 @@ export default function DashboardHeader({
         </div>
 
         {isAdminView && displayTitle && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center w-full max-w-[28%] pointer-events-none z-10">
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center w-full max-w-[40%] pointer-events-none z-10">
             <h1 className={`${unbounded.className} text-[14px] md:text-[16px] lg:text-[18px] font-black uppercase tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3`}>
               <div className="hidden xl:flex gap-1">
                 <div className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
@@ -288,7 +288,7 @@ export default function DashboardHeader({
               </div>
             )}
 
-            {!isAdminView && <ProviderStatusToggle />}
+
 
             {!isAdminView && (
               <Link
@@ -396,14 +396,14 @@ export default function DashboardHeader({
 
                   <div className="space-y-1">
                     <Link
-                      href={isAdminView ? ADMIN_ROUTES.USERS : USER_ROUTES.PROFILE}
+                      href={isAdminView ? ADMIN_ROUTES.USERS : (activePerspective === 'provider' ? PROVIDER_ROUTES.PROFILE : USER_ROUTES.PROFILE)}
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all"
                     >
                       <User2 size={18} className="opacity-70 group-hover:opacity-100" /> {isAdminView ? t("header.adminOverview") : t("header.myProfile")}
                     </Link>
                     <Link
-                      href={isAdminView ? ADMIN_ROUTES.SETTINGS : USER_ROUTES.SETTINGS}
+                      href={isAdminView ? ADMIN_ROUTES.SETTINGS : (activePerspective === 'provider' ? PROVIDER_ROUTES.SETTINGS : USER_ROUTES.SETTINGS)}
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all"
                     >
@@ -411,7 +411,7 @@ export default function DashboardHeader({
                     </Link>
                     {!isAdminView && (
                         <Link
-                            href={USER_ROUTES.NOTIFICATIONS}
+                            href={activePerspective === 'provider' ? PROVIDER_ROUTES.NOTIFICATIONS : USER_ROUTES.NOTIFICATIONS}
                             onClick={() => setShowProfileMenu(false)}
                             className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all relative"
                         >

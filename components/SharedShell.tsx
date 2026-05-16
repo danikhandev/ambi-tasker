@@ -83,9 +83,7 @@ export default function SharedShell({ children }: { children: React.ReactNode })
       <div className="flex flex-1 w-full overflow-hidden">
         {/* 2. Unified Sidebar for App Pages */}
         {isAppPage && (
-          <div className="hidden lg:block h-full">
-            <Sidebar type={sidebarType} />
-          </div>
+          <Sidebar type={sidebarType} />
         )}
 
         <div className={`flex-1 flex flex-col h-full w-full relative ${isAppPage ? 'overflow-hidden' : 'overflow-y-auto'}`}>

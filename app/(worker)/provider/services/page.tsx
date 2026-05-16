@@ -79,7 +79,34 @@ export default function AddServicePage() {
     };
 
     const [status, setStatus] = useState<SubmissionStatus>("idle");
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+    const [requestForm, setRequestForm] = useState({ name: "", category: "", price: "", description: "" });
     const pendingCount = requests.filter(r => r.service_status === "paused").length;
+
+    const handleRequestService = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmittingRequest(true);
+        try {
+            const res = await fetch("/api/provider/services/apply", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestForm)
+            });
+            const json = await res.json();
+            if (json.success) {
+                showToast("Application submitted successfully!", "success");
+                setShowRequestModal(false);
+                setRequestForm({ name: "", category: "", price: "", description: "" });
+            } else {
+                throw new Error(json.error || "Failed to submit application");
+            }
+        } catch (error: any) {
+            showToast(error.message, "error");
+        } finally {
+            setIsSubmittingRequest(false);
+        }
+    };
 
     return (
         <div className="flex-1 bg-muted/50 min-h-screen">
@@ -94,13 +121,21 @@ export default function AddServicePage() {
                         <h1 className={`${unbounded.className} text-2xl font-black text-foreground`}>{t("providerServices.title")}</h1>
                         <p className="text-sm text-text-secondary font-medium mt-1">{t("providerServices.subtitle")}</p>
                     </div>
-                    <Link
-                        href="/provider/services/add"
-                        className="flex items-center gap-2 px-5 py-3 bg-primary text-white font-bold text-sm rounded-2xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all"
-                    >
-                        <Plus className="w-4 h-4" />
-                        {t("providerServices.addNew")}
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowRequestModal(true)}
+                            className="flex items-center gap-2 px-5 py-3 bg-card border border-border text-text-secondary font-bold text-sm rounded-2xl hover:bg-muted transition-all"
+                        >
+                            Request New Type
+                        </button>
+                        <Link
+                            href="/provider/services/add"
+                            className="flex items-center gap-2 px-5 py-3 bg-primary text-white font-bold text-sm rounded-2xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all"
+                        >
+                            <Plus className="w-4 h-4" />
+                            {t("providerServices.addNew")}
+                        </Link>
+                    </div>
                 </motion.div>
 
                 {/* Success Toast */}
@@ -207,6 +242,55 @@ export default function AddServicePage() {
                     )}
                 </div>
             </div>
+
+            {/* Request New Service Modal */}
+            <AnimatePresence>
+                {showRequestModal && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRequestModal(false)} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[60]" />
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="fixed inset-0 m-auto w-full max-w-lg h-fit bg-card border border-border rounded-[40px] shadow-2xl z-[70] overflow-hidden"
+                        >
+                            <form onSubmit={handleRequestService}>
+                                <div className="p-8 border-b border-border flex justify-between items-center bg-muted/20">
+                                    <div className="space-y-1">
+                                        <h3 className={`${unbounded.className} text-xl font-black`}>Request New <span className="text-primary italic">Service</span></h3>
+                                        <p className="text-[10px] font-black text-text-hint uppercase tracking-widest">Submit for Admin Approval</p>
+                                    </div>
+                                    <button type="button" onClick={() => setShowRequestModal(false)} className="p-3 hover:bg-muted rounded-2xl transition-all text-text-hint hover:text-foreground">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="p-8 space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Service Name</label>
+                                        <input required value={requestForm.name} onChange={e => setRequestForm({...requestForm, name: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Solar Panel Cleaning" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Suggested Category</label>
+                                        <input required value={requestForm.category} onChange={e => setRequestForm({...requestForm, category: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Maintenance" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Estimated Price (Rs.)</label>
+                                        <input type="number" required value={requestForm.price} onChange={e => setRequestForm({...requestForm, price: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. 1500" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Description</label>
+                                        <textarea required value={requestForm.description} onChange={e => setRequestForm({...requestForm, description: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none resize-none h-24 no-scrollbar" placeholder="Describe the service scope..." />
+                                    </div>
+                                </div>
+                                <div className="p-8 bg-muted/20 border-t border-border flex gap-3">
+                                    <button type="button" onClick={() => setShowRequestModal(false)} className="flex-1 py-4 bg-white text-text-secondary border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest">Cancel</button>
+                                    <button type="submit" disabled={isSubmittingRequest} className="flex-[2] py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
+                                        {isSubmittingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" /> Submit Application</>}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
