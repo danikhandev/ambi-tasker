@@ -15,42 +15,105 @@ export async function GET(req: NextRequest) {
     const guard = await userGuard(req);
     if (guard.error) return guard.error;
 
+    let currentUserId = guard.user.id;
+    if (guard.user.role === "ADMIN") {
+      const masterSupport = await prisma.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" },
+      });
+      if (masterSupport) currentUserId = masterSupport.id;
+    }
+
     const { searchParams } = new URL(req.url);
     const bookingId = searchParams.get("bookingId");
-    const after = searchParams.get("after"); // For polling: get messages after this timestamp
+    const conversationId = searchParams.get("conversationId");
+    const after = searchParams.get("after");
 
-    if (!bookingId) {
+    if (!bookingId && !conversationId) {
       return NextResponse.json(
-        { success: false, error: "bookingId is required" },
+        { success: false, error: "bookingId or conversationId is required" },
         { status: 400 }
       );
     }
 
-    // Verify user belongs to this booking
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { provider: true },
-    });
+    let conversation;
+    if (bookingId) {
+      // Verify user belongs to this booking
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { provider: true },
+      });
 
-    if (!booking) {
-      return NextResponse.json(
-        { success: false, error: "Booking not found" },
-        { status: 404 }
-      );
+      if (!booking) {
+        return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
+      }
+
+      const isCustomer = booking.userId === guard.user.id;
+      const isProvider = booking.provider.userId === guard.user.id;
+      const isAdmin = guard.user.role === "ADMIN";
+
+      if (!isCustomer && !isProvider && !isAdmin) {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+      }
+    } else if (conversationId) {
+      conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+
+      if (!conversation) {
+        return NextResponse.json({ success: false, error: "Conversation not found" }, { status: 404 });
+      }
+
+      const isPart = conversation.userId === currentUserId || conversation.providerId === currentUserId;
+      const isAdmin = guard.user.role === "ADMIN";
+
+      if (!isPart && !isAdmin) {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+      }
     }
 
-    const isCustomer = booking.userId === guard.user.id;
-    const isProvider = booking.provider.userId === guard.user.id;
-    const isAdmin = guard.user.role === "ADMIN";
+    let where: any = {};
+    if (bookingId) {
+      where.bookingId = bookingId;
+    } else if (conversationId) {
+      // OPTIMIZATION: Parallel fetch of conversation and master support
+      const [conv, masterSupport] = await Promise.all([
+        prisma.conversation.findUnique({
+          where: { id: conversationId },
+          include: { user: { select: { role: true, id: true } }, provider: { select: { role: true, id: true } } }
+        }),
+        prisma.user.findFirst({
+          where: { role: "ADMIN" },
+          orderBy: { createdAt: "asc" },
+          select: { id: true }
+        })
+      ]);
 
-    if (!isCustomer && !isProvider && !isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "You are not part of this conversation" },
-        { status: 403 }
-      );
+      const isSupport = conv?.user?.role === "ADMIN" || conv?.provider?.role === "ADMIN";
+      if (isSupport) {
+        const otherPartyId = conv?.user?.role === "ADMIN" ? conv?.providerId : conv?.userId;
+        where = {
+          OR: [
+            { conversationId: conversationId },
+            {
+              AND: [
+                { senderId: otherPartyId },
+                { receiverId: masterSupport?.id || "N/A" }
+              ]
+            },
+            {
+              AND: [
+                { senderId: masterSupport?.id || "N/A" },
+                { receiverId: otherPartyId }
+              ]
+            }
+          ]
+        };
+      } else {
+        where.conversationId = conversationId;
+      }
     }
 
-    const where: any = { bookingId };
     if (after) {
       where.createdAt = { gt: new Date(after) };
     }
@@ -70,7 +133,8 @@ export async function GET(req: NextRequest) {
     await prisma.message.updateMany({
       where: {
         bookingId,
-        receiverId: guard.user.id,
+        conversationId,
+        receiverId: currentUserId,
         isRead: false,
       },
       data: { isRead: true },
@@ -98,63 +162,95 @@ export async function POST(req: NextRequest) {
     const guard = await userGuard(req);
     if (guard.error) return guard.error;
 
-    const body = await req.json();
-    const { bookingId, message } = body;
+    let currentUserId = guard.user.id;
+    if (guard.user.role === "ADMIN") {
+      const masterSupport = await prisma.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" },
+      });
+      if (masterSupport) currentUserId = masterSupport.id;
+    }
 
-    if (!bookingId || !message?.trim()) {
+    const body = await req.json();
+    const { bookingId, conversationId, message } = body;
+
+    if ((!bookingId && !conversationId) || !message?.trim()) {
       return NextResponse.json(
-        { success: false, error: "bookingId and message are required" },
+        { success: false, error: "Target (booking or conversation) and message are required" },
         { status: 400 }
       );
     }
 
-    // Verify booking exists and user is part of it
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { provider: true },
-    });
+    let targetConversationId = conversationId;
+    let receiverId: string;
 
-    if (!booking) {
-      return NextResponse.json(
-        { success: false, error: "Booking not found" },
-        { status: 404 }
-      );
-    }
+    if (bookingId) {
+      // Verify booking exists and user is part of it
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { provider: true },
+      });
 
-    const isCustomer = booking.userId === guard.user.id;
-    const isProvider = booking.provider.userId === guard.user.id;
-
-    if (!isCustomer && !isProvider) {
-      return NextResponse.json(
-        { success: false, error: "You are not part of this conversation" },
-        { status: 403 }
-      );
-    }
-
-    // Determine receiver
-    const receiverId = isCustomer ? booking.provider.userId : booking.userId;
-
-    // Ensure conversation exists
-    const conversation = await prisma.conversation.upsert({
-      where: {
-        userId_providerId: isCustomer 
-          ? { userId: guard.user.id, providerId: booking.provider.userId } 
-          : { userId: booking.userId, providerId: guard.user.id }
-      },
-      update: { lastMessageAt: new Date() },
-      create: {
-        userId: isCustomer ? guard.user.id : booking.userId,
-        providerId: isCustomer ? booking.provider.userId : guard.user.id,
-        lastMessageAt: new Date()
+      if (!booking) {
+        return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
       }
-    });
+
+      const isCustomer = booking.userId === currentUserId;
+      const isProvider = booking.provider.userId === currentUserId;
+
+      if (!isCustomer && !isProvider) {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+      }
+
+      receiverId = isCustomer ? booking.provider.userId : booking.userId;
+
+      // Sync conversation
+      const conversation = await prisma.conversation.upsert({
+        where: {
+          userId_providerId: isCustomer 
+            ? { userId: currentUserId, providerId: booking.provider.userId } 
+            : { userId: booking.userId, providerId: currentUserId }
+        },
+        update: { lastMessageAt: new Date() },
+        create: {
+          userId: isCustomer ? currentUserId : booking.userId,
+          providerId: isCustomer ? booking.provider.userId : currentUserId,
+          lastMessageAt: new Date()
+        }
+      });
+      targetConversationId = conversation.id;
+    } else {
+      // Use conversationId
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+
+      if (!conversation) {
+        return NextResponse.json({ success: false, error: "Conversation not found" }, { status: 404 });
+      }
+
+      const isUser = conversation.userId === currentUserId;
+      const isProvider = conversation.providerId === currentUserId;
+
+      if (!isUser && !isProvider) {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+      }
+
+      receiverId = isUser ? conversation.providerId : conversation.userId;
+      
+      // Update lastMessageAt
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: new Date() }
+      });
+    }
 
     const newMessage = await prisma.message.create({
       data: {
-        senderId: guard.user.id,
+        senderId: currentUserId,
         receiverId,
-        bookingId,
-        conversationId: conversation.id,
+        bookingId: bookingId || null,
+        conversationId: targetConversationId,
         messageText: message.trim(),
         isRead: false,
       },

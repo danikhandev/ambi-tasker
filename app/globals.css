@@ -1102,4 +1102,16 @@ input, select, textarea {
 .revealed {
   opacity: 1;
   transform: translateY(0);
-}
+}
+/* Mobile Production Utilities */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.h-dvh {
+  height: 100dvh;
+}
+
+.min-h-dvh {
+  min-height: 100dvh;
+}

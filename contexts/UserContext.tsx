@@ -162,12 +162,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (isSuperAdminEmail) {
           setActivePerspective("admin");
           localStorage.setItem(PERSPECTIVE_STORAGE_KEY, "admin");
-          
-          // Force redirect for Admin to dashboard
-          if (path === "/" || path === "/login" || path === "/signup" || path === "/search") {
-            window.location.href = "/admin/dashboard";
-            return;
-          }
         } else if (savedUser) {
           try {
             const pUser = JSON.parse(savedUser);
@@ -175,18 +169,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             
             if (userRole === "PROVIDER") {
               setActivePerspective("provider");
-              // If on landing or auth pages, go to provider dashboard
-              if (path === "/" || path === "/login" || path === "/signup") {
-                window.location.href = "/provider/dashboard";
-                return;
-              }
             } else if (userRole === "USER" || userRole === "CUSTOMER") {
               setActivePerspective("consumer");
-              // If on login/signup, go to user dashboard
-              if (path === "/login" || path === "/signup") {
-                window.location.href = "/user/dashboard";
-                return;
-              }
             }
           } catch (e) {}
 

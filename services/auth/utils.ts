@@ -13,7 +13,7 @@ if (!JWT_SECRET_RAW) {
   if (process.env.NODE_ENV === 'production') {
     console.warn("⚠️ WARNING: JWT_SECRET environment variable is missing. Authentication will fail at runtime.");
   }
-  JWT_SECRET_RAW = "serve_u_dev_jwt_secret_fallback_placeholder";
+  JWT_SECRET_RAW = "serve_u_dev_jwt_secret_fallback";
 }
 
 export const JWT_SECRET_KEY = new TextEncoder().encode(JWT_SECRET_RAW);

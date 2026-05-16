@@ -24,7 +24,10 @@ export default function SupportFloatingWidget() {
   // Visibility Logic: Hide on admin pages, support page, and auth pages
   const isAdminPage = pathname?.startsWith("/admin");
   const isSupportPage = pathname === "/support";
-  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/register");
+  const isAuthPage = pathname?.startsWith("/login") || 
+                     pathname?.startsWith("/signup") || 
+                     pathname?.startsWith("/register") ||
+                     pathname?.startsWith("/messages");
 
   useEffect(() => {
     if (isOpen && user && !conversation) {

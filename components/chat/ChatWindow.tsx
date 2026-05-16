@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Paperclip, Mic, CheckCheck, Check,
   Menu, MoreVertical, Phone, Video, Smile, Clock,
-  AlertCircle, RefreshCw, User2, FileText, X, Camera
+  AlertCircle, RefreshCw, User2, FileText, X, Camera,
+  CheckCircle2, ChevronLeft, Loader2, Headphones
 } from "lucide-react";
 import Image from "next/image";
 import FileAttachmentPreview from "./FileAttachmentPreview";
@@ -34,6 +35,7 @@ interface ChatWindowProps {
   isOnline: boolean;
   currentUserId: string;
   currentUserRole: "provider" | "consumer" | "admin";
+  otherUserRole?: string;
   onToggleSidebar?: () => void;
 }
 
@@ -44,6 +46,7 @@ export default function ChatWindow({
   isOnline,
   currentUserId,
   currentUserRole,
+  otherUserRole,
   onToggleSidebar,
 }: ChatWindowProps) {
   const [draftMessage, setDraftMessage] = useState("");
@@ -72,9 +75,17 @@ export default function ChatWindow({
     currentUserId,
   });
 
-  // ─── Auto-scroll to bottom on new messages ────────────────────────
+  // ─── Auto-scroll to bottom (Smart Scroll) ────────────────────────
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // Only auto-scroll if user is already at the bottom (with 100px tolerance)
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+    
+    if (isAtBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isTyping]);
 
   // ─── Mark as read when window is focused / conversation opens ─────
@@ -102,10 +113,10 @@ export default function ChatWindow({
   const handleSend = useCallback(async () => {
     if (!draftMessage.trim() && selectedFiles.length === 0) return;
     const text = draftMessage.trim();
-    
+
     // In a real app, we would upload selectedFiles here
     console.log("Sending message with files:", selectedFiles);
-    
+
     setDraftMessage("");
     setSelectedFiles([]);
     sendTyping(false);
@@ -180,83 +191,92 @@ export default function ChatWindow({
 
   return (
     <>
-      <div className="h-full flex flex-col bg-card overflow-hidden">
-        {/* Header */}
-        <div className="bg-card/80 backdrop-blur-xl border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-4">
+      <div className="h-full flex flex-col bg-[#F3F4F6] relative overflow-hidden">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
+        {/* Sticky Header - Premium Design */}
+        <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3">
             {onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className="lg:hidden p-2.5 hover:bg-muted text-text-hint rounded-2xl transition-all active:scale-95 duration-200"
+                className="lg:hidden p-2 hover:bg-gray-100 text-gray-500 rounded-full transition-colors"
               >
-                <Menu className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
             )}
             <div className="relative group cursor-pointer">
-              <div className="w-12 h-12 rounded-2xl bg-secondary p-0.5 transition-transform hover:scale-105 duration-300 relative overflow-hidden flex items-center justify-center">
-                {userImage && !userImage.includes("dicebear.com") ? (
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border ${otherUserRole === "ADMIN" ? "bg-primary border-primary/20" : "bg-gradient-to-tr from-gray-100 to-gray-200 border-gray-200"}`}>
+                {otherUserRole === "ADMIN" ? (
+                  <Headphones className="w-5 h-5 text-white" />
+                ) : userImage && !userImage.includes("dicebear.com") ? (
                   <Image
                     src={userImage}
                     alt={userName}
                     fill
-                    className="rounded-[14px] object-cover bg-card"
+                    className="object-cover"
                   />
                 ) : (
-                  <User2 className="w-6 h-6 text-text-hint opacity-40" />
+                  <User2 className="w-6 h-6 text-gray-400" />
                 )}
               </div>
               {isOnline && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-xl shadow-sm" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm" />
               )}
             </div>
-            <div>
-              <h2 className={`${unbounded.className} text-base font-bold text-foreground leading-none mb-1`}>
-                {userName}
+            <div className="flex flex-col">
+              <h2 className={`${unbounded.className} text-[15px] font-bold text-gray-900 leading-tight flex items-center gap-1.5`}>
+                {otherUserRole === "ADMIN" ? "Ambi Tasker" : userName}
+                {otherUserRole === "ADMIN" && (
+                  <CheckCircle2 className="w-4 h-4 text-primary fill-primary/10" />
+                )}
               </h2>
               <div className="flex items-center gap-1.5">
-                {isTyping ? (
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
+                {isTyping && otherUserRole !== "ADMIN" ? (
+                  <p className="text-[11px] font-semibold text-primary animate-pulse italic">
                     {t("chat.typing") || "typing..."}
                   </p>
                 ) : (
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${isOnline ? "text-green-500" : "text-text-hint"}`}>
-                    {isOnline ? (t("chat.activeNow") || "Active Now") : (t("chat.offline") || "Offline")}
+                  <p className={`text-[11px] font-medium ${isOnline ? "text-green-500" : "text-gray-400"}`}>
+                    {isOnline 
+                      ? (t("chat.activeNow") || "Active Now") 
+                      : (otherUserRole === "ADMIN" ? "Support" : (t("chat.offline") || "Offline"))
+                    }
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Socket connection indicator */}
-            <div
-              className={`w-2 h-2 rounded-full transition-colors ${isConnected ? "bg-green-400" : "bg-amber-400"}`}
-              title={isConnected ? "Real-time connected" : "Reconnecting..."}
-            />
-            <button className="hidden md:flex p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border active:scale-95 duration-200">
+          <div className="flex items-center gap-1">
+            <button className="p-2.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all">
               <Phone size={20} />
             </button>
-            <button className="hidden md:flex p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border active:scale-95 duration-200">
+            <button className="p-2.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all">
               <Video size={20} />
             </button>
-            <div className="w-px h-6 bg-gray-100 mx-2 hidden md:block" />
-            <button className="p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border active:scale-95 duration-200">
+            <button className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-all">
               <MoreVertical size={20} />
             </button>
           </div>
         </div>
 
-        {/* Message Area */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8 bg-background">
-          {isLoading && (
-            <div className="py-8 text-center">
-              <div className="inline-flex items-center gap-2 text-xs text-text-hint font-medium">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                {t("chat.loadingMessages")}
-              </div>
+        {/* Message List - Dynamic Scrolling Area */}
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-4 px-4 py-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200">
+          {!isConnected && (
+            <div className="mx-auto bg-amber-50 text-amber-700 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border border-amber-100 flex items-center gap-2 animate-pulse w-fit">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              {t("chat.reconnecting") || "Reconnecting..."}
             </div>
           )}
 
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
+            </div>
+          )}
+          
           {messages.map((msg, index) => {
             const isOwn = msg.senderId === currentUserId;
             const prevMsg = messages[index - 1];
@@ -281,27 +301,29 @@ export default function ChatWindow({
                   </div>
                 )}
 
-                <div className={`flex gap-4 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                    {!isOwn && (
-                      <div className="flex-shrink-0 w-10">
-                        {showAvatar && (
-                          <div className="w-10 h-10 rounded-xl bg-secondary p-0.5 relative overflow-hidden flex items-center justify-center">
-                            {userImage && !userImage.includes("dicebear.com") ? (
-                              <Image
-                                src={userImage}
-                                alt={userName}
-                                fill
-                                className="rounded-[9px] object-cover bg-card"
-                              />
-                            ) : (
-                              <User2 className="w-5 h-5 text-text-hint opacity-40" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                <div className={`flex items-end gap-3 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
+                  {!isOwn && (
+                    <div className="flex-shrink-0 mb-1">
+                      {showAvatar ? (
+                        <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
+                          {userImage && !userImage.includes("dicebear.com") ? (
+                            <Image
+                              src={userImage}
+                              alt={userName}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <User2 className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-8" /> // Spacer for grouped messages
+                      )}
+                    </div>
+                  )}
 
-                  <div className={`max-w-[75%] md:max-w-[60%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
+                  <div className={`flex flex-col ${isOwn ? "items-end ml-auto" : "items-start mr-auto"} max-w-[80%] md:max-w-[70%]`}>
                     {msg.attachments?.map(att => (
                       <div key={att.id} className="mb-2 shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300 border border-border">
                         <FileAttachmentPreview attachment={att} onPreview={() => setSelectedMedia(att)} />
@@ -310,12 +332,12 @@ export default function ChatWindow({
 
                     {msg.content && (
                       <div
-                        className={`px-5 py-3.5 rounded-[24px] text-sm leading-relaxed shadow-sm ${
+                        className={`relative px-4 py-2.5 shadow-sm text-[15px] leading-relaxed transition-all duration-200 ${
                           isOwn
                             ? isFailed
-                              ? "bg-red-50 text-red-700 border border-red-100 rounded-tr-none"
-                              : "bg-primary text-white rounded-tr-none shadow-primary/10 font-medium"
-                            : "bg-card text-foreground border border-border rounded-tl-none font-medium"
+                              ? "bg-red-50 text-red-700 border border-red-100 rounded-2xl rounded-br-md"
+                              : "bg-primary text-white rounded-2xl rounded-br-md"
+                            : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md"
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">
@@ -336,7 +358,7 @@ export default function ChatWindow({
                       <span className="text-[10px] font-black text-text-hint uppercase tracking-tighter">
                         {formatTime(msg.createdAt)}
                       </span>
-                      {isOwn && <StatusIcon status={msg.status} />}
+                      {isOwn && otherUserRole !== "ADMIN" && <StatusIcon status={msg.status} />}
                     </div>
                   </div>
                 </div>
@@ -433,76 +455,63 @@ export default function ChatWindow({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area (Instagram Style) */}
-        <div className="bg-background/80 backdrop-blur-xl px-4 py-3 border-t border-border sticky bottom-0 z-30">
-          <div className="flex items-center gap-2 max-w-5xl mx-auto">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full transition-all shrink-0"
-              title={t("chat.attachFile") || "Attach File"}
-            >
-              <Paperclip className="w-5 h-5" />
-              <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileSelect} />
-            </button>
-            <div className="flex-1 relative group flex items-center bg-secondary/50 rounded-[28px] border border-border/40 focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all">
-              <button
-                onClick={() => setShowCamera(true)}
-                className="ml-2 p-2 text-text-hint hover:text-primary transition-all active:scale-95"
-                title={t("chat.openCamera") || "Open Camera"}
-              >
-                <Camera className="w-5 h-5" />
-              </button>
+        {/* Sticky Composer - Premium Production Input */}
+        <div className="bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 py-3 sticky bottom-0 z-30">
+          <div className="max-w-5xl mx-auto flex flex-col gap-2">
+            {/* Minimal Encryption Note */}
+            <div className="flex items-center justify-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+              <Clock size={8} className="text-gray-400" />
+              <span className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.2em]">{t("chat.endToEndEncrypted") || "Secured"}</span>
+            </div>
+
+            <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-[24px] px-3 py-1.5 focus-within:bg-white focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all">
+              {/* Action Icons - Left Group */}
+              <div className="flex items-center gap-0.5 pb-1">
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all"
+                >
+                  <Paperclip className="w-5 h-5" />
+                  <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileSelect} />
+                </button>
+                <button 
+                  onClick={() => setShowCamera(true)}
+                  className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all"
+                >
+                  <Camera className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Multiline Input Field */}
               <textarea
                 value={draftMessage}
                 onChange={handleDraftChange}
                 onKeyDown={handleKeyDown}
                 placeholder={t("chat.typeMessage") || "Message..."}
                 rows={1}
-                className="flex-1 px-3 py-2.5 text-[15px] bg-transparent border-none focus:ring-0 outline-none resize-none max-h-32 no-scrollbar font-medium placeholder:text-text-hint/50"
+                className="flex-1 bg-transparent border-none focus:ring-0 outline-none resize-none max-h-32 py-2 text-[15px] font-medium placeholder:text-gray-400 no-scrollbar"
               />
-              <button
-                className="mr-1 p-2 text-text-hint hover:text-primary transition-all"
-                title={t("chat.addEmoji") || "Add Emoji"}
-              >
-                <Smile className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="flex items-center shrink-0">
-              <AnimatePresence mode="wait">
-                {draftMessage.trim() ? (
-                  <motion.button
-                    key="send"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    onClick={handleSend}
-                    className="text-primary font-bold text-sm px-3 hover:opacity-80 transition-opacity"
-                  >
-                    {t("common.send") || "Send"}
-                  </motion.button>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <motion.button
-                      key="mic"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      onClick={() => setShowVoiceRecorder(true)}
-                      className="p-2 text-text-hint hover:text-primary transition-all"
-                    >
-                      <Mic className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-center justify-center gap-4">
-            <div className="flex items-center gap-1 text-[9px] font-black text-text-disabled uppercase tracking-widest">
-              <Clock size={10} />
-              <span>{t("chat.endToEndEncrypted") || "End-to-end encrypted"}</span>
+              {/* Action Icons - Right Group */}
+              <div className="flex items-center gap-0.5 pb-1">
+                <button 
+                  onClick={() => setShowVoiceRecorder(true)}
+                  className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleSend}
+                  disabled={!draftMessage.trim() && selectedFiles.length === 0}
+                  className={`p-2 rounded-full transition-all active:scale-90 ${
+                    draftMessage.trim() || selectedFiles.length > 0
+                      ? "text-primary hover:bg-primary/5"
+                      : "text-gray-300"
+                  }`}
+                >
+                  <Send className="w-5 h-5" fill={draftMessage.trim() ? "currentColor" : "none"} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

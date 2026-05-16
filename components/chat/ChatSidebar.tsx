@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, MoreVertical, CheckCircle2, MessageSquare, User2, ArrowLeft } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, MoreVertical, CheckCircle2, MessageSquare, User2, ArrowLeft, Headphones } from "lucide-react";
 import Image from "next/image";
 // All chat data is fetched from Supabase
 import { unbounded } from "@/app/fonts";
@@ -22,6 +22,7 @@ interface ChatUser {
   email?: string;
   avatar?: string;
   isOnline?: boolean;
+  role?: string;
 }
 
 interface Conversation {
@@ -76,7 +77,8 @@ export default function ChatSidebar({
           lastName: c.otherUser.name?.split(' ').slice(1).join(' ') || "",
           email: "",
           avatar: c.otherUser.avatar,
-          isOnline: c.otherUser.isOnline
+          isOnline: c.otherUser.isOnline,
+          role: c.otherUser.role
         }
       }));
 
@@ -130,52 +132,39 @@ export default function ChatSidebar({
       className={`h-full bg-card border-r border-border flex flex-col transition-all duration-500 ease-in-out relative z-10 ${isOpen ? "w-80 xl:w-96" : "w-24"
         }`}
     >
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-8">
-          <AnimatePresence mode="wait">
+      <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h1 className={`${unbounded.className} text-xl font-black text-gray-900 tracking-tight`}>
+              {isOpen ? (t("chat.messages") || "Chats") : <MessageSquare className="w-6 h-6 text-primary" />}
+            </h1>
             {isOpen && (
-              <motion.h2
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className={`${unbounded.className} text-xl font-bold text-foreground flex items-center gap-2`}
-              >
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border"
-                  title={t("common.back") || "Back"}
-                >
-                  <ArrowLeft size={20} className={language === 'ur' ? 'rotate-180' : ''} />
-                </button>
-                {t("chat.chats") || "Chats"} <span className="w-6 h-6 bg-primary/10 text-primary text-[10px] rounded-xl flex items-center justify-center font-black">
-                  {conversations.reduce((acc, c) => acc + getUnreadCount(c), 0)}
-                </span>
-              </motion.h2>
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-sm shadow-primary/50" />
             )}
-          </AnimatePresence>
-          <button
+          </div>
+          <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2.5 hover:bg-muted text-text-hint hover:text-primary rounded-2xl transition-all border border-transparent hover:border-border"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-all text-gray-400"
           >
-            {isOpen ? <ChevronLeft className="w-5 h-5" /> : <MoreVertical className="w-5 h-5" />}
+            {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
         </div>
 
         {isOpen && (
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               placeholder={t("chat.searchMessages") || "Search messages..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 text-sm bg-muted border border-transparent focus:bg-card focus:border-primary/20 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm hover:shadow-md transition-all duration-300"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent focus:border-primary/20 focus:bg-white focus:ring-4 focus:ring-primary/5 rounded-[14px] text-sm font-medium outline-none transition-all placeholder:text-gray-400"
             />
           </div>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-4 pb-4">
         {!isOpen ? (
           <div className="flex flex-col items-center gap-4 py-2">
             {filteredConversations.map(conv => {
@@ -186,8 +175,8 @@ export default function ChatSidebar({
               return (
                 <div key={conv.id} className="relative group">
                   <Link href={`/messages/${otherUser.id}`} className={`block relative transition-all duration-300 ${isActive ? "scale-110" : "hover:scale-105"}`}>
-                    <div className={`w-14 h-14 rounded-2xl p-0.5 overflow-hidden transition-all relative ${isActive ? "bg-primary shadow-lg shadow-primary/20" : "bg-gray-100 group-hover:bg-primary/20"}`}>
-                      <Image src={otherUser.avatar || "/avatar-placeholder.png"} alt={otherUser.firstName || "User"} fill className="rounded-[14px] object-cover bg-card" />
+                    <div className={`w-14 h-14 rounded-full p-0.5 overflow-hidden transition-all relative ${isActive ? "bg-primary shadow-lg shadow-primary/20" : "bg-gray-100 group-hover:bg-primary/20"}`}>
+                      <Image src={otherUser.avatar || "/avatar-placeholder.png"} alt={otherUser.firstName || "User"} fill className="rounded-full object-cover bg-card" />
                     </div>
                     {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-[10px] font-black text-white rounded-xl flex items-center justify-center border-2 border-white shadow-sm shimmer">
@@ -216,46 +205,57 @@ export default function ChatSidebar({
                 >
                   <Link
                     href={`/messages/${otherUser.id}`}
-                    className={`group block p-4 rounded-[24px] transition-all relative ${isActive
-                      ? "bg-card border border-border shadow-[0_10px_30px_rgba(0,0,0,0.04)]"
-                      : "hover:bg-muted/80 border border-transparent"
+                    className={`group block p-4 rounded-2xl transition-all relative ${isActive
+                      ? "bg-primary/5 border border-primary/10 shadow-sm"
+                      : "hover:bg-gray-50 border border-transparent"
                       }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="relative flex-shrink-0">
-                        <div className={`w-14 h-14 rounded-2xl p-0.5 transition-all relative overflow-hidden flex items-center justify-center ${isActive ? "bg-primary/10" : "bg-gray-100 group-hover:bg-primary/5"}`}>
-                          {otherUser.avatar && !otherUser.avatar.includes("dicebear.com") ? (
-                            <Image src={otherUser.avatar} alt={otherUser.firstName || "User"} fill className="rounded-[14px] object-cover bg-card" />
+                        <div className={`w-14 h-14 rounded-full p-0.5 transition-all relative overflow-hidden flex items-center justify-center ${isActive ? "bg-primary/10" : "bg-gray-100"}`}>
+                          {otherUser.role === "ADMIN" ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center rounded-full">
+                              <Headphones className="w-6 h-6 text-white" />
+                            </div>
+                          ) : otherUser.avatar && !otherUser.avatar.includes("dicebear.com") ? (
+                            <Image src={otherUser.avatar} alt={otherUser.firstName || "User"} fill className="rounded-full object-cover bg-card" />
                           ) : (
-                            <User2 className="w-6 h-6 text-text-hint opacity-40" />
+                            <User2 className="w-6 h-6 text-gray-400" />
                           )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-card rounded-xl shadow-sm flex items-center justify-center">
-                          <div className={`w-2.5 h-2.5 rounded-full ${otherUser.isOnline ? "bg-green-500" : "bg-gray-300"}`} />
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 border-white">
+                          <div className={`w-2 h-2 rounded-full ${otherUser.isOnline ? "bg-green-500" : "bg-gray-300"}`} />
                         </div>
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className={`${unbounded.className} text-sm font-bold truncate ${isActive ? 'text-primary' : 'text-foreground group-hover:text-primary transition-colors'}`}>
-                            {otherUser.firstName} {otherUser.lastName}
+                        <div className="flex items-center justify-between mb-0.5">
+                          <h3 className={`text-[15px] font-bold truncate flex items-center gap-2 ${isActive ? 'text-gray-900' : 'text-gray-700 group-hover:text-primary transition-colors'}`}>
+                            {otherUser.role === "ADMIN" ? "Ambi Tasker" : `${otherUser.firstName} ${otherUser.lastName}`}
+                            {otherUser.role === "ADMIN" && (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-primary/10" />
+                            )}
+                            {otherUser.role === "PROVIDER" && (
+                              <span className="bg-green-50 text-green-600 text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-green-100">
+                                PRO
+                              </span>
+                            )}
                           </h3>
-                          <span className="text-[10px] font-black text-text-disabled uppercase tracking-tighter ml-2 flex-shrink-0">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter ml-2 flex-shrink-0">
                             {formatTimestamp(conv.lastMessageAt)}
                           </span>
                         </div>
-
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={`text-xs truncate font-medium ${unreadCount > 0 ? 'text-foreground font-bold' : 'text-text-hint'}`}>
+                        
+                        <div className="flex items-center justify-between">
+                          <p className={`text-sm truncate ${unreadCount > 0 ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>
                             {conv.lastMessageText}
                           </p>
-                          {unreadCount > 0 && (
-                            <div className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-xl shadow-lg shadow-primary/20 shimmer">
+                          {unreadCount > 0 ? (
+                            <div className="ml-2 w-5 h-5 bg-primary text-[10px] font-black text-white rounded-full flex items-center justify-center shadow-sm shadow-primary/20">
                               {unreadCount}
                             </div>
-                          )}
-                          {isActive && unreadCount === 0 && (
-                            <CheckCircle2 size={12} className="text-primary flex-shrink-0" />
+                          ) : (
+                            isActive && <CheckCircle2 size={12} className="text-primary flex-shrink-0" />
                           )}
                         </div>
                       </div>

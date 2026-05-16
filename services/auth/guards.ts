@@ -46,6 +46,12 @@ export async function userGuard(req: NextRequest): Promise<GuardResult> {
   try {
     const authHeader = req.headers.get("authorization");
     let token = req.cookies.get(AUTH_COOKIE)?.value;
+    let isAdminToken = false;
+
+    if (!token) {
+      token = req.cookies.get(ADMIN_COOKIE)?.value;
+      if (token) isAdminToken = true;
+    }
 
     if (!token && authHeader?.startsWith("Bearer ")) {
       token = authHeader.split(" ")[1];
@@ -70,13 +76,47 @@ export async function userGuard(req: NextRequest): Promise<GuardResult> {
       };
     }
 
-    const userId = decoded.userId as string;
+    const userId = (decoded.userId || decoded.id) as string;
     if (!userId) {
       return {
         error: NextResponse.json(
           { success: false, error: "Unauthorized — Invalid token payload" },
           { status: 401 }
         ),
+      };
+    }
+
+    if (isAdminToken) {
+      // Fetch from Admin table
+      const admin = await prisma.admin.findUnique({
+        where: { id: userId },
+      });
+
+      if (!admin || admin.status !== "active") {
+        return {
+          error: NextResponse.json({ success: false, error: "Admin not found or inactive" }, { status: 404 }),
+        };
+      }
+
+      // Find shadow user record by email
+      const shadowUser = await prisma.user.findUnique({
+        where: { email: admin.email }
+      });
+
+      if (!shadowUser) {
+        return {
+          error: NextResponse.json({ success: false, error: "Admin shadow user not found" }, { status: 404 }),
+        };
+      }
+
+      return {
+        user: {
+          id: shadowUser.id,
+          email: shadowUser.email,
+          name: shadowUser.name,
+          role: "ADMIN",
+          isEmailVerified: true,
+        },
       };
     }
 

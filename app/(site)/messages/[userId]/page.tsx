@@ -19,6 +19,7 @@ export default function ChatPage() {
 
   const [conversation, setConversation] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState(true);
   const [otherUser, setOtherUser] = useState<{
     id: string;
     firstName: string;
@@ -26,6 +27,7 @@ export default function ChatPage() {
     profileImage: string;
     email: string;
     isOnline?: boolean;
+    role?: string;
   } | null>(null);
 
   const loading = userLoading || adminLoading;
@@ -42,6 +44,7 @@ export default function ChatPage() {
       if (!currentId || !otherUserId) return;
 
       try {
+        setIsResolving(true);
         setError(null);
         const res = await fetch("/api/messages/conversations", {
           method: "POST",
@@ -58,7 +61,8 @@ export default function ChatPage() {
             lastName: json.data.otherUser.name?.split(' ').slice(1).join(' ') || "",
             profileImage: json.data.otherUser.avatar || "",
             email: "",
-            isOnline: json.data.otherUser.isOnline
+            isOnline: json.data.otherUser.isOnline,
+            role: json.data.otherUser.role
           });
         } else {
           setError(json.error || "User not found or unavailable");
@@ -69,7 +73,7 @@ export default function ChatPage() {
       }
     };
 
-    resolveChat();
+    resolveChat().finally(() => setIsResolving(false));
   }, [currentId, otherUserId]);
 
   if (loading || (!user && !admin)) {
@@ -81,7 +85,7 @@ export default function ChatPage() {
   }
 
   // Handle Error / User Not Found State
-  if (error || (!conversation && !loading && currentId && otherUserId)) {
+  if (error || (!conversation && !loading && !isResolving && currentId && otherUserId)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
@@ -125,8 +129,8 @@ export default function ChatPage() {
   const otherUserName = `${otherUser.firstName} ${otherUser.lastName}`;
 
   return (
-    <div className="flex-1 bg-background overflow-hidden">
-      <div className="h-full flex relative">
+    <div className="h-screen bg-background overflow-hidden flex flex-col">
+      <div className="flex-1 flex relative overflow-hidden">
         <div className="hidden lg:block lg:w-96 flex-shrink-0 h-full">
           <ChatSidebar
             currentUserRole={currentUserRole}
@@ -140,6 +144,7 @@ export default function ChatPage() {
             isOnline={!!otherUser.isOnline}
             currentUserId={currentId || ""}
             currentUserRole={currentUserRole as "consumer" | "provider" | "admin"}
+            otherUserRole={otherUser.role}
           />
         </div>
       </div>

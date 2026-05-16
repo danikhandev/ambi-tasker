@@ -20,8 +20,8 @@ export default function AdminLoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
 
   React.useEffect(() => {
-    if (admin) window.location.href = "/admin/dashboard";
-  }, [admin]);
+    if (admin) router.push("/admin/dashboard");
+  }, [admin, router]);
 
   const [formData, setFormData] = useState({
     email: "",

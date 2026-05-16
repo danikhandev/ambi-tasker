@@ -73,15 +73,9 @@ function LoginContent() {
   const validateField = (name: string, value: string) => {
     let err = "";
     if (name === "email") {
-      if (roleParam === "provider") {
-        const cnicRegex = /^\d{5}-\d{7}-\d{1}$|^\d{13}$/;
-        if (!value) err = t("auth.cnicRequired") || "CNIC Number is required";
-        else if (!cnicRegex.test(value)) err = t("auth.invalidCnic") || "Enter a valid 13-digit CNIC Number";
-      } else {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!value) err = t("auth.emailRequired") || "Email is required";
-        else if (!emailRegex.test(value)) err = t("auth.invalidEmail") || "Enter a valid email";
-      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value) err = t("auth.emailRequired") || "Email is required";
+      else if (!emailRegex.test(value)) err = t("auth.invalidEmail") || "Enter a valid email";
     } else if (name === "password") {
       if (!value) err = t("auth.passwordRequired") || "Password is required";
     }
@@ -109,9 +103,7 @@ function LoginContent() {
     // Mark all as touched on submit
     setTouched({ email: true, password: true });
 
-    const identifierError = roleParam === "provider"
-      ? (/^\d{5}-\d{7}-\d{1}$|^\d{13}$/.test(formData.email) ? "" : (t("auth.invalidCnic") || "Enter a valid 13-digit CNIC"))
-      : (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? "" : (t("auth.invalidEmail") || "Enter a valid email"));
+    const identifierError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? "" : (t("auth.invalidEmail") || "Enter a valid email");
     const passError = formData.password ? "" : (t("auth.passwordRequired") || "Password is required");
 
     if (identifierError || passError) {
@@ -324,26 +316,18 @@ function LoginContent() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    {roleParam === "provider" ? (t("auth.cnicNumber") || "CNIC Number") : (t("auth.emailAddress") || "Email Address")}
+                    {t("auth.emailAddress") || "Email Address"}
                   </label>
-                  {roleParam === "provider" && (
-                    <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                      {t("auth.forKycVerification") || "For KYC Verification"}
-                    </span>
-                  )}
                 </div>
                 <div className="relative group">
-                  {roleParam === "provider" ? (
-                    <ShieldCheck className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
-                  ) : (
-                    <Mail className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
-                  )}
+                  <Mail className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
+
                     <input
-                      type={roleParam === "provider" ? "text" : "email"}
+                      type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       onBlur={() => handleBlur("email")}
-                      placeholder={roleParam === "provider" ? "00000-0000000-0" : (t("auth.email") || "Enter your email")}
+                      placeholder={t("auth.email") || "Enter your email"}
                       className={`w-full h-16 bg-[#eff6ff]/50 border rounded-2xl ${isRTL ? "pe-14 ps-6" : "ps-14 pe-6"} text-gray-900 text-sm font-bold focus:bg-white transition-all outline-none ${fieldErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-transparent focus:border-primary/30'}`}
                       required
                     />

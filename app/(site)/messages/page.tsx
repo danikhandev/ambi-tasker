@@ -58,8 +58,8 @@ function ChatContent() {
   }
 
   return (
-    <div className="flex-1 bg-background overflow-hidden">
-      <div className="h-full flex">
+    <div className="h-screen bg-background overflow-hidden flex flex-col">
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Full width on mobile, dynamic width on desktop */}
         <div className="w-full lg:w-auto flex-shrink-0 h-full">
           <ChatSidebar
