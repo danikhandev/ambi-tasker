@@ -96,15 +96,71 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
     }
   }, [conversationId, currentUserId]);
 
-  // ─── 3. Polling for updates (fallback for real-time) ──────────────
+  // ─── 3. Real-time Message Subscription ───────────────────────────
   useEffect(() => {
+    // RESET: Clear old messages when switching conversations to prevent ghosting
+    setMessages([]);
+    
     if (!conversationId) return;
 
     fetchMessages();
 
-    // Poll for new messages every 5 seconds while conversation is open
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+    const channel = supabase
+      .channel(`conversation-${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          const newMessage = payload.new;
+          // Only add if not already in list (prevent duplicates from optimistic updates)
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            
+            const mapped: ChatMessage = {
+              id: newMessage.id,
+              conversationId: newMessage.conversation_id,
+              senderId: newMessage.sender_id,
+              content: newMessage.message_text,
+              createdAt: newMessage.created_at,
+              readAt: newMessage.is_read ? newMessage.created_at : null,
+              status: newMessage.is_read ? "read" : "delivered",
+              attachments: [],
+            };
+            return [...prev, mapped];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          const updated = payload.new;
+          setMessages(prev => prev.map(m => 
+            m.id === updated.id 
+              ? { ...m, status: updated.is_read ? "read" : "delivered", readAt: updated.is_read ? updated.created_at : null } 
+              : m
+          ));
+        }
+      )
+      .subscribe();
+
+    // Occasional safety poll (less aggressive)
+    const interval = setInterval(fetchMessages, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [conversationId, fetchMessages]);
 
   // ─── 4. Supabase Broadcast — typing indicators & read receipts ────

@@ -3,36 +3,27 @@
 import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
 import ChatSidebar from "@/components/chat/ChatSidebar";
-import ChatEmptyState from "@/components/chat/ChatEmptyState";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-
+import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
-function ChatContent() {
+export default function MessagesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, loading: userLoading, activePerspective } = useUser();
   const { admin, loading: adminLoading } = useAdmin();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const { t } = useTranslation();
 
   const loading = userLoading || adminLoading;
 
-  // Determine current role based on user's active perspective
   const currentUserRole = admin 
     ? 'admin' 
     : (user?.isUserSignUpForProvider
         ? (activePerspective || 'consumer')
         : 'consumer');
-
-  useEffect(() => {
-    const targetUser = searchParams.get('user');
-    if (targetUser) {
-      router.replace(`/messages/${targetUser}`);
-    }
-  }, [searchParams, router]);
 
   if (loading) {
     return (
@@ -57,17 +48,34 @@ function ChatContent() {
     );
   }
 
-  return (
-    <div className="flex-1 h-full flex flex-col items-center justify-center bg-gray-50/30">
-      <ChatEmptyState />
-    </div>
-  );
-}
+  const pathname = usePathname();
+  const isIndex = pathname === "/messages";
 
-export default function ChatPage() {
   return (
-    <Suspense fallback={null}>
-      <ChatContent />
-    </Suspense>
+    <div className="h-screen bg-background overflow-hidden flex flex-col">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Persistent on desktop, toggle-able on mobile */}
+        <div className={`
+          ${isIndex ? "flex" : "hidden lg:flex"} 
+          w-full lg:w-96 flex-shrink-0 h-full border-r border-border
+        `}>
+          <ChatSidebar currentUserRole={currentUserRole} />
+        </div>
+
+        {/* Content Area - Responsive visibility */}
+        <div className={`
+          ${!isIndex ? "flex" : "hidden lg:flex"} 
+          flex-1 h-full overflow-hidden relative
+        `}>
+          <Suspense fallback={
+            <div className="h-full flex items-center justify-center bg-gray-50/50 w-full">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          }>
+            {children}
+          </Suspense>
+        </div>
+      </div>
+    </div>
   );
 }

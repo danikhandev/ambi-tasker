@@ -294,36 +294,7 @@ export default function Header() {
             {/* Desktop Navigation */}
             <div className={`hidden lg:flex items-center gap-10 ${isRTL ? "ps-12" : "pe-12"}`}>
               {activePerspective === 'provider' ? (
-                <>
-                  <Link
-                    href="/provider/dashboard"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
-                  >
-                    {t("nav.dashboard") || "Dashboard"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
-                  </Link>
-                  <Link
-                    href="/provider/bookings"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
-                  >
-                    {t("nav.bookings") || "Jobs"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
-                  </Link>
-                  <Link
-                    href="/provider/earnings"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
-                  >
-                    {t("nav.earnings") || "Earnings"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
-                  </Link>
-                  <Link
-                    href="/about"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
-                  >
-                    {t("nav.aboutUs") || "About Us"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
-                  </Link>
-                </>
+                <div className="w-10" /> // Minimal spacer for layout balance
               ) : (
                 <>
                   {/* Find a Service Mega Menu */}

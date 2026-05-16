@@ -6,7 +6,7 @@ import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/services/supabase";
 import Link from "next/link";
 import { unbounded } from "@/app/fonts";
@@ -14,10 +14,11 @@ import { unbounded } from "@/app/fonts";
 export default function ChatPage() {
   const { user, loading: userLoading, activePerspective } = useUser();
   const { admin, loading: adminLoading } = useAdmin();
-  const params = useParams();
-  const otherUserId = params.userId as string;
+  const pathname = usePathname();
+  const otherUserId = pathname.split('/').pop() || "";
 
   const [conversation, setConversation] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(true);
   const [otherUser, setOtherUser] = useState<{
@@ -40,12 +41,21 @@ export default function ChatPage() {
         : 'consumer');
 
   useEffect(() => {
+    let active = true;
+
     const resolveChat = async () => {
+      // Wait for auth to resolve before returning early
+      if (loading) return;
       if (!currentId || !otherUserId) return;
 
       try {
+        if (!active) return;
         setIsResolving(true);
+        setConversation(null); // Reset for new navigation
+        setOtherUser(null);    // Reset for new navigation
         setError(null);
+        setIsLoading(true);
+
         const res = await fetch("/api/messages/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -53,28 +63,40 @@ export default function ChatPage() {
         });
         const json = await res.json();
 
+        if (!active) return;
+
         if (json.success && json.data) {
           setConversation(json.data);
           setOtherUser({
-            id: json.data.otherUser.id,
-            firstName: json.data.otherUser.name?.split(' ')[0] || "User",
-            lastName: json.data.otherUser.name?.split(' ').slice(1).join(' ') || "",
-            profileImage: json.data.otherUser.avatar || "",
+            id: json.data.otherUser?.id || "",
+            firstName: json.data.otherUser?.name?.split(' ')[0] || "User",
+            lastName: json.data.otherUser?.name?.split(' ').slice(1).join(' ') || "",
+            profileImage: json.data.otherUser?.avatar || "",
             email: "",
-            isOnline: json.data.otherUser.isOnline,
-            role: json.data.otherUser.role
+            isOnline: json.data.otherUser?.isOnline,
+            role: json.data.otherUser?.role
           });
         } else {
           setError(json.error || "User not found or unavailable");
         }
       } catch (err) {
+        if (!active) return;
         console.error("Chat resolution failed:", err);
         setError("Failed to initialize chat. Please check your connection.");
+      } finally {
+        if (active) {
+          setIsLoading(false);
+          setIsResolving(false);
+        }
       }
     };
 
-    resolveChat().finally(() => setIsResolving(false));
-  }, [currentId, otherUserId]);
+    resolveChat();
+
+    return () => {
+      active = false;
+    };
+  }, [currentId, otherUserId, loading]);
 
   if (loading || (!user && !admin)) {
     return (
@@ -126,28 +148,32 @@ export default function ChatPage() {
     );
   }
 
-  const otherUserName = `${otherUser.firstName} ${otherUser.lastName}`;
+  const otherUserName = `${otherUser?.firstName || "User"} ${otherUser?.lastName || ""}`;
 
   return (
-    <div className="h-screen bg-background overflow-hidden flex flex-col">
-      <div className="flex-1 flex relative overflow-hidden">
-        <div className="hidden lg:block lg:w-96 flex-shrink-0 h-full">
-          <ChatSidebar
-            currentUserRole={currentUserRole}
-          />
+    <div className="flex-1 h-full flex flex-col relative bg-background">
+      {/* 
+          PRODUCTION LOGIC: 
+          1. Key-based remounting ensures ChatWindow is destroyed/rebuilt on ID change.
+          2. All internal hooks (realtime, fetching) re-initialize automatically.
+          3. Layout-level sidebar preservation ensures zero flickering.
+      */}
+      {conversation?.id ? (
+        <ChatWindow
+          key={conversation.id} 
+          conversationId={conversation.id}
+          userName={otherUserName}
+          userImage={otherUser.profileImage}
+          isOnline={!!otherUser.isOnline}
+          currentUserId={currentId || ""}
+          currentUserRole={currentUserRole as "consumer" | "provider" | "admin"}
+          otherUserRole={otherUser.role}
+        />
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-gray-50/30">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
-        <div className="flex-1 h-full">
-          <ChatWindow
-            conversationId={conversation.id}
-            userName={otherUserName}
-            userImage={otherUser.profileImage}
-            isOnline={!!otherUser.isOnline}
-            currentUserId={currentId || ""}
-            currentUserRole={currentUserRole as "consumer" | "provider" | "admin"}
-            otherUserRole={otherUser.role}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
-}
+}

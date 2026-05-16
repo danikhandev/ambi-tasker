@@ -54,6 +54,9 @@ export default function ChatWindow({
   const [selectedMedia, setSelectedMedia] = useState<Attachment | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [unreadWhileScrolledUp, setUnreadWhileScrolledUp] = useState(0);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const prevMessagesCount = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -80,13 +83,41 @@ export default function ChatWindow({
     const container = messagesContainerRef.current;
     if (!container) return;
 
-    // Only auto-scroll if user is already at the bottom (with 100px tolerance)
-    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-    
-    if (isAtBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const isInitialLoad = prevMessagesCount.current === 0 && messages.length > 0;
+    const isNewMessage = messages.length > prevMessagesCount.current;
+    const lastMessage = messages[messages.length - 1];
+    const isOwnMessage = lastMessage?.senderId === currentUserId;
+
+    // Tolerance for determining if we are at bottom
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+
+    if (isInitialLoad || (isNewMessage && (isAtBottom || isOwnMessage))) {
+      // Force scroll if initial load, or if already at bottom, or if we sent the message
+      messagesEndRef.current?.scrollIntoView({ behavior: isInitialLoad ? "auto" : "smooth" });
+      setUnreadWhileScrolledUp(0);
+    } else if (isNewMessage && !isAtBottom) {
+      // New message arrived but user is scrolled up
+      setUnreadWhileScrolledUp(prev => prev + 1);
     }
-  }, [messages, isTyping]);
+
+    prevMessagesCount.current = messages.length;
+  }, [messages, isTyping, currentUserId]);
+
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+    setShowScrollToBottom(!isAtBottom);
+    if (isAtBottom) {
+      setUnreadWhileScrolledUp(0);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setUnreadWhileScrolledUp(0);
+  };
 
   // ─── Mark as read when window is focused / conversation opens ─────
   useEffect(() => {
@@ -263,7 +294,11 @@ export default function ChatWindow({
         </div>
 
         {/* Message List - Dynamic Scrolling Area */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-4 px-4 py-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200">
+        <div 
+          ref={messagesContainerRef} 
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto space-y-4 px-4 py-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200"
+        >
           {!isConnected && (
             <div className="mx-auto bg-amber-50 text-amber-700 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border border-amber-100 flex items-center gap-2 animate-pulse w-fit">
               <RefreshCw className="w-3 h-3 animate-spin" />
@@ -453,6 +488,28 @@ export default function ChatWindow({
 
           {/* Scroll anchor */}
           <div ref={messagesEndRef} />
+
+          {/* New Messages Indicator / Scroll to Bottom */}
+          <AnimatePresence>
+            {showScrollToBottom && (
+              <motion.button
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                onClick={scrollToBottom}
+                className="absolute bottom-28 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-md border border-gray-100 shadow-xl rounded-full p-3 flex items-center justify-center hover:bg-white hover:scale-110 active:scale-95 transition-all group"
+              >
+                <div className="relative">
+                  <ChevronLeft className="w-5 h-5 text-primary -rotate-90" />
+                  {unreadWhileScrolledUp > 0 && (
+                    <span className="absolute -top-3 -right-3 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-white animate-bounce shadow-sm">
+                      {unreadWhileScrolledUp > 5 ? "5+" : unreadWhileScrolledUp}
+                    </span>
+                  )}
+                </div>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Sticky Composer - Premium Production Input */}

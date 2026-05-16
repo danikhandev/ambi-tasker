@@ -19,6 +19,7 @@ import Brand from "./ui/Brand";
 import ProviderStatusToggle from "./ProviderStatusToggle";
 import NotificationBell from "./notifications/NotificationBell";
 import BackButton from "./BackButton";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 interface DashboardHeaderProps {
   title?: string;
@@ -140,6 +141,7 @@ export default function DashboardHeader({
   } = useUI();
   const displayTitle = title || contextTitle;
   const displaySubtitle = subtitle || contextSubtitle;
+  const unreadMessages = useUnreadCount(user?.id || "");
 
   return (
     <header
@@ -166,7 +168,7 @@ export default function DashboardHeader({
           </Link>
 
           {/* Main Navigation Links - Hidden on smaller desktops */}
-          {!isAdminView && (
+          {!isAdminView && !isProviderView && (
             <nav className="hidden xl:flex items-center gap-6 ml-4">
               {[
                 { name: t("nav.dashboard"), href: "/dashboard" },
@@ -291,11 +293,22 @@ export default function DashboardHeader({
             {!isAdminView && (
               <Link
                 href="/messages"
-                className="w-11 h-11 flex items-center justify-center text-text-hint hover:text-primary hover:bg-primary/5 rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40"
+                className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40"
                 aria-label={t("nav.messages")}
               >
                 <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-background ring-2 ring-primary/20 animate-pulse" />
+                <AnimatePresence>
+                  {unreadMessages > 0 && (
+                    <motion.span
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-background shadow-md"
+                    >
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Link>
             )}
 

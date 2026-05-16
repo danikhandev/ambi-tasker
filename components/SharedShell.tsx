@@ -109,7 +109,7 @@ export default function SharedShell({ children }: { children: React.ReactNode })
           <main className={`flex-1 flex flex-col w-full mx-auto ${isAppPage ? 'p-4 md:p-8 lg:p-10 overflow-y-auto no-scrollbar' : ''}`}>
             <AnimatePresence mode="wait">
               <motion.div
-                key={pathname}
+                key={pathname?.startsWith("/messages") ? "messages-root" : pathname}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}

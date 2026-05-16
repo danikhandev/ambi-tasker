@@ -49,6 +49,7 @@ export default function ChatSidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { t, language } = useTranslation();
   const router = useRouter();
 
@@ -58,6 +59,7 @@ export default function ChatSidebar({
     if (!currentId) return;
 
     try {
+      setIsLoading(true);
       const res = await fetch("/api/messages/conversations");
       const json = await res.json();
       
@@ -72,30 +74,52 @@ export default function ChatSidebar({
         consumerUnreadCount: (currentUserRole === "consumer" || currentUserRole === "admin") ? c.unreadCount : 0,
         providerUnreadCount: currentUserRole === "provider" ? c.unreadCount : 0,
         otherUser: {
-          id: c.otherUser.id,
-          firstName: c.otherUser.name?.split(' ')[0] || "User",
-          lastName: c.otherUser.name?.split(' ').slice(1).join(' ') || "",
+          id: c.otherUser?.id || "N/A",
+          firstName: c.otherUser?.name?.split(' ')[0] || "User",
+          lastName: c.otherUser?.name?.split(' ').slice(1).join(' ') || "",
           email: "",
-          avatar: c.otherUser.avatar,
-          isOnline: c.otherUser.isOnline,
-          role: c.otherUser.role
+          avatar: c.otherUser?.avatar,
+          isOnline: c.otherUser?.isOnline,
+          role: c.otherUser?.role
         }
       }));
 
       setConversations(mapped);
     } catch (err) {
       console.error("Chat fetch error:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [currentId, currentUserRole]);
 
   useEffect(() => {
-    if (currentId) {
-      fetchConversations();
+    if (!currentId) return;
+    
+    fetchConversations();
 
-      // Poll as fallback for real-time since DB migrated from Supabase
-      const interval = setInterval(fetchConversations, 10000);
-      return () => clearInterval(interval);
-    }
+    // ─── Real-time Subscriptions ─────────────────────────────────────
+    // Listen for new messages or conversation updates to keep list fresh
+    const channel = supabase
+      .channel(`chat-sidebar-${currentId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        () => fetchConversations()
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        () => fetchConversations()
+      )
+      .subscribe();
+
+    // Poll as occasional fallback (less frequent)
+    const interval = setInterval(fetchConversations, 30000);
+    
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [currentId, fetchConversations]);
 
   const filteredConversations = conversations.filter((conv) => {
@@ -231,11 +255,11 @@ export default function ChatSidebar({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <h3 className={`text-[15px] font-bold truncate flex items-center gap-2 ${isActive ? 'text-gray-900' : 'text-gray-700 group-hover:text-primary transition-colors'}`}>
-                            {otherUser.role === "ADMIN" ? "Ambi Tasker" : `${otherUser.firstName} ${otherUser.lastName}`}
-                            {otherUser.role === "ADMIN" && (
+                            {otherUser?.role === "ADMIN" ? "Ambi Tasker" : `${otherUser?.firstName || "User"} ${otherUser?.lastName || ""}`}
+                            {otherUser?.role === "ADMIN" && (
                               <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-primary/10" />
                             )}
-                            {otherUser.role === "PROVIDER" && (
+                            {otherUser?.role === "PROVIDER" && (
                               <span className="bg-green-50 text-green-600 text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest border border-green-100">
                                 PRO
                               </span>
