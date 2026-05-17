@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { Upload, CheckCircle, Clock, AlertCircle, X, Image as ImageIcon } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Clock, AlertCircle, Image as ImageIcon, ArrowLeft, RefreshCw, Zap, ShieldCheck, Camera } from "lucide-react";
 
 interface KYCUploadProps {
   currentStatus?: "PENDING" | "VERIFIED" | "REJECTED" | null;
   onSuccess?: () => void;
 }
+
+type StepKey = "cnicFront" | "cnicBack" | "selfie";
 
 export default function KYCUpload({ currentStatus, onSuccess }: KYCUploadProps) {
   const [files, setFiles] = useState<{
@@ -31,14 +33,26 @@ export default function KYCUpload({ currentStatus, onSuccess }: KYCUploadProps) 
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  const handleFileChange = (type: keyof typeof files, e: React.ChangeEvent<HTMLInputElement>) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const steps: { key: StepKey; title: string; desc: string }[] = [
+    { key: "cnicFront", title: "CNIC Front Verification", desc: "Scan the front page of your CNIC ensuring all details are visible or upload from your phone library." },
+    { key: "cnicBack", title: "CNIC Back Verification", desc: "Scan the back page of your CNIC ensuring all details are visible or upload from your phone library." },
+    { key: "selfie", title: "Face Verification", desc: "Snap a quick selfie for identity verification. Ensure your face is well-lit and visible. We'll keep it secure." }
+  ];
+
+  const currentStep = steps[currentStepIndex];
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         setError("File size must be less than 5MB");
         return;
       }
+      const type = currentStep.key;
       setFiles((prev) => ({ ...prev, [type]: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -49,9 +63,30 @@ export default function KYCUpload({ currentStatus, onSuccess }: KYCUploadProps) 
     }
   };
 
+  const handleContinue = async () => {
+    // If no file uploaded for this step, trigger file input
+    if (!files[currentStep.key]) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepIndex(prev => prev + 1);
+    } else {
+      await handleSubmit();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(prev => prev - 1);
+      setError(null);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!files.cnicFront || !files.cnicBack || !files.selfie) {
-      setError("Please upload all three required documents");
+      setError("Please complete all verification steps.");
       return;
     }
 
@@ -82,128 +117,188 @@ export default function KYCUpload({ currentStatus, onSuccess }: KYCUploadProps) 
     }
   };
 
+  // VERIFIED SUCCESS SCREEN
   if (currentStatus === "VERIFIED") {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-green-900">Identity Verified</h3>
-        <p className="text-green-700 text-sm">Your KYC verification is complete. You can now accept bookings.</p>
+      <div className="max-w-md mx-auto bg-white rounded-[2.5rem] shadow-xl overflow-hidden min-h-[600px] flex flex-col items-center justify-center p-8 border border-gray-100">
+        <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 bg-teal-50 rounded-full scale-150 opacity-50"></div>
+          <div className="absolute top-0 right-4 w-2 h-2 bg-teal-400 rounded-full"></div>
+          <div className="absolute bottom-8 left-0 w-2 h-2 bg-teal-400 rounded-full"></div>
+          <div className="absolute top-1/2 -right-8 w-1 h-4 bg-teal-400 rounded-full rotate-45"></div>
+          <div className="absolute top-8 -left-4 w-1 h-4 bg-teal-400 rounded-full -rotate-45"></div>
+          
+          {/* Main Shield Icon */}
+          <ShieldCheck className="w-32 h-32 text-teal-400 relative z-10" strokeWidth={1} />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-[#1A1B4B] mb-4">Verification Success</h2>
+        <p className="text-center text-gray-500 text-sm leading-relaxed mb-12 px-4">
+          Congrats! Your identity has been verified. You're all set to enjoy our services securely. Safe travels!
+        </p>
+        
+        <div className="mt-auto w-full">
+          <button className="w-full bg-[#1A1B4B] text-white rounded-full py-4 font-semibold text-[15px] hover:bg-[#1A1B4B]/90 transition-colors shadow-lg shadow-[#1A1B4B]/20">
+            Continue
+          </button>
+        </div>
       </div>
     );
   }
 
+  // PENDING SCREEN
   if (currentStatus === "PENDING") {
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
-        <Clock className="w-12 h-12 text-blue-500 mx-auto mb-3 animate-pulse" />
-        <h3 className="text-lg font-bold text-blue-900">Verification Pending</h3>
-        <p className="text-blue-700 text-sm">Your documents are being reviewed by our team. This usually takes 24-48 hours.</p>
+      <div className="max-w-md mx-auto bg-white rounded-[2.5rem] shadow-xl overflow-hidden min-h-[600px] flex flex-col items-center justify-center p-8 border border-gray-100">
+        <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
+          <div className="absolute inset-0 bg-blue-50 rounded-full scale-150 opacity-50 animate-pulse"></div>
+          <Clock className="w-24 h-24 text-blue-500 relative z-10 animate-pulse" strokeWidth={1.5} />
+        </div>
+        <h2 className="text-2xl font-bold text-[#1A1B4B] mb-4">Verification Pending</h2>
+        <p className="text-center text-gray-500 text-sm leading-relaxed px-4">
+          Your documents are being reviewed by our team. This usually takes 24-48 hours. We'll notify you once it's complete.
+        </p>
       </div>
     );
   }
 
+  // MAIN VERIFICATION FLOW
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Upload className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-gray-900">Submit KYC Documents</h2>
-        </div>
+    <div className="max-w-md mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden min-h-[680px] flex flex-col border border-gray-100 relative">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-6 pt-10">
+        {currentStepIndex > 0 ? (
+          <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+            <ArrowLeft className="w-6 h-6 text-[#1A1B4B]" />
+          </button>
+        ) : (
+          <div className="w-10"></div> // Placeholder for alignment
+        )}
+        <h1 className="text-[17px] font-bold text-[#1A1B4B]">{currentStep.title}</h1>
+        <div className="w-10"></div> // Placeholder for alignment
+      </div>
 
-        {currentStatus === "REJECTED" && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-red-900">Previous Submission Rejected</p>
-              <p className="text-xs text-red-700">Your documents were rejected. Please ensure the images are clear and valid.</p>
-            </div>
+      {/* Description */}
+      <p className="text-center text-gray-500 text-[14px] leading-relaxed px-8 mt-2">
+        {currentStep.desc}
+      </p>
+
+      {/* Rejection Alert */}
+      {currentStatus === "REJECTED" && currentStepIndex === 0 && (
+        <div className="mx-8 mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-red-700">Previous submission rejected. Please ensure images are clear.</p>
+        </div>
+      )}
+
+      {/* Error Alert */}
+      {error && (
+        <div className="mx-8 mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500" />
+          <p className="text-xs font-medium text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Main Scanner Area */}
+      <div className="mx-8 mt-8 aspect-[4/5] relative rounded-[2rem] overflow-hidden bg-gray-50 flex items-center justify-center shadow-inner group">
+        {previews[currentStep.key] ? (
+          <img src={previews[currentStep.key] as string} alt={currentStep.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="text-gray-300 flex flex-col items-center">
+            {currentStep.key === "selfie" ? <Camera className="w-16 h-16 mb-4 opacity-50" /> : <ImageIcon className="w-16 h-16 mb-4 opacity-50" />}
+            <span className="text-sm font-medium opacity-50">Preview Area</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DocUploader
-            label="CNIC Front"
-            preview={previews.cnicFront}
-            onChange={(e) => handleFileChange("cnicFront", e)}
-            onClear={() => {
-              setFiles(p => ({...p, cnicFront: null}));
-              setPreviews(p => ({...p, cnicFront: null}));
-            }}
-          />
-          <DocUploader
-            label="CNIC Back"
-            preview={previews.cnicBack}
-            onChange={(e) => handleFileChange("cnicBack", e)}
-            onClear={() => {
-              setFiles(p => ({...p, cnicBack: null}));
-              setPreviews(p => ({...p, cnicBack: null}));
-            }}
-          />
-          <DocUploader
-            label="Selfie with CNIC"
-            preview={previews.selfie}
-            onChange={(e) => handleFileChange("selfie", e)}
-            onClear={() => {
-              setFiles(p => ({...p, selfie: null}));
-              setPreviews(p => ({...p, selfie: null}));
-            }}
-          />
+        {/* Scanner Overlay (Green brackets) */}
+        <div className="absolute inset-6 pointer-events-none">
+          {/* Top Left */}
+          <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-[#38B2AC] rounded-tl-3xl opacity-80"></div>
+          {/* Top Right */}
+          <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-[#38B2AC] rounded-tr-3xl opacity-80"></div>
+          {/* Bottom Left */}
+          <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-[#38B2AC] rounded-bl-3xl opacity-80"></div>
+          {/* Bottom Right */}
+          <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-[#38B2AC] rounded-br-3xl opacity-80"></div>
+          
+          {/* Scanning Line Animation */}
+          {!previews[currentStep.key] && (
+            <>
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes scanLine {
+                  0% { top: 10%; opacity: 0; }
+                  10% { opacity: 1; }
+                  90% { opacity: 1; }
+                  100% { top: 90%; opacity: 0; }
+                }
+              `}} />
+              <div 
+                className="absolute left-4 right-4 h-0.5 bg-[#38B2AC] shadow-[0_0_8px_2px_rgba(56,178,172,0.6)]"
+                style={{ animation: 'scanLine 2.5s ease-in-out infinite' }}
+              ></div>
+            </>
+          )}
         </div>
 
-        {error && (
-          <p className="text-red-500 text-sm mt-4 font-medium flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" /> {error}
-          </p>
-        )}
+        {/* Hidden File Input */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={handleFileChange} 
+        />
+      </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !files.cnicFront || !files.cnicBack || !files.selfie}
-          className={`w-full mt-6 py-3 rounded-xl font-bold transition-all ${
-            loading || !files.cnicFront || !files.cnicBack || !files.selfie
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20"
-          }`}
+      {/* Toolbar Icons */}
+      <div className="flex justify-center items-center gap-12 mt-8">
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          className="p-3 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
+          title="Upload from gallery"
         >
-          {loading ? "Uploading..." : "Submit for Verification"}
+          {currentStep.key === "selfie" ? (
+             <Camera className="w-6 h-6 text-gray-500 group-hover:text-[#1A1B4B]" />
+          ) : (
+             <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-[#1A1B4B]" />
+          )}
+        </button>
+        <button 
+          onClick={() => {
+            const type = currentStep.key;
+            setFiles(p => ({...p, [type]: null}));
+            setPreviews(p => ({...p, [type]: null}));
+          }}
+          className="p-3 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
+          title="Retake / Clear"
+        >
+          <RefreshCw className="w-6 h-6 text-gray-500 group-hover:text-[#1A1B4B]" />
+        </button>
+        <button 
+          className="p-3 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group opacity-50 cursor-not-allowed"
+          title="Flash (Not applicable for web upload)"
+        >
+          <Zap className="w-6 h-6 text-gray-500" />
         </button>
       </div>
-    </div>
-  );
-}
 
-interface DocUploaderProps {
-  label: string;
-  preview: string | null;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClear: () => void;
-}
-
-function DocUploader({ label, preview, onChange, onClear }: DocUploaderProps) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-bold text-gray-700">{label}</label>
-      <div className="relative group">
-        {preview ? (
-          <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-primary/20">
-            <img src={preview} alt={label} className="w-full h-full object-cover" />
-            <button
-              onClick={onClear}
-              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <label className="flex flex-col items-center justify-center aspect-[4/3] rounded-lg border-2 border-dashed border-gray-200 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group">
-            <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-primary transition-colors">
-              <ImageIcon className="w-8 h-8" />
-              <span className="text-xs font-medium">Click to upload</span>
-            </div>
-            <input type="file" className="hidden" accept="image/*" onChange={onChange} />
-          </label>
-        )}
+      {/* Footer Button */}
+      <div className="mt-auto p-8 pt-6">
+        <button 
+          onClick={handleContinue}
+          disabled={loading}
+          className={`w-full py-4 rounded-full font-semibold text-[15px] transition-all shadow-lg ${
+            loading 
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+              : "bg-[#1A1B4B] text-white hover:bg-[#1A1B4B]/90 shadow-[#1A1B4B]/20"
+          }`}
+        >
+          {loading ? "Uploading..." : !files[currentStep.key] ? "Upload Image to Continue" : "Continue"}
+        </button>
       </div>
+      
     </div>
   );
 }

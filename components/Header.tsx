@@ -23,8 +23,8 @@ import { useUnreadCount } from "@/hooks/useUnreadCount";
 function ChatIconWithBadge({ userId }: { userId: string }) {
   const unread = useUnreadCount(userId);
   return (
-    <Link href="/messages" className="relative p-2.5 text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all">
-      <MessageSquare className="w-[22px] h-[22px]" />
+    <Link href="/messages" className="relative p-2 text-foreground/50 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200">
+      <MessageSquare className="w-5 h-5" />
       {unread > 0 && (
         <span className="absolute top-2 right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-white shadow-sm">
           {unread > 99 ? "99+" : unread}
@@ -270,30 +270,30 @@ export default function Header() {
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${isScrolled
-          ? "bg-white/95 backdrop-blur-xl shadow-[0_4px_30px_-5px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.04)] border-b border-border/60"
-          : "bg-white border-b border-border/20 shadow-sm"
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+          ? "bg-white/98 backdrop-blur-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_-4px_rgba(0,0,0,0.04)] border-b border-black/[0.04]"
+          : "bg-white border-b border-black/[0.04]"
           }`}
       >
-        <nav className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 py-2 sm:py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo & Branding - Grouped as one unit */}
-            <div className="flex-none flex items-center">
+        <nav className={`max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 transition-all duration-500 ${isScrolled ? 'py-2' : 'py-2.5 sm:py-3'}`}>
+          <div className="flex items-center justify-between" style={{ flexWrap: 'nowrap', gap: '16px' }}>
+            {/* Logo & Branding */}
+            <div style={{ flex: 'none' }}>
               <Link
                 href="/"
-                className={`relative z-50 group transition-transform active:scale-95 flex items-center ${isRTL ? "origin-right" : "origin-left"}`}
+                className={`relative z-50 group transition-all duration-200 active:scale-[0.97] flex items-center ${isRTL ? "origin-right" : "origin-left"}`}
                 dir="ltr"
               >
                 <Brand
-                  size="md"
-                  className="group-hover:opacity-90 transition-opacity"
+                  size="sm"
+                  className="group-hover:opacity-80 transition-opacity duration-200"
                 />
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className={`hidden lg:flex items-center gap-10 ${isRTL ? "ps-12" : "pe-12"}`}>
+            {/* Desktop Navigation - Center Zone */}
+            <div className={`hidden lg:flex items-center`} style={{ flex: 'none', gap: '20px' }}>
               {activePerspective === 'provider' ? (
                 <div className="w-10" /> // Minimal spacer for layout balance
               ) : (
@@ -308,12 +308,13 @@ export default function Header() {
                     }}
                   >
                     <button
-                      className={`flex items-center gap-2 transition-all font-semibold text-[11px] uppercase tracking-widest ${activeDropdown === "find-service" ? "text-primary" : "text-text-secondary hover:text-primary"
+                      className={`flex items-center gap-1.5 transition-all duration-200 font-semibold text-[11px] uppercase tracking-[0.08em] py-2 ${activeDropdown === "find-service" ? "text-primary" : "text-foreground/70 hover:text-foreground"
                         }`}
+                      style={{ whiteSpace: 'nowrap' }}
                     >
                       {t("header.services") || t("nav.services") || "Find a Service"}
                       <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-300 ${activeDropdown === "find-service" ? "rotate-180" : ""
+                        className={`w-3 h-3 transition-transform duration-300 ${activeDropdown === "find-service" ? "rotate-180" : ""
                           }`}
                       />
                     </button>
@@ -427,40 +428,43 @@ export default function Header() {
 
                   <Link
                     href="/how-it-works"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
+                    className="text-foreground/70 hover:text-foreground transition-colors duration-200 font-semibold text-[11px] uppercase tracking-[0.08em] relative group py-2"
+                    style={{ whiteSpace: 'nowrap' }}
                   >
                     {t("nav.howItWorks") || "How it Works"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
+                    <span className={`absolute bottom-0 w-0 h-[2px] bg-primary rounded-full group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
                   </Link>
 
                   <Link
                     href="/about"
-                    className="text-text-secondary hover:text-primary transition-colors font-semibold text-[11px] uppercase tracking-widest relative group"
+                    className="text-foreground/70 hover:text-foreground transition-colors duration-200 font-semibold text-[11px] uppercase tracking-[0.08em] relative group py-2"
+                    style={{ whiteSpace: 'nowrap' }}
                   >
                     {t("nav.aboutUs") || "About Us"}
-                    <span className={`absolute -bottom-1.5 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
+                    <span className={`absolute bottom-0 w-0 h-[2px] bg-primary rounded-full group-hover:w-full transition-all duration-300 ${isRTL ? "right-0" : "left-0"}`} />
                   </Link>
                 </>
               )}
             </div>
 
             {/* Desktop CTA / Profile Zone */}
-            <div className="hidden lg:flex items-center gap-8">
+            <div className="hidden lg:flex items-center" style={{ flex: 'none', gap: '10px' }}>
               {/* Language Switcher Toggle */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-2 px-4 h-11 rounded-2xl bg-muted/40 hover:bg-muted text-text-secondary hover:text-primary transition-all duration-300 border border-border/50 group"
+                className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 text-foreground/60 hover:text-foreground transition-all duration-200 border border-black/[0.04] group"
                 title={t("header.switchLanguage")}
               >
-                <Globe className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none">
+                <Globe className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform duration-300" />
+                <span className="text-[10px] font-bold uppercase tracking-wide leading-none">
                   {language === "en" ? "اردو" : "EN"}
                 </span>
               </button>
 
+              {user && (
               <div className="relative hidden xl:block group">
                 <form onSubmit={handleSearchSubmit} className={`relative group/search`}>
-                  <Search className={`absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint transition-colors group-focus-within/search:text-primary`} />
+                  <Search className={`absolute start-3.5 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-foreground/30 transition-colors duration-200 group-focus-within/search:text-primary`} />
                   <input
                     type="text"
                     placeholder={t("header.whatServiceNeed")}
@@ -470,7 +474,7 @@ export default function Header() {
                       setShowSearchDropdown(true);
                     }}
                     onFocus={() => setShowSearchDropdown(true)}
-                    className={`ps-11 pe-5 h-11 w-64 xl:w-80 border border-border/60 rounded-2xl bg-secondary/30 text-foreground placeholder:text-text-hint focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all text-[11px] font-bold shadow-sm group-hover/search:bg-card`}
+                    className={`ps-9 pe-4 h-9 w-52 border border-black/[0.06] rounded-xl bg-gray-50/80 text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/20 focus:bg-white transition-all duration-200 text-[11px] font-medium group-hover/search:bg-white group-hover/search:border-black/[0.08]`}
                   />
                 </form>
 
@@ -591,11 +595,12 @@ export default function Header() {
                   )}
                 </AnimatePresence>
               </div>
-
+              )}
               {!user && (
                 <Link
                   href="/signup/provider"
-                  className="hidden xl:block text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all mr-2"
+                  className="hidden 2xl:block text-[10px] font-bold uppercase tracking-[0.06em] text-foreground/50 hover:text-primary transition-colors duration-200"
+                  style={{ whiteSpace: 'nowrap', flex: 'none' }}
                 >
                   {t("header.becomeProvider")}
                 </Link>
@@ -603,8 +608,8 @@ export default function Header() {
 
               {user ? (
                 <>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 bg-muted/40 p-1.5 rounded-2xl border border-border/40">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-0.5 bg-gray-50 p-1 rounded-xl border border-black/[0.04]">
                       <ChatIconWithBadge userId={user.id} />
                       <NotificationBell />
                     </div>
@@ -615,8 +620,8 @@ export default function Header() {
                       onMouseEnter={() => setShowProfileMenu(true)}
                       onMouseLeave={() => setShowProfileMenu(false)}
                     >
-                      <button className="flex items-center gap-2.5 p-1.5 pl-3.5 bg-white border border-border shadow-sm rounded-full hover:shadow-md transition-all active:scale-95 group">
-                        <Menu className="w-4 h-4 text-text-hint group-hover:text-foreground transition-colors" />
+                      <button className="flex items-center gap-2 p-1 pl-3 bg-white border border-black/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.04)] rounded-full hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 active:scale-[0.97] group">
+                        <Menu className="w-3.5 h-3.5 text-foreground/40 group-hover:text-foreground/70 transition-colors duration-200" />
                         <div className="relative">
                            {user.avatar ? (
                              <CircularFrame
@@ -697,43 +702,45 @@ export default function Header() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center gap-10">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 'none' }}>
                   <Link
                     href="/login"
-                    className="text-[11px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all"
+                    className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/60 hover:text-foreground transition-colors duration-200"
+                    style={{ whiteSpace: 'nowrap' }}
                   >
-                    SIGN IN
+                    {t("auth.signIn") || "Sign In"}
                   </Link>
                   <Link
                     href="/select-role"
-                    className="h-14 px-10 flex items-center justify-center bg-[#0F172A] text-white text-[11px] font-black uppercase tracking-widest rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg shadow-black/10"
+                    className="h-9 px-5 flex items-center justify-center bg-foreground text-white text-[11px] font-bold uppercase tracking-[0.06em] rounded-full hover:bg-primary transition-all duration-300 active:scale-[0.97] shadow-sm hover:shadow-lg hover:shadow-primary/15"
+                    style={{ whiteSpace: 'nowrap' }}
                   >
-                    GET STARTED
+                    {t("onboarding.getStarted") || "Get Started"}
                   </Link>
                 </div>
               )}
             </div>
 
             {/* Mobile Toggle & Search */}
-            <div className="flex items-center gap-2 sm:gap-3 lg:hidden">
+            <div className="flex items-center gap-2 lg:hidden">
               <button
                 onClick={toggleLanguage}
-                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl bg-muted/40 border border-border"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 border border-black/[0.04]"
               >
-                <span className="text-[9px] sm:text-[10px] font-black text-primary">{language === "en" ? "اردو" : "EN"}</span>
+                <span className="text-[9px] font-bold text-foreground/60">{language === "en" ? "اردو" : "EN"}</span>
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl sm:rounded-[18px] bg-foreground text-background shadow-md border border-border/10"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground text-background shadow-sm"
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
                     <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-                      <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <X className="w-5 h-5" />
                     </motion.div>
                   ) : (
                     <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-                      <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Menu className="w-5 h-5" />
                     </motion.div>
                   )}
                 </AnimatePresence>

@@ -31,7 +31,8 @@ export default function Footer() {
   const { t, isRTL } = useTranslation();
   const { showToast } = useUI();
   const [email, setEmail] = useState("");
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [footerCopyrightText, setFooterCopyrightText] = useState("© 2026 AmbiTasker. Empowering local professionals across Pakistan 🇵🇰");
 
   // Fetch branding settings
@@ -52,13 +53,29 @@ export default function Footer() {
     return null;
   }
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubscribed(true);
-    setTimeout(() => {
-      setEmail("");
-      setIsSubscribed(false);
-    }, 3000);
+    if (!email) return;
+    setIsSubscribing(true);
+    
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, honeypot })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, "success");
+        setEmail("");
+      } else {
+        showToast(data.error || "Subscription failed.", "error");
+      }
+    } catch (err) {
+      showToast("Something went wrong.", "error");
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   const footerLinks = {
@@ -199,6 +216,9 @@ export default function Footer() {
 
             <div className="w-full lg:w-auto max-w-lg flex-1">
               <form onSubmit={handleSubscribe} className={`flex gap-2 p-2 h-16 bg-card border border-border rounded-2xl focus-within:ring-4 focus-within:ring-primary/5 focus-within:border-primary/20 transition-all shadow-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div style={{ display: 'none' }}>
+                  <input type="text" name="honeypot" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" />
+                </div>
                 <div className={`flex items-center gap-3 px-4 flex-1 h-full ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Mail className="w-5 h-5 text-text-hint" />
                   <input
@@ -212,9 +232,12 @@ export default function Footer() {
                 </div>
                 <button
                   type="submit"
-                  className="px-8 h-full bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+                  disabled={isSubscribing}
+                  className={`px-8 h-full bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                    isSubscribing ? "opacity-70 cursor-not-allowed" : "hover:bg-primary active:scale-95"
+                  }`}
                 >
-                  {isSubscribed ? <CheckCircle2 className="w-4 h-4" /> : t("footer.subscribe")}
+                  {isSubscribing ? "Subscribing..." : t("footer.subscribe")}
                 </button>
               </form>
             </div>

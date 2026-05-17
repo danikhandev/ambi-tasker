@@ -30,7 +30,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
-  FileText
+  FileText,
+  Mail
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -131,6 +132,12 @@ export default function Sidebar({ type }: SidebarProps) {
         { icon: ShieldCheck, label: t("admin.sidebar.subAdmins"), href: ADMIN_ROUTES.SUB_ADMINS, requiredPerm: "admins.manage" },
         { icon: History, label: t("admin.sidebar.auditLogs"), href: ADMIN_ROUTES.LOGS, requiredPerm: "admins.manage" },
         { icon: Settings, label: t("admin.sidebar.settings"), href: ADMIN_ROUTES.SETTINGS, requiredPerm: "settings.view" },
+      ]
+    },
+    {
+      group: "MARKETING",
+      items: [
+        { icon: Mail, label: "Newsletter", href: "/admin/marketing/newsletter", requiredPerm: "settings.view" },
       ]
     }
   ];

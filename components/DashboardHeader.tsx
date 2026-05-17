@@ -156,10 +156,10 @@ export default function DashboardHeader({
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center text-text-hint hover:text-primary bg-secondary/30 border border-border/40 rounded-xl transition-all flex-shrink-0"
+            className="lg:hidden w-10 h-10 flex items-center justify-center text-foreground/70 hover:text-primary bg-background border border-border/50 rounded-full shadow-sm transition-all flex-shrink-0 active:scale-95"
             aria-label="Open Menu"
           >
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Menu className="w-5 h-5" />
           </button>
 
           {/* Brand Identity */}
@@ -256,9 +256,9 @@ export default function DashboardHeader({
         {/* Right Side */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6 flex-shrink-0">
           {/* Quick Actions Group */}
-          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {!isAdminView && user?.isUserSignUpForProvider && user.role !== 'ADMIN' && (
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-2">
                 {/* Active Perspective Badge — hidden on very small, compact on sm, full on md+ */}
                 <div className={`hidden md:flex items-center gap-2 px-3 lg:px-4 py-1.5 lg:py-2 rounded-2xl border ${
                   user.role === 'ADMIN'
@@ -277,11 +277,11 @@ export default function DashboardHeader({
 
                 <button
                   onClick={handleSwitchPerspective}
-                  className="flex items-center gap-1.5 sm:gap-2 group px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-secondary/30 hover:bg-primary rounded-xl sm:rounded-2xl transition-all duration-400 border border-border/60 hover:border-primary shadow-sm hover:shadow-primary/20"
+                  className="flex items-center justify-center w-10 h-10 md:w-auto md:px-4 md:py-2 group bg-secondary/30 hover:bg-primary rounded-full md:rounded-2xl transition-all duration-300 border border-border/50 hover:border-primary shadow-sm hover:shadow-primary/20 flex-shrink-0 active:scale-95"
                   aria-label={`${t("header.switchTo")} ${activePerspective === 'consumer' ? t("common.professional") : t("common.customer")} ${t("header.mode")}`}
                 >
-                  <Repeat className="w-3.5 h-3.5 text-text-hint group-hover:text-white transition-all duration-300" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-text-secondary group-hover:text-white transition-colors hidden sm:inline">
+                  <Repeat className="w-4 h-4 md:w-3.5 md:h-3.5 text-foreground/70 group-hover:text-white transition-all duration-300" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-text-secondary group-hover:text-white transition-colors hidden md:inline ml-2">
                     {activePerspective === 'consumer' ? t("header.proMode") : t("header.userMode")}
                   </span>
                 </button>
@@ -293,10 +293,10 @@ export default function DashboardHeader({
             {!isAdminView && (
               <Link
                 href="/messages"
-                className="w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl sm:rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40"
+                className="hidden md:flex w-11 h-11 items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-2xl transition-all relative group shadow-sm bg-secondary/30 border border-border/40 active:scale-95 flex-shrink-0"
                 aria-label={t("nav.messages")}
               >
-                <MessageSquare className="w-4 h-4 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <AnimatePresence>
                   {unreadMessages > 0 && (
                     <motion.span
@@ -328,13 +328,13 @@ export default function DashboardHeader({
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => { setShowProfileMenu(!showProfileMenu); }}
-              className="flex items-center gap-2 sm:gap-3 md:gap-4 group p-1 sm:p-1.5 sm:pr-2 md:pr-3 bg-secondary/30 hover:bg-secondary/50 rounded-xl sm:rounded-2xl border border-border/40 transition-all active:scale-95"
+              className="flex items-center gap-2 md:gap-4 group p-0 md:p-1.5 md:pr-3 md:bg-secondary/30 hover:md:bg-secondary/50 rounded-full md:rounded-2xl border-none md:border md:border-border/40 transition-all active:scale-95"
               aria-label="Account menu"
             >
               <div className="relative">
                 {profileImage && !profileImage.includes("dicebear.com") ? (
                   <>
-                    <div className="hidden sm:block">
+                    <div className="hidden md:block">
                       <CircularFrame
                         src={profileImage}
                         alt={displayName}
@@ -343,22 +343,22 @@ export default function DashboardHeader({
                         className="group-hover:ring-4 ring-primary/10 transition-all shadow-md"
                       />
                     </div>
-                    <div className="block sm:hidden">
+                    <div className="block md:hidden">
                       <CircularFrame
                         src={profileImage}
                         alt={displayName}
-                        size={32}
+                        size={36}
                         border={true}
                         className="group-hover:ring-2 ring-primary/10 transition-all shadow-sm"
                       />
                     </div>
                   </>
                 ) : (
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-md group-hover:shadow-lg group-hover:border-primary/20 transition-all">
-                    <User2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-full md:rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-md group-hover:shadow-lg group-hover:border-primary/20 transition-all">
+                    <User2 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   </div>
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-background rounded-full z-10 shadow-sm" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-background rounded-full z-10 shadow-sm" />
               </div>
 
               {/* Hide name text if it's already in the main title to avoid duplication */}
