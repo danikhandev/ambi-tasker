@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/services/prisma';
 import { getAuth } from '@/utils/auth';
 import { logger } from '@/utils/logger';
 
-export async function POST(req: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function POST(req: NextRequest) {
   try {
     const auth = await getAuth(req);
-    if (!auth || auth.role !== 'PROVIDER') {
+    if (!auth || !auth.user || auth.user.role !== 'PROVIDER') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
 
     // Ensure provider profile exists
     const providerProfile = await prisma.providerProfile.findUnique({
-      where: { userId: auth.userId }
+      where: { userId: auth.user.id }
     });
 
     if (!providerProfile) {

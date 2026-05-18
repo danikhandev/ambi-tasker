@@ -16,7 +16,8 @@ export const BUCKETS = {
   KYC: 'kyc-documents',
   PROFILES: 'profile-images',
   ADMIN: 'admin-avatars',
-  POSTERS: 'posters'
+  POSTERS: 'posters',
+  CHAT: 'chat-attachments'
 } as const;
 
 export async function uploadFile(
@@ -39,7 +40,8 @@ export async function uploadFile(
   if (error && (error.message.includes('not found') || (error as any).status === 404)) {
     try {
       console.log(`Bucket "${bucket}" not found. Attempting auto-creation...`);
-      await admin.storage.createBucket(bucket, { public: false });
+      const isPrivate = bucket === BUCKETS.KYC;
+      await admin.storage.createBucket(bucket, { public: !isPrivate });
       
       // Retry upload after creation
       const retry = await admin.storage

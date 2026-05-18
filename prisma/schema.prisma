@@ -330,6 +330,7 @@ model Message {
   bookingId      String?      @map("booking_id")
   booking        Booking?     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   messageText    String       @map("message_text")
+  attachmentUrl  String?      @map("attachment_url")
   isRead         Boolean      @default(false) @map("is_read")
   createdAt      DateTime     @default(now()) @map("created_at")
 

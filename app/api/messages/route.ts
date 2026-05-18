@@ -172,11 +172,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bookingId, conversationId, message } = body;
+    const { bookingId, conversationId, message, attachmentUrl } = body;
 
-    if ((!bookingId && !conversationId) || !message?.trim()) {
+    if ((!bookingId && !conversationId) || (!message?.trim() && !attachmentUrl)) {
       return NextResponse.json(
-        { success: false, error: "Target (booking or conversation) and message are required" },
+        { success: false, error: "Target (booking or conversation) and message or attachment are required" },
         { status: 400 }
       );
     }
@@ -251,7 +251,8 @@ export async function POST(req: NextRequest) {
         receiverId,
         bookingId: bookingId || null,
         conversationId: targetConversationId,
-        messageText: message.trim(),
+        messageText: message?.trim() || "",
+        attachmentUrl: attachmentUrl || null,
         isRead: false,
       },
       include: {
@@ -261,11 +262,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const notificationText = message?.trim() 
+      ? message.trim() 
+      : (attachmentUrl?.includes("voice") ? "Sent a voice note" : "Sent a photo attachment");
+
     // Create notification for receiver
     await sendNotification({
       userId: receiverId,
       title: "New Message",
-      body: `${guard.user.name}: ${message.trim().substring(0, 80)}${message.length > 80 ? "..." : ""}`,
+      body: `${guard.user.name}: ${notificationText.substring(0, 80)}${notificationText.length > 80 ? "..." : ""}`,
       type: "GENERAL",
       actionUrl: `/messages/${guard.user.id}`,
     });

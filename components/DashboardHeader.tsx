@@ -69,7 +69,6 @@ export default function DashboardHeader({
   const handleSwitchPerspective = async () => {
     const newPerspective = activePerspective === 'consumer' ? 'provider' : 'consumer';
     await switchPerspective(newPerspective);
-    router.push(newPerspective === 'provider' ? PROVIDER_ROUTES.DASHBOARD : USER_ROUTES.HOME);
   };
 
   const getUserInfo = () => {

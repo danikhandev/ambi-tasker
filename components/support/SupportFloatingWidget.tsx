@@ -54,12 +54,27 @@ export default function SupportFloatingWidget() {
       const res = await fetch("/api/support/conversations");
       const json = await res.json();
       if (json.success) {
-        setConversations(json.data);
-        if (json.data.length === 1) {
-          setSelectedId(json.data[0].id);
-          setView("chat");
-        } else if (json.data.length > 1) {
-          setView("list");
+        if (json.data.length === 0) {
+          // Auto-initialize to go directly to chat
+          const postRes = await fetch("/api/support/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subject: "Direct Support Inquiry", category: "GENERAL" })
+          });
+          const postJson = await postRes.json();
+          if (postJson.success) {
+            setConversations([postJson.data]);
+            setSelectedId(postJson.data.id);
+            setView("chat");
+          }
+        } else {
+          setConversations(json.data);
+          if (json.data.length === 1) {
+            setSelectedId(json.data[0].id);
+            setView("chat");
+          } else {
+            setView("list");
+          }
         }
       }
     } catch (err) {
@@ -204,35 +219,8 @@ export default function SupportFloatingWidget() {
                   </button>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center p-6 sm:p-10 text-center">
-                  <div className="relative mb-6 sm:mb-8">
-                     <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
-                     <div className="w-20 h-20 sm:w-24 sm:h-24 bg-card border border-border/50 text-primary rounded-[24px] sm:rounded-[32px] flex items-center justify-center relative z-10 shadow-xl group">
-                       <MessageSquare size={32} className="sm:w-10 sm:h-10 group-hover:scale-110 transition-transform duration-500" />
-                     </div>
-                  </div>
-                  
-                  <h5 className={`${unbounded.className} text-lg sm:text-xl font-black mb-2 sm:mb-3 tracking-tight text-foreground`}>
-                    {t("support.howCanWeHelp") || "How can we help?"}
-                  </h5>
-                  <p className="text-[11px] sm:text-xs text-text-hint font-medium mb-8 sm:mb-10 max-w-[240px] mx-auto leading-relaxed">
-                    Connect with our support experts for real-time assistance.
-                  </p>
-                  
-                  <button
-                    onClick={startNewConversation}
-                    disabled={loading}
-                    className="w-full max-w-xs py-4 sm:py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:shadow-2xl hover:shadow-primary/30 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-3"
-                  >
-                    {loading ? (
-                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        <span>Initialize Chat</span>
-                      </>
-                    )}
-                  </button>
+                <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                 </div>
               )}
             </div>

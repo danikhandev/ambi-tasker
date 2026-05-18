@@ -161,122 +161,125 @@ export default function LocationSelector({
   };
 
   return (
-    <div ref={wrapperRef} className={`space-y-5 ${className}`}>
+    <div ref={wrapperRef} className={`space-y-4 ${className}`}>
       {/* Beta availability banner */}
       {IS_BETA && (
         <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
-          <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">
+            <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-0.5">
               {PLATFORM_SUBTITLE}
             </p>
-            <p className="text-sm text-text-secondary font-medium">
+            <p className="text-xs text-text-secondary font-medium leading-relaxed">
               {AVAILABILITY_MESSAGE}
             </p>
           </div>
         </div>
       )}
 
-      {/* Province Selector */}
-      {showProvince && (
-        <DropdownField
-          label="Province"
-          icon={<Globe className="w-3.5 h-3.5" />}
-          value={value?.provinceName || ""}
-          options={provinces}
-          loading={loading.provinces}
-          open={openDropdown === "province"}
-          onToggle={() => {
-            setOpenDropdown(openDropdown === "province" ? null : "province");
-            setSearchQuery("");
-          }}
-          onSelect={(item: any) => handleSelect("province", item)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterOptions={filterOptions}
-          disabled={disabled}
-        />
-      )}
+      {/* Unified iOS-Settings Style Table */}
+      <div className="bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border shadow-sm">
+        {/* Province Selector */}
+        {showProvince && (
+          <TableRowField
+            label="Province"
+            icon={<Globe className="w-4 h-4" />}
+            value={value?.provinceName || ""}
+            options={provinces}
+            loading={loading.provinces}
+            open={openDropdown === "province"}
+            onToggle={() => {
+              setOpenDropdown(openDropdown === "province" ? null : "province");
+              setSearchQuery("");
+            }}
+            onSelect={(item: any) => handleSelect("province", item)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterOptions={filterOptions}
+            disabled={disabled}
+          />
+        )}
 
-      {/* District Selector */}
-      {showDistrict && (
-        <DropdownField
-          label="District"
-          icon={<MapPin className="w-3.5 h-3.5" />}
-          value={value?.districtName || ""}
-          options={districts}
-          loading={loading.districts}
-          open={openDropdown === "district"}
-          onToggle={() => {
-            if (showProvince && !value?.provinceId) return;
-            setOpenDropdown(openDropdown === "district" ? null : "district");
-            setSearchQuery("");
-          }}
-          onSelect={(item: any) => handleSelect("district", item)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterOptions={filterOptions}
-          disabled={disabled || (showProvince && !value?.provinceId)}
-          placeholder={showProvince && !value?.provinceId ? "Select Province first" : "Search District"}
-        />
-      )}
+        {/* District Selector */}
+        {showDistrict && (
+          <TableRowField
+            label="District"
+            icon={<MapPin className="w-4 h-4" />}
+            value={value?.districtName || ""}
+            options={districts}
+            loading={loading.districts}
+            open={openDropdown === "district"}
+            onToggle={() => {
+              if (showProvince && !value?.provinceId) return;
+              setOpenDropdown(openDropdown === "district" ? null : "district");
+              setSearchQuery("");
+            }}
+            onSelect={(item: any) => handleSelect("district", item)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterOptions={filterOptions}
+            disabled={disabled || (showProvince && !value?.provinceId)}
+            placeholder={showProvince && !value?.provinceId ? "Select Province first" : "Search District"}
+          />
+        )}
 
-      {/* City Selector */}
-      {showCity && (
-        <DropdownField
-          label="City / Tehsil"
-          icon={<MapPin className="w-3.5 h-3.5" />}
-          value={value?.cityName || ""}
-          options={cities}
-          loading={loading.cities}
-          open={openDropdown === "city"}
-          onToggle={() => {
-            if (!value?.districtId) return;
-            setOpenDropdown(openDropdown === "city" ? null : "city");
-            setSearchQuery("");
-          }}
-          onSelect={(item: any) => handleSelect("city", item)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterOptions={filterOptions}
-          disabled={disabled || !value?.districtId}
-          placeholder={!value?.districtId ? "Select District first" : "Search City"}
-        />
-      )}
+        {/* City Selector */}
+        {showCity && (
+          <TableRowField
+            label="City / Tehsil"
+            icon={<MapPin className="w-4 h-4" />}
+            value={value?.cityName || ""}
+            options={cities}
+            loading={loading.cities}
+            open={openDropdown === "city"}
+            onToggle={() => {
+              if (!value?.districtId) return;
+              setOpenDropdown(openDropdown === "city" ? null : "city");
+              setSearchQuery("");
+            }}
+            onSelect={(item: any) => handleSelect("city", item)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterOptions={filterOptions}
+            disabled={disabled || !value?.districtId}
+            placeholder={!value?.districtId ? "Select District first" : "Search City"}
+          />
+        )}
 
-      {/* Area Selector */}
-      {showArea && (
-        <DropdownField
-          label="Area / Locality"
-          icon={<MapPin className="w-3.5 h-3.5" />}
-          value={value?.areaName || ""}
-          options={areas}
-          loading={loading.areas}
-          open={openDropdown === "area"}
-          onToggle={() => {
-            const dependencyMet = showCity ? !!value?.cityId : !!value?.districtId;
-            if (!dependencyMet) return;
-            setOpenDropdown(openDropdown === "area" ? null : "area");
-            setSearchQuery("");
-          }}
-          onSelect={(item: any) => handleSelect("area", item)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterOptions={filterOptions}
-          disabled={disabled || (showCity ? !value?.cityId : !value?.districtId)}
-          placeholder={showCity 
-            ? (!value?.cityId ? "Select City first" : "Search Area")
-            : (!value?.districtId ? "Select District first" : "Search Area")
-          }
-        />
-      )}
+        {/* Area Selector */}
+        {showArea && (
+          <TableRowField
+            label="Area / Locality"
+            icon={<MapPin className="w-4 h-4" />}
+            value={value?.areaName || ""}
+            options={areas}
+            loading={loading.areas}
+            open={openDropdown === "area"}
+            onToggle={() => {
+              const dependencyMet = showCity ? !!value?.cityId : !!value?.districtId;
+              if (!dependencyMet) return;
+              setOpenDropdown(openDropdown === "area" ? null : "area");
+              setSearchQuery("");
+            }}
+            onSelect={(item: any) => handleSelect("area", item)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterOptions={filterOptions}
+            disabled={disabled || (showCity ? !value?.cityId : !value?.districtId)}
+            placeholder={showCity 
+              ? (!value?.cityId ? "Select City first" : "Search Area")
+              : (!value?.districtId ? "Select District first" : "Search Area")
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── INTERNAL DROPDOWN FIELD ──────────────────────────────────────────────────
+// ─── INTERNAL DROPDOWN TABLE ROW FIELD ──────────────────────────────────────────
 
-function DropdownField({
+function TableRowField({
   label, value, options, open, onToggle, onSelect,
   searchQuery, onSearchChange, filterOptions,
   disabled = false, loading = false, icon, placeholder = "Search..."
@@ -284,88 +287,92 @@ function DropdownField({
   const filteredOptions = filterOptions(options);
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-[10px] font-black uppercase tracking-widest text-text-hint flex items-center gap-2 px-1">
-        {icon} {label}
-      </label>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={disabled}
-          className={`w-full px-5 py-4 rounded-2xl border flex items-center gap-3 text-left transition-all duration-300
-            ${open
-              ? "border-primary/40 bg-primary/5 shadow-2xl shadow-primary/10"
-              : "border-border bg-card hover:border-primary/20 hover:shadow-sm"
-            }
-            ${disabled ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer"}
-          `}
-        >
-          <div className={`p-2 rounded-xl ${value ? 'bg-primary/10 text-primary' : 'bg-muted text-text-hint'}`}>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled}
+        className={`w-full px-5 py-3.5 flex items-center justify-between text-left transition-all duration-200
+          ${open ? "bg-primary/5" : "hover:bg-muted/30"}
+          ${disabled ? "opacity-40 cursor-not-allowed grayscale" : "cursor-pointer"}
+        `}
+      >
+        <div className="flex items-center gap-4 min-w-0">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors
+            ${value ? 'bg-primary/10 text-primary' : 'bg-muted text-text-hint'}
+          `}>
              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : icon}
           </div>
-          <span className={`flex-1 text-sm font-bold truncate ${value ? "text-foreground" : "text-text-hint"}`}>
-            {value || `Select ${label}`}
-          </span>
-          <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="w-4 h-4 text-text-hint" />
-          </motion.div>
-        </button>
+          <div className="min-w-0">
+            <span className="text-[10px] font-black uppercase tracking-widest text-text-hint block leading-none mb-1">
+              {label}
+            </span>
+            <span className={`text-xs font-bold truncate block leading-none
+              ${value ? "text-foreground" : "text-text-hint/70"}
+            `}>
+              {value || `Select ${label}`}
+            </span>
+          </div>
+        </div>
 
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.97 }}
-              className="absolute top-full mt-2 left-0 right-0 z-50 bg-card border border-border rounded-2xl shadow-2xl shadow-black/10 overflow-hidden"
-            >
-              <div className="p-3 border-b border-border bg-muted/30">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-hint" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    placeholder={placeholder}
-                    className="w-full pl-9 pr-4 py-2.5 bg-muted rounded-xl text-sm font-bold placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 border border-transparent"
-                    autoFocus
-                  />
+        <div className="flex items-center gap-2 shrink-0">
+          <ChevronDown className="w-4 h-4 text-text-hint/80" />
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            className="absolute left-0 right-0 z-50 bg-card border border-border rounded-xl shadow-2xl overflow-hidden mt-1 mx-2"
+          >
+            <div className="p-2 border-b border-border bg-muted/40">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-hint" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder={placeholder}
+                  className="w-full pl-8 pr-4 py-2 bg-muted rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 border border-transparent"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto">
+              {loading ? (
+                <div className="px-4 py-6 text-center text-text-hint text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  Loading...
                 </div>
-              </div>
-
-              <div className="max-h-52 overflow-y-auto">
-                {loading ? (
-                  <div className="px-5 py-8 text-center text-text-hint text-xs font-black uppercase tracking-widest flex flex-col items-center gap-3">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    Fetching Data...
-                  </div>
-                ) : filteredOptions.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-text-hint text-xs font-bold">
-                    No results found
-                  </div>
-                ) : (
-                  filteredOptions.map((opt: LocationItem) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onSelect(opt)}
-                      className={`w-full flex items-center gap-3 px-5 py-3.5 text-left text-sm font-bold transition-all
-                        ${opt.name === value
-                          ? "bg-primary text-white"
-                          : "text-foreground hover:bg-muted"
-                        }`}
-                    >
-                      {opt.name === value && <CheckCircle2 className="w-4 h-4 text-white shrink-0" />}
-                      <span className="flex-1">{opt.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              ) : filteredOptions.length === 0 ? (
+                <div className="px-4 py-6 text-center text-text-hint text-xs font-bold">
+                  No results found
+                </div>
+              ) : (
+                filteredOptions.map((opt: LocationItem) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onSelect(opt)}
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 text-left text-xs font-bold transition-all
+                      ${opt.name === value
+                        ? "bg-primary text-white"
+                        : "text-foreground hover:bg-muted"
+                      }`}
+                  >
+                    {opt.name === value && <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />}
+                    <span className="flex-1">{opt.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getAdminAuth } from '@/utils/adminAuth';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/services/prisma';
+import { getAdminAuth } from '@/utils/admin-auth';
 import { logger } from '@/utils/logger';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export const dynamic = 'force-dynamic';
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const auth = await getAdminAuth(req);
     if (!auth) {

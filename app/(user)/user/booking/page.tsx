@@ -321,9 +321,9 @@ function BookingForm() {
                     subtitle={t("booking.bookingSubtitle")}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:p-8 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:p-4 items-start">
                     {/* Form Section */}
-                    <div className="md:col-span-7 space-y-8">
+                    <div className="md:col-span-7 space-y-5">
                         <AnimatePresence>
                             {error && (
                                 <motion.div
@@ -337,16 +337,16 @@ function BookingForm() {
                         </AnimatePresence>
 
                         {/* Schedule Section */}
-                        <div className="bg-card p-6 md:p-8 rounded-[32px] border border-border shadow-sm">
-                            <h3 className="flex items-center gap-3 text-lg font-black text-foreground mb-6">
-                                <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-                                    <Calendar className="w-5 h-5" />
+                        <div className="bg-card p-4 md:p-6 rounded-2xl border border-border shadow-sm">
+                            <h3 className="flex items-center gap-3 text-base font-black text-foreground mb-4">
+                                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                    <Calendar className="w-4 h-4" />
                                 </div>
                                 {t("booking.whenDoYouNeed")}
                             </h3>
-                            <div className="space-y-6">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-black text-text-hint uppercase tracking-widest mb-2 block">
+                                    <label className="text-[10px] font-black text-text-hint uppercase tracking-widest mb-1.5 block">
                                         {t("booking.date")}
                                     </label>
                                     <input
@@ -355,21 +355,21 @@ function BookingForm() {
                                         onChange={(e) => setDate(e.target.value)}
                                         min={new Date().toISOString().split("T")[0]}
                                         dir="ltr"
-                                        className="w-full px-5 py-4 rounded-2xl border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 bg-muted font-bold"
+                                        className="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 bg-muted font-bold text-xs"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-black text-text-hint uppercase tracking-widest mb-2 block">
+                                    <label className="text-[10px] font-black text-text-hint uppercase tracking-widest mb-1.5 block">
                                         {t("booking.time")}
                                     </label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                         {timeSlots.map(slot => (
                                             <button
                                                 key={slot}
                                                 onClick={() => setTime(slot)}
                                                 dir="ltr"
-                                                className={`py-3 px-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border-2 ${time === slot
-                                                    ? "bg-primary border-primary text-white shadow-lg shadow-primary/30"
+                                                className={`py-2 px-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all border-2 ${time === slot
+                                                    ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
                                                     : "bg-card border-border text-text-secondary hover:border-border/60"
                                                     }`}
                                             >
@@ -382,111 +382,112 @@ function BookingForm() {
                         </div>
 
                         {/* Location Section */}
-                        <div className="bg-card p-6 md:p-8 rounded-[32px] border border-border shadow-sm">
-                            <h3 className="flex items-center gap-3 text-lg font-black text-foreground mb-6">
-                                <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center">
-                                    <MapPin className="w-5 h-5" />
+                        <div className="bg-card p-4 md:p-6 rounded-2xl border border-border shadow-sm">
+                            <h3 className="flex items-center gap-3 text-base font-black text-foreground mb-4">
+                                <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
+                                    <MapPin className="w-4 h-4" />
                                 </div>
                                 {t("booking.whereToGo")}
                             </h3>
                             <LocationPicker
                                 onLocationSelect={(loc) => setLocationData(loc)}
                                 initialLocation={locationData}
+                                compact={true}
                             />
                         </div>
 
                         {/* Notes Section */}
-                        <div className="bg-card p-6 md:p-8 rounded-[32px] border border-border shadow-sm">
-                            <h3 className="flex items-center gap-3 text-lg font-black text-foreground mb-6">
-                                <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
-                                    <FileText className="w-5 h-5" />
+                        <div className="bg-card p-4 md:p-6 rounded-2xl border border-border shadow-sm">
+                            <h3 className="flex items-center gap-3 text-base font-black text-foreground mb-4">
+                                <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                                    <FileText className="w-4 h-4" />
                                 </div>
                                 {t("booking.additionalNotes")}
                             </h3>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                rows={3}
+                                rows={2}
                                 placeholder={t("booking.notesPlaceholder")}
-                                className="w-full px-5 py-4 rounded-2xl border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 bg-muted font-medium resize-none shadow-inner"
+                                className="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 bg-muted font-medium resize-none shadow-inner text-xs"
                             />
                         </div>
                     </div>
 
                     {/* Summary Sidebar */}
                     <div className="md:col-span-5 relative">
-                        <div className="sticky top-24 space-y-6">
+                        <div className="sticky top-24 space-y-4">
                             {/* Provider Card */}
-                            <div className="bg-card rounded-[32px] border border-border p-6 shadow-sm overflow-hidden relative">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                                <div className="mb-6 relative z-10 flex items-center gap-4 border-b border-gray-50 pb-6">
+                            <div className="bg-card rounded-2xl border border-border p-4 shadow-sm overflow-hidden relative">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                                <div className="mb-4 relative z-10 flex items-center gap-3 border-b border-gray-50 pb-4">
                                     <div className="relative group">
                                         <CircularFrame
                                             src={matchedWorker.avatar}
                                             alt="Provider"
-                                            size={64}
-                                            className="border-primary/20 shadow-xl"
+                                            size={48}
+                                            className="border-primary/20 shadow-md"
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white" />
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
                                     </div>
                                     <div className={isRTL ? "text-right" : ""}>
-                                        <h4 className={`${unbounded.className} text-xl font-black text-foreground leading-tight`}>{matchedWorker.name}</h4>
-                                        <span className="text-[10px] uppercase font-black tracking-widest text-text-hint">{matchedWorker.title}</span>
-                                        <div className="flex items-center gap-1 mt-1 border border-border bg-card w-fit px-2 py-0.5 rounded-full">
-                                            <Star className="w-3.5 h-3.5 text-yellow-500 fill-current" />
-                                            <span className="text-xs font-bold text-foreground">{matchedWorker.rating}</span>
+                                        <h4 className={`${unbounded.className} text-base font-black text-foreground leading-tight`}>{matchedWorker.name}</h4>
+                                        <span className="text-[9px] uppercase font-black tracking-widest text-text-hint block mt-0.5">{matchedWorker.title}</span>
+                                        <div className="flex items-center gap-1 mt-1 border border-border bg-card w-fit px-1.5 py-0.5 rounded-full">
+                                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                            <span className="text-[10px] font-bold text-foreground">{matchedWorker.rating}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-start border-b border-gray-50 pb-4">
-                                        <span className="text-sm font-medium text-text-hint uppercase tracking-widest text-[10px]">{t("booking.service")}</span>
-                                        <span className="font-black text-foreground max-w-[60%]">{defaultServiceName}</span>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-start border-b border-gray-50 pb-3">
+                                        <span className="text-[9px] font-medium text-text-hint uppercase tracking-widest">{t("booking.service")}</span>
+                                        <span className="font-black text-foreground text-xs max-w-[60%] truncate">{defaultServiceName}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm font-medium text-text-secondary">{t("booking.serviceFee")}</span>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-medium text-text-secondary">{t("booking.serviceFee")}</span>
                                         <span className="font-bold text-foreground">Rs. {baseServicePrice}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm font-medium text-text-secondary">Visit & Delivery</span>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-medium text-text-secondary">Visit & Delivery</span>
                                         <span className="font-bold text-foreground">Rs. {visitCharge}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm font-medium text-text-secondary">GST (5%)</span>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-medium text-text-secondary">GST (5%)</span>
                                         <span className="font-bold text-foreground">Rs. {taxAmount}</span>
                                     </div>
-                                    <div className="pt-4 border-t border-border flex justify-between items-center">
-                                        <span className="font-black text-foreground uppercase tracking-widest text-xs">{t("booking.total")}</span>
-                                        <span className={`${unbounded.className} text-3xl font-black text-primary`}>Rs. {totalPrice}</span>
+                                    <div className="pt-3 border-t border-border flex justify-between items-center">
+                                        <span className="font-black text-foreground uppercase tracking-widest text-[10px]">{t("booking.total")}</span>
+                                        <span className={`${unbounded.className} text-xl font-black text-primary`}>Rs. {totalPrice}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Payment Options */}
-                            <div className="bg-card rounded-[32px] border border-border p-6 shadow-sm">
-                                <h4 className="text-[10px] font-black text-text-hint uppercase tracking-widest mb-4">
+                            <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+                                <h4 className="text-[9px] font-black text-text-hint uppercase tracking-widest mb-3">
                                     {t("booking.paymentMethod")}
                                 </h4>
-                                <div className="space-y-3">
-                                    <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === "cash" ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}>
+                                <div className="space-y-2">
+                                    <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "cash" ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}>
                                         <input type="radio" className="hidden" onChange={() => setPaymentMethod("cash")} checked={paymentMethod === "cash"} />
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "cash" ? "border-primary" : "border-border/60"}`}>
-                                            {paymentMethod === "cash" && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "cash" ? "border-primary" : "border-border/60"}`}>
+                                            {paymentMethod === "cash" && <div className="w-2 h-2 bg-primary rounded-full" />}
                                         </div>
-                                        <Wallet className={`w-6 h-6 ${paymentMethod === "cash" ? "text-primary" : "text-text-hint"}`} />
+                                        <Wallet className={`w-5 h-5 ${paymentMethod === "cash" ? "text-primary" : "text-text-hint"}`} />
                                         <div>
-                                            <p className="font-bold text-foreground text-sm">{t("booking.cashOnDelivery")}</p>
+                                            <p className="font-bold text-foreground text-xs">{t("booking.cashOnDelivery")}</p>
                                         </div>
                                     </label>
-                                    <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === "online" ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}>
+                                    <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "online" ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}>
                                         <input type="radio" className="hidden" onChange={() => setPaymentMethod("online")} checked={paymentMethod === "online"} />
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "online" ? "border-primary" : "border-border/60"}`}>
-                                            {paymentMethod === "online" && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "online" ? "border-primary" : "border-border/60"}`}>
+                                            {paymentMethod === "online" && <div className="w-2 h-2 bg-primary rounded-full" />}
                                         </div>
-                                        <CreditCard className={`w-6 h-6 ${paymentMethod === "online" ? "text-primary" : "text-text-hint"}`} />
+                                        <CreditCard className={`w-5 h-5 ${paymentMethod === "online" ? "text-primary" : "text-text-hint"}`} />
                                         <div>
-                                            <p className="font-bold text-foreground text-sm">{t("booking.onlinePayment")}</p>
+                                            <p className="font-bold text-foreground text-xs">{t("booking.onlinePayment")}</p>
                                         </div>
                                     </label>
                                 </div>
@@ -496,16 +497,16 @@ function BookingForm() {
                             <button
                                 onClick={handleConfirmBooking}
                                 disabled={isSubmitting}
-                                className="w-full py-5 bg-gray-900 text-white font-black text-lg rounded-[24px] hover:bg-primary hover:shadow-md border border-border/50 hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                                className="w-full py-4 bg-gray-900 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-primary hover:shadow-md border border-border/50 hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                             >
                                 {isSubmitting ? (
-                                    <><div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" /> {t("booking.confirming")}</>
+                                    <><div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> {t("booking.confirming")}</>
                                 ) : (
-                                    <>{t("booking.confirmBooking")} <ArrowRight className="w-6 h-6" /></>
+                                    <>{t("booking.confirmBooking")} <ArrowRight className="w-4 h-4" /></>
                                 )}
                             </button>
 
-                            <p className="text-center text-[10px] font-bold text-text-hint px-4 mt-4 flex items-center justify-center gap-1.5 uppercase tracking-widest">
+                            <p className="text-center text-[9px] font-bold text-text-hint px-4 mt-3 flex items-center justify-center gap-1.5 uppercase tracking-widest">
                                 <ShieldCheck className="w-3.5 h-3.5 text-primary" /> <BrandText text={t("booking.ambiGuarantee")} />
                             </p>
                         </div>

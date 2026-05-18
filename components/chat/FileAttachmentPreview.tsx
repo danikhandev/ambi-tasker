@@ -54,15 +54,15 @@ export default function FileAttachmentPreview({
 
   const isVideo =
     fileType.startsWith("video/") ||
-    ["mp4", "webm", "mov"].some((ext) =>
+    (["mp4", "webm", "mov"].some((ext) =>
       fileName.toLowerCase().endsWith(ext)
-    );
+    ) && !fileType.startsWith("audio/"));
 
   const isAudio =
     fileType.startsWith("audio/") ||
-    ["mp3", "wav", "ogg", "webm", "m4a"].some((ext) =>
+    (["mp3", "wav", "ogg", "webm", "m4a"].some((ext) =>
       fileName.toLowerCase().endsWith(ext)
-    );
+    ) && !fileType.startsWith("video/"));
 
   const isDocument =
     fileType.includes("pdf") ||
@@ -178,15 +178,22 @@ export default function FileAttachmentPreview({
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              const audio = document.getElementById(`audio-${attachment.id}`
-              ) as HTMLAudioElement;
+              const audio = document.getElementById(`audio-${attachment.id}`) as HTMLAudioElement;
               if (audio) {
                 if (audioPlaying) {
                   audio.pause();
                 } else {
-                  audio.play();
+                  // Pause all other audio elements playing in the page
+                  const allAudios = document.querySelectorAll("audio");
+                  allAudios.forEach((el) => {
+                    if (el.id !== `audio-${attachment.id}`) {
+                      el.pause();
+                    }
+                  });
+                  audio.play().catch((err) => {
+                    console.error("Audio play failed:", err);
+                  });
                 }
-                setAudioPlaying(!audioPlaying);
               }
             }}
             className="flex-shrink-0 w-14 h-14 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-primary transition-colors relative group-hover:scale-105 duration-500"
@@ -224,8 +231,7 @@ export default function FileAttachmentPreview({
           <div className="flex flex-col gap-1">
             <button
               onClick={() => {
-                const audio = document.getElementById(`audio-${attachment.id}`
-                ) as HTMLAudioElement;
+                const audio = document.getElementById(`audio-${attachment.id}`) as HTMLAudioElement;
                 if (audio) {
                   audio.muted = !isMuted;
                   setIsMuted(!isMuted);
@@ -248,6 +254,8 @@ export default function FileAttachmentPreview({
         <audio
           id={`audio-${attachment.id}`}
           src={fileUrl}
+          onPlay={() => setAudioPlaying(true)}
+          onPause={() => setAudioPlaying(false)}
           onTimeUpdate={(e) => {
             const audio = e.currentTarget;
             const progress = (audio.currentTime / audio.duration) * 100;

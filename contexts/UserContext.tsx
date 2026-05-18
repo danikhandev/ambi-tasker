@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import { useRouter } from "next/navigation";
 import { logger } from "@/utils/logger";
 import { supabase } from "@/services/supabase";
 
@@ -20,7 +21,7 @@ export interface User {
   avatar?: string;
   isUserSignUpForProvider: boolean;
   isEmailVerified: boolean;
-  idVerificationStatus: "NOT_STARTED" | "PENDING" | "VERIFIED" | "REJECTED";
+  idVerificationStatus: "NOT_STARTED" | "NOT_SUBMITTED" | "PENDING" | "UNDER_REVIEW" | "VERIFIED" | "REJECTED";
   rejectionReason?: string;
   dob?: string;
   gender?: "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY";
@@ -42,6 +43,7 @@ interface UserContextType {
   loading: boolean;
   error: string | null;
   activePerspective: UserPerspective;
+  isSwitchingPerspective: boolean;
   login: (email: string, isProvider?: boolean) => Promise<void>;
   logout: () => void;
   refetch: () => Promise<void>;
@@ -59,6 +61,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePerspective, setActivePerspective] = useState<UserPerspective>("consumer");
+  const router = useRouter();
 
   const refetch = useCallback(async () => {
     try {
@@ -258,25 +261,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (user.role === "USER" && perspective === "provider") {
-        window.location.href = "/profile";
+        router.push("/profile");
         return;
       }
 
+      // 1. Instantly update local context state for immediate UI reflection
       setActivePerspective(perspective);
       localStorage.setItem(PERSPECTIVE_STORAGE_KEY, perspective);
 
-      // Persist perspective to backend cookie
-      try {
-        await fetch("/api/user/switch-role", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ perspective }),
-        });
-      } catch (err) {
-        console.error("Failed to persist role switch:", err);
-      }
+      // 2. Persist perspective to backend cookie in the background
+      fetch("/api/user/switch-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ perspective }),
+      }).catch(err => console.error("Failed to persist role switch:", err));
+
+      // 3. Push to the new route and refresh Next.js cache to load the correct RSC payload
+      const targetUrl = perspective === "provider" ? "/provider/dashboard" : "/user/dashboard";
+      router.push(targetUrl);
+      router.refresh();
     },
-    [user]
+    [user, router]
   );
 
   const clearAllUsers = useCallback(() => {
@@ -293,6 +298,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       activePerspective,
+      isSwitchingPerspective: false,
       login,
       logout,
       refetch,
@@ -305,6 +311,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={contextValue}>
       {children}
+      
     </UserContext.Provider>
   );
 }

@@ -20,37 +20,52 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    // For KYC documents, we use the KYC bucket
     const bucket = (formData.get("bucket") as string) || BUCKETS.KYC;
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file size (max 10MB for chat, 5MB for others)
+    const isChatBucket = bucket === BUCKETS.CHAT;
+    const maxSize = isChatBucket ? 10 * 1024 * 1024 : MAX_FILE_SIZE;
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, error: `File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit` },
+        { success: false, error: `File size exceeds ${maxSize / (1024 * 1024)}MB limit` },
         { status: 400 }
       );
     }
 
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      return NextResponse.json(
-        { success: false, error: "Invalid file type. Only JPG, PNG, and WebP images are allowed." },
-        { status: 400 }
-      );
-    }
-
-    // Validate file extension as additional security layer
     const fileExt = (file.name.split('.').pop() || '').toLowerCase();
-    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
-    if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid file extension. Only .jpg, .jpeg, .png, and .webp are allowed." },
-        { status: 400 }
-      );
+    
+    if (isChatBucket) {
+      const isAudioType = file.type.toLowerCase().startsWith("audio/") || ["webm", "wav", "mp3", "ogg", "m4a"].includes(fileExt);
+      const isImageType = ALLOWED_TYPES.includes(file.type.toLowerCase()) || ["jpg", "jpeg", "png", "webp"].includes(fileExt);
+      const isDocType = ["application/pdf", "text/plain", "application/msword"].includes(file.type.toLowerCase()) || ["pdf", "txt", "doc", "docx"].includes(fileExt);
+
+      if (!isImageType && !isAudioType && !isDocType) {
+        return NextResponse.json(
+          { success: false, error: "Invalid file type for chat. Images, audio, and documents are supported." },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Validate file type strictly for KYC/Avatars
+      if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+        return NextResponse.json(
+          { success: false, error: "Invalid file type. Only JPG, PNG, and WebP images are allowed." },
+          { status: 400 }
+        );
+      }
+
+      // Validate file extension as additional security layer
+      const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+      if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid file extension. Only .jpg, .jpeg, .png, and .webp are allowed." },
+          { status: 400 }
+        );
+      }
     }
 
     const fileName = `${guard.user.id}/${uuidv4()}.${fileExt}`;

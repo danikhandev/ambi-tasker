@@ -13,10 +13,15 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 export default function Button({ variant = "primary", size = "md", loading = false, className, children, onClick, ...rest }: ButtonProps) {
-  const { playClickSound } = useSound();
+  const sound = useSound();
+  const playClickSound = sound.playClickSound;
 
   const handleOnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    playClickSound();
+    try {
+      playClickSound();
+    } catch (err) {
+      // Ignored
+    }
     if (onClick) onClick(e);
   };
 

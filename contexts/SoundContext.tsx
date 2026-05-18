@@ -123,7 +123,17 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 export function useSound() {
     const context = useContext(SoundContext);
     if (context === undefined) {
-        throw new Error("useSound must be used within a SoundProvider");
+        return {
+            isSoundEnabled: false,
+            setSoundEnabled: () => {},
+            isUISoundEnabled: false,
+            setUISoundEnabled: () => {},
+            playNotificationSound: () => {},
+            playClickSound: () => {},
+            availableTones: ["default"],
+            selectedTone: "default",
+            setSelectedTone: () => {}
+        };
     }
     return context;
 }

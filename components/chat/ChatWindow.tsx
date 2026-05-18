@@ -63,6 +63,7 @@ export default function ChatWindow({
   const [selectedMedia, setSelectedMedia] = useState<Attachment | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [unreadWhileScrolledUp, setUnreadWhileScrolledUp] = useState(0);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [liveLastActive, setLiveLastActive] = useState<string | undefined>(lastActiveAt);
@@ -165,6 +166,17 @@ export default function ChatWindow({
     markAsRead();
   }, [conversationId, markAsRead]);
 
+  // ─── Lock background body scrolling when modal overlays are active ──
+  useEffect(() => {
+    if (showCamera || showVoiceRecorder || !!selectedMedia) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow || "";
+      };
+    }
+  }, [showCamera, showVoiceRecorder, selectedMedia]);
+
   // ─── Typing indicator: emit start/stop ───────────────────────────
   const handleDraftChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -182,18 +194,76 @@ export default function ChatWindow({
     [sendTyping]
   );
 
+  const uploadAndSendMessage = useCallback(async (file: File, text?: string) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", "chat-attachments");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (json.success && json.url) {
+        await sendMessage(text || "", json.url);
+      } else {
+        console.error("Upload failed:", json.error);
+        alert(`Failed to send attachment: ${json.error || "Unknown error"}. Please check your connection.`);
+      }
+    } catch (err) {
+      console.error("Error uploading and sending file:", err);
+      alert("An unexpected error occurred while sending the attachment. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  }, [sendMessage]);
+
   const handleSend = useCallback(async () => {
     if (!draftMessage.trim() && selectedFiles.length === 0) return;
     const text = draftMessage.trim();
+    const filesToUpload = [...selectedFiles];
 
-    // In a real app, we would upload selectedFiles here
-    console.log("Sending message with files:", selectedFiles);
-
+    setIsUploading(true);
     setDraftMessage("");
     setSelectedFiles([]);
     sendTyping(false);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    await sendMessage(text);
+
+    try {
+      if (text && filesToUpload.length === 0) {
+        await sendMessage(text);
+      } else if (filesToUpload.length > 0) {
+        if (text) {
+          await sendMessage(text);
+        }
+        for (const fileToUpload of filesToUpload) {
+          const formData = new FormData();
+          formData.append("file", fileToUpload);
+          formData.append("bucket", "chat-attachments");
+
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+          const json = await res.json();
+          if (json.success && json.url) {
+            const isImg = fileToUpload.type.startsWith("image/");
+            const isAudio = fileToUpload.type.startsWith("audio/") || fileToUpload.name.endsWith(".webm");
+            const caption = isImg ? "Photo" : isAudio ? "Voice Note" : fileToUpload.name;
+            await sendMessage(caption, json.url);
+          } else {
+            console.error("Upload failed:", json.error);
+            alert(`Failed to send ${fileToUpload.name}: ${json.error || "Unknown error"}. Please check your connection.`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error in handleSend:", err);
+    } finally {
+      setIsUploading(false);
+    }
   }, [draftMessage, selectedFiles, sendMessage, sendTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -219,22 +289,22 @@ export default function ChatWindow({
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleVoiceRecordingComplete = (audioBlob: Blob) => {
-    const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: audioBlob.type });
-    handleSendFile(file);
+  const handleVoiceRecordingComplete = useCallback(async (audioBlob: Blob) => {
     setShowVoiceRecorder(false);
-  };
+    const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: audioBlob.type });
+    await uploadAndSendMessage(file, "Voice Note");
+  }, [uploadAndSendMessage]);
 
-  const handleCameraCapture = (image: string) => {
+  const handleCameraCapture = useCallback(async (image: string) => {
+    setShowCamera(false);
     const byteString = atob(image.split(",")[1]);
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
     const blob = new Blob([ab], { type: "image/jpeg" });
     const file = new File([blob], `camera-shot-${Date.now()}.jpg`, { type: "image/jpeg" });
-    handleSendFile(file);
-    setShowCamera(false);
-  };
+    await uploadAndSendMessage(file, "Photo");
+  }, [uploadAndSendMessage]);
 
   const formatTime = (date: string) =>
     new Date(date).toLocaleTimeString(language === "ur" ? "ur-PK" : "en-US", {
@@ -607,14 +677,20 @@ export default function ChatWindow({
                 </button>
                 <button
                   onClick={handleSend}
-                  disabled={!draftMessage.trim() && selectedFiles.length === 0}
+                  disabled={isUploading || (!draftMessage.trim() && selectedFiles.length === 0)}
                   className={`p-2 rounded-full transition-all active:scale-90 ${
-                    draftMessage.trim() || selectedFiles.length > 0
-                      ? "text-primary hover:bg-primary/5"
-                      : "text-gray-300"
+                    isUploading
+                      ? "text-primary cursor-not-allowed"
+                      : draftMessage.trim() || selectedFiles.length > 0
+                        ? "text-primary hover:bg-primary/5"
+                        : "text-gray-300"
                   }`}
                 >
-                  <Send className="w-5 h-5" fill={draftMessage.trim() ? "currentColor" : "none"} />
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" fill={draftMessage.trim() ? "currentColor" : "none"} />
+                  )}
                 </button>
               </div>
             </div>
@@ -644,7 +720,7 @@ export default function ChatWindow({
           <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[999] flex items-center justify-center p-6">
             <div className="w-full max-w-xl">
               <CameraCapture
-                type="selfie"
+                type="chat"
                 onCapture={handleCameraCapture}
                 onClose={() => setShowCamera(false)}
                 allowUpload={true}

@@ -10,7 +10,7 @@ import { Capacitor } from "@capacitor/core";
 import { Camera as CapCamera } from "@capacitor/camera";
 
 interface CameraCaptureProps {
-    type: "selfie" | "cnic-front" | "cnic-back";
+    type: "selfie" | "cnic-front" | "cnic-back" | "chat";
     onCapture: (image: string) => void;
     onClose?: () => void;
     allowUpload?: boolean;
@@ -201,15 +201,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
     }, [t, stopCamera]);
 
     useEffect(() => {
-        const initialMode = type === "selfie" ? "user" : "environment";
+        const initialMode = (type === "selfie" || type === "chat") ? "user" : "environment";
         setCapturedImage(null);
         setError(null);
         setIsCameraReady(false);
         setFacingMode(initialMode);
         modeRef.current = initialMode;
 
-        // Note: We don't auto-start if permission is prompt/denied for better UX
-        // startCamera(initialMode); 
+        // Auto-start camera stream on mount for immediate production-grade feed
+        startCamera(initialMode); 
 
         return () => {
             stopCamera();
@@ -217,7 +217,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                 activeStreamRef.current.getTracks().forEach(t => t.stop());
             }
         };
-    }, [type, stopCamera]);
+    }, [type, stopCamera, startCamera]);
 
     const capturePhoto = async () => {
         if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
@@ -358,7 +358,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                 </button>
             )}
 
-            <div className="relative w-full aspect-[4/3] bg-black overflow-hidden group">
+            <div className={`relative w-full ${type === "chat" ? "aspect-[16/10]" : "aspect-[4/3]"} bg-black overflow-hidden group`}>
                 {!capturedImage ? (
                     <>
                         {(permissionStatus === "prompt" || permissionStatus === "denied") && !isCameraReady && !error && (
@@ -372,7 +372,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                 <p className="text-xs text-white/60 font-medium mb-8 max-w-[280px] leading-relaxed">
                                     {permissionStatus === "denied" 
                                         ? (t("camera.permissionDenied") || "Camera access was denied. Please enable it in your browser settings to continue.")
-                                        : (t("camera.permissionDesc") || "We need camera access to capture high-quality photos for identity verification.")
+                                        : type === "chat"
+                                            ? "We need camera access to take and send photos directly in your conversation."
+                                            : (t("camera.permissionDesc") || "We need camera access to capture high-quality photos for identity verification.")
                                     }
                                 </p>
                                 <button
@@ -421,7 +423,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         {isCameraReady && !isVerifying && (
                             <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
                                 {/* Guides based on task type */}
-                                {type === "selfie" ? (
+                                {type === "chat" ? (
+                                    <div className="relative w-full h-full border-2 border-white/25 rounded-[32px] overflow-hidden">
+                                        {/* Simple elegant crosshair or subtle corners */}
+                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center">
+                                            <div className="w-1 bg-white/40 h-4 rounded-full" />
+                                            <div className="h-1 bg-white/40 w-4 rounded-full absolute" />
+                                        </div>
+                                    </div>
+                                ) : type === "selfie" ? (
                                     <div className="relative w-[75%] h-[85%] sm:w-[320px] sm:h-[400px]">
                                         {/* Scanner Frame */}
                                         <div className="absolute inset-0 border-[3px] border-primary/60 rounded-[160px] shadow-[0_0_0_2000px_rgba(0,0,0,0.7)]" />
@@ -479,10 +489,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         )}
 
                         <div className={`absolute top-8 ${isRTL ? "right-8" : "left-8"} flex items-center gap-4 z-20`}>
-                            <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-3 text-white text-[9px] font-black uppercase tracking-widest border border-white/10 shadow-xl">
-                                <Shield className="w-4 h-4 text-primary" />
-                                {t("camera.secureFeed") || "SECURE_UPLINK"}
-                            </div>
+                            {type !== "chat" && (
+                                <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-3 text-white text-[9px] font-black uppercase tracking-widest border border-white/10 shadow-xl">
+                                    <Shield className="w-4 h-4 text-primary" />
+                                    {t("camera.secureFeed") || "SECURE_UPLINK"}
+                                </div>
+                            )}
                             {isCameraReady && !isVerifying && (
                                 <div className="px-3 py-2 bg-green-500/80 backdrop-blur-xl rounded-2xl text-[8px] font-black text-white uppercase tracking-widest animate-pulse border border-white/10">
                                     {t("camera.live") || "LIVE"}
@@ -517,10 +529,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                         </div>
                                     </div>
                                     <h4 className={`${unbounded.className} text-[10px] font-black uppercase tracking-[0.4em] text-white/90`}>
-                                        {type === "selfie" ? (t("camera.analyzing") || "Biometric Sync") : (t("camera.analyzingDoc") || "OCR Verification")}
+                                        {type === "chat" ? "Processing Photo..." : type === "selfie" ? (t("camera.analyzing") || "Biometric Sync") : (t("camera.analyzingDoc") || "OCR Verification")}
                                     </h4>
                                     <div className="mt-8 flex flex-col items-center gap-4">
-                                        <p className="text-[8px] text-white/40 font-black uppercase tracking-[0.3em]">{t("camera.livenessDetection") || "Liveness Detection In Progress"}</p>
+                                        <p className="text-[8px] text-white/40 font-black uppercase tracking-[0.3em]">{type === "chat" ? "OPTIMIZING IMAGE DETAILS" : (t("camera.livenessDetection") || "Liveness Detection In Progress")}</p>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(i => (
                                                 <motion.div
@@ -534,9 +546,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                                 />
                                             ))}
                                         </div>
-                                        <div className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em] mt-2">
-                                            AI_VERIFICATION_PROBE
-                                        </div>
+                                        {type !== "chat" && (
+                                            <div className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em] mt-2">
+                                                AI_VERIFICATION_PROBE
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
@@ -549,9 +563,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                     animate={{ opacity: 1, y: 0 }}
                                     className="text-white text-[10px] font-black uppercase tracking-widest bg-black/60 backdrop-blur-2xl inline-block py-4 px-10 rounded-3xl border border-white/10 shadow-2xl"
                                 >
-                                    {type === "selfie"
-                                        ? "Align your face within the frame"
-                                        : type === 'cnic-front' ? "Position CNIC front-side inside markers" : "Position CNIC back-side inside markers"
+                                    {type === "chat"
+                                        ? "Take a photo to send in the chat"
+                                        : type === "selfie"
+                                            ? "Align your face within the frame"
+                                            : type === 'cnic-front' ? "Position CNIC front-side inside markers" : "Position CNIC back-side inside markers"
                                     }
                                 </motion.div>
                             </div>
@@ -601,33 +617,45 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                             </div>
                         </motion.div>
                     )}
+                {isCameraReady && !isVerifying && type === "chat" && (
+                    <button
+                        type="button"
+                        onClick={toggleCamera}
+                        className="absolute bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/60 transition-all border border-white/10 shadow-lg active:scale-90"
+                        title={t("camera.switchCamera") || "Switch Camera"}
+                    >
+                        <FlipHorizontal size={20} className={isRTL ? "scale-x-[-1]" : ""} />
+                    </button>
+                )}
                 </AnimatePresence>
             </div>
 
-            <div className="p-8 w-full space-y-6 bg-muted/20">
+            <div className={`${type === "chat" ? "p-5 space-y-4" : "p-8 space-y-6"} w-full bg-muted/20`}>
                 {!capturedImage ? (
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between px-2">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                    <Info size={16} />
+                    <div className={type === "chat" ? "flex flex-col gap-4" : "flex flex-col gap-6"}>
+                        {type !== "chat" && (
+                            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        <Info size={16} />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-hint">{t("camera.methodBiometric")}</p>
                                 </div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-text-hint">{t("camera.methodBiometric")}</p>
+                                <button
+                                    type="button"
+                                    onClick={toggleCamera}
+                                    className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center text-text-hint hover:text-primary transition-all shadow-sm active:scale-95 transition-all duration-200"
+                                    title={t("camera.switchCamera")}
+                                >
+                                    <FlipHorizontal size={18} className={isRTL ? "scale-x-[-1]" : ""} />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={toggleCamera}
-                                className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center text-text-hint hover:text-primary transition-all shadow-sm active:scale-95 transition-all duration-200"
-                                title={t("camera.switchCamera")}
-                            >
-                                <FlipHorizontal size={18} className={isRTL ? "scale-x-[-1]" : ""} />
-                            </button>
-                        </div>
+                        )}
                         <button
                             type="button"
                             onClick={capturePhoto}
                             disabled={!isCameraReady || isCapturing || isVerifying || !!error}
-                            className="w-full h-20 bg-primary text-white rounded-[32px] font-black text-xl shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-5 disabled:opacity-50 disabled:scale-100 disabled:shadow-none relative overflow-hidden group"
+                            className={`w-full ${type === "chat" ? "h-14 rounded-2xl text-md shadow-xl" : "h-20 rounded-[32px] text-xl shadow-2xl"} bg-primary text-white font-black shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-5 disabled:opacity-50 disabled:scale-100 disabled:shadow-none relative overflow-hidden group`}
                         >
                             <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]" />
                             {isCapturing ? (
@@ -635,14 +663,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                             ) : (
                                 <>
                                     <Camera className="w-8 h-8" />
-                                    {t("camera.reviewCapture")}
+                                    {type === "chat" ? "Capture Photo" : t("camera.reviewCapture")}
                                 </>
                             )}
                         </button>
 
                         {allowUpload && !liveOnly && (
                             <>
-                                <div className="flex items-center gap-4">
+                                <div className={`${type === "chat" ? "my-0.5" : ""} flex items-center gap-4`}>
                                     <div className="h-px bg-border flex-1" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-text-hint">{t("camera.or")}</span>
                                     <div className="h-px bg-border flex-1" />
@@ -651,10 +679,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full py-5 bg-card border-2 border-dashed border-border rounded-[28px] font-black text-xs uppercase tracking-[0.2em] text-text-hint hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all flex items-center justify-center gap-3 active:scale-95 duration-200"
+                                    className={`w-full ${type === "chat" ? "py-3.5 rounded-2xl text-xs" : "py-5 rounded-[28px] text-xs"} bg-card border-2 border-dashed border-border font-black uppercase tracking-[0.2em] text-text-hint hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all flex items-center justify-center gap-3 active:scale-95 duration-200`}
                                 >
                                     <Check className="w-4 h-4" />
-                                    {t("camera.chooseDocument")}
+                                    {type === "chat" ? "Upload Image from Gallery" : t("camera.chooseDocument")}
                                 </button>
                                 <input
                                     ref={fileInputRef}
@@ -667,11 +695,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         )}
                     </div>
                 ) : (
-                    <div className="flex gap-4 sm:gap-8">
+                    <div className={`${type === "chat" ? "gap-3" : "gap-4 sm:gap-8"} flex w-full`}>
                         <button
                             type="button"
                             onClick={handleRetake}
-                            className="flex-1 h-20 bg-card text-foreground rounded-[32px] border border-border font-black text-md flex items-center justify-center gap-3 hover:bg-muted/50 transition-all shadow-sm group active:scale-95 transition-all duration-200"
+                            className={`flex-1 ${type === "chat" ? "h-14 rounded-2xl text-sm" : "h-20 rounded-[32px] text-md"} bg-card text-foreground border border-border font-black flex items-center justify-center gap-3 hover:bg-muted/50 transition-all shadow-sm group active:scale-95 transition-all duration-200`}
                         >
                             <RefreshCw className={`w-4 h-4 text-text-hint group-hover:rotate-180 transition-transform duration-500 ${isRTL ? "ml-2" : "mr-2"}`} />
                             {t("camera.discard")}
@@ -679,7 +707,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         <button
                             type="button"
                             onClick={handleConfirm}
-                            className="flex-[1.5] h-20 bg-gray-900 text-white rounded-[32px] font-black text-md flex items-center justify-center gap-3 shadow-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all group"
+                            className={`flex-[1.5] ${type === "chat" ? "h-14 rounded-2xl text-sm" : "h-20 rounded-[32px] text-md"} bg-gray-900 text-white font-black flex items-center justify-center gap-3 shadow-2xl hover:bg-black hover:scale-[1.02] active:scale-95 transition-all group`}
                         >
                             <Check className="w-5 h-5 text-green-400 group-hover:scale-125 transition-transform" />
                             {t("camera.confirm")}

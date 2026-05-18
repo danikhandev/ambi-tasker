@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getAdminAuth } from '@/utils/adminAuth';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/services/prisma';
+import { getAdminAuth } from '@/utils/admin-auth';
 import { logger } from '@/utils/logger';
 
-export async function GET(req: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
   try {
     const auth = await getAdminAuth(req);
     if (!auth) {
@@ -19,7 +21,7 @@ export async function GET(req: Request) {
         provider: {
           include: {
             user: {
-              select: { firstName: true, lastName: true, email: true }
+              select: { name: true, email: true }
             }
           }
         }

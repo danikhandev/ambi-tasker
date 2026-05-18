@@ -93,6 +93,177 @@ export default function VerificationScreen() {
         fetchCategories();
     }, []);
 
+    const { setPageTitle } = useUI();
+    useEffect(() => {
+        setPageTitle("Worker KYC", "Identity Protocol", "Verification");
+        return () => setPageTitle("", "", "");
+    }, [setPageTitle]);
+
+    // ─── Already Verified / Pending / Rejected Guard ─────────────────────
+    const verificationStatus = user?.idVerificationStatus;
+    
+    // Allow the full KYC flow only if the user hasn't submitted anything yet
+    const allowKycFlow = !verificationStatus || verificationStatus === "NOT_STARTED" || verificationStatus === "NOT_SUBMITTED";
+    
+    if (!allowKycFlow) {
+        // Normalize UNDER_REVIEW to show the same UI as PENDING
+        const normalizedStatus = verificationStatus === "UNDER_REVIEW" ? "PENDING" : verificationStatus;
+        
+        const statusConfig = {
+            VERIFIED: {
+                icon: <CheckCircle2 className="w-14 h-14 text-white relative z-10" />,
+                iconBg: "bg-emerald-500 shadow-emerald-500/40",
+                title: "Identity",
+                highlight: "Verified",
+                highlightColor: "text-emerald-500",
+                badge: "VERIFIED",
+                badgeBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-600",
+                dotColor: "bg-emerald-500",
+                message: "Your identity has been successfully verified. Your biometric data and documents have been securely encrypted and validated by our verification system.",
+                buttonText: "Return to Dashboard",
+                buttonAction: () => router.push("/provider/dashboard"),
+                buttonStyle: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30",
+            },
+            PENDING: {
+                icon: <ShieldCheck className="w-14 h-14 text-white relative z-10" />,
+                iconBg: "bg-primary shadow-primary/40",
+                title: "Verification",
+                highlight: "Pending",
+                highlightColor: "text-primary",
+                badge: "UNDER REVIEW",
+                badgeBg: "bg-primary/10 border-primary/20 text-primary",
+                dotColor: "bg-primary",
+                message: "Your verification documents have been submitted and are currently under review by our security team. You will be notified once the process is complete.",
+                buttonText: "Return to Dashboard",
+                buttonAction: () => router.push("/provider/dashboard"),
+                buttonStyle: "bg-gray-900 hover:bg-black shadow-gray-900/30",
+            },
+            REJECTED: {
+                icon: <X className="w-14 h-14 text-white relative z-10" />,
+                iconBg: "bg-red-500 shadow-red-500/40",
+                title: "Verification",
+                highlight: "Denied",
+                highlightColor: "text-red-500",
+                badge: "REJECTED",
+                badgeBg: "bg-red-500/10 border-red-500/20 text-red-600",
+                dotColor: "bg-red-500",
+                message: user?.rejectionReason || "Your verification was not approved. Please re-submit your documents ensuring your photos are clear and match your identity card.",
+                buttonText: "Re-Submit Documents",
+                buttonAction: () => {
+                    // Reset state so user can re-do KYC
+                    setCurrentStep(1);
+                    // Force a re-render by clearing the guard
+                    window.location.reload();
+                },
+                buttonStyle: "bg-red-600 hover:bg-red-700 shadow-red-600/30",
+            },
+        };
+
+        const config = statusConfig[normalizedStatus as keyof typeof statusConfig];
+        if (!config) return null;
+
+        return (
+            <div className={`flex flex-col items-center justify-center h-full py-16 px-6 ${isRTL ? "rtl" : ""}`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 200 }}
+                    className="flex flex-col items-center max-w-lg w-full"
+                >
+                    {/* Ambient Glows */}
+                    <div className="relative">
+                        <div className={`absolute -inset-8 rounded-full blur-3xl opacity-20 ${config.iconBg.split(" ")[0]}`} />
+                        <div className={`w-28 h-28 rounded-[36px] flex items-center justify-center mb-10 shadow-2xl relative overflow-hidden ${config.iconBg}`}>
+                            {config.icon}
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                                className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border mb-8 ${config.badgeBg}`}>
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${config.dotColor}`} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">{config.badge}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h2 className={`${unbounded.className} text-3xl sm:text-4xl font-black text-foreground mb-5 text-center tracking-tighter`}>
+                        {config.title}{" "}
+                        <span className={`${config.highlightColor} italic`}>{config.highlight}</span>
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-text-secondary text-sm mb-12 text-center max-w-md font-medium leading-relaxed">
+                        {config.message}
+                    </p>
+
+                    {/* Info Cards for Verified Status */}
+                    {normalizedStatus === "VERIFIED" && (
+                        <div className="w-full max-w-sm space-y-3 mb-10">
+                            {[
+                                { label: "Identity Status", value: "Secured", icon: ShieldCheck, color: "text-emerald-500" },
+                                { label: "Biometric Scan", value: "Confirmed", icon: User, color: "text-emerald-500" },
+                                { label: "Document Audit", value: "Passed", icon: FileText, color: "text-emerald-500" },
+                            ].map((row, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + i * 0.1 }}
+                                    className="flex justify-between items-center bg-card p-4 rounded-2xl border border-border group hover:border-emerald-200 transition-all"
+                                >
+                                    <span className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-text-hint">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                                            <row.icon size={16} />
+                                        </div>
+                                        {row.label}
+                                    </span>
+                                    <span className={`${row.color} font-black text-[10px] uppercase tracking-[0.2em]`}>{row.value}</span>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pending Progress Indicator */}
+                    {normalizedStatus === "PENDING" && (
+                        <div className="w-full max-w-sm mb-10">
+                            <div className="bg-card p-6 rounded-3xl border border-border space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-text-hint">Review Progress</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">In Queue</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                    <motion.div
+                                        animate={{ width: ["30%", "60%", "45%", "70%", "50%"] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                        className="h-full bg-primary rounded-full"
+                                    />
+                                </div>
+                                <p className="text-[10px] font-bold text-text-hint text-center uppercase tracking-wider opacity-60">
+                                    Average review time: 24-48 hours
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Action Button */}
+                    <motion.button
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        onClick={config.buttonAction}
+                        className={`w-full max-w-sm h-16 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.25em] shadow-xl active:scale-95 transition-all ${config.buttonStyle}`}
+                    >
+                        {config.buttonText}
+                    </motion.button>
+                </motion.div>
+            </div>
+        );
+    }
+
     const runRealMatch = async () => {
         if (!selfieData || !cnicFront) {
             setErrorMsg("Missing biometric signals. Please recapture selfie and ID.");
@@ -271,34 +442,28 @@ export default function VerificationScreen() {
     }
 
     return (
-        <div className={`min-h-screen bg-background flex flex-col items-center ${isRTL ? "rtl" : ""}`}>
-            {/* Header */}
-            <header className="w-full max-w-3xl sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-6 py-6 flex items-center mt-4">
-                <button
-                    onClick={handleBack}
-                    className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-muted transition-all border border-border group"
-                >
-                    <ChevronLeft className={`w-5 h-5 group-hover:-translate-x-1 transition-transform ${isRTL ? "rotate-180" : ""}`} />
-                </button>
-                <div className="flex-1 text-center pr-12">
-                    <p className="text-[10px] font-black uppercase text-primary tracking-[0.3em] mb-1">Identity Protocol</p>
-                    <h1 className={`${unbounded.className} text-xl font-black text-foreground`}>Worker KYC <span className="text-primary italic">Verification</span></h1>
-                </div>
-            </header>
-
-            <main className="w-full max-w-2xl flex-1 px-4 sm:px-6 py-10 pb-32">
-                {/* Custom Technical Progress */}
-                <div className="mb-14 relative px-2">
-                    <div className="flex justify-between items-center mb-4">
-                       <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocol Step {currentStep} of 7</span>
-                       <span className="text-[10px] font-black text-text-hint uppercase tracking-widest">{Math.round((currentStep/7)*100)}% Complete</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(currentStep / 7) * 100}%` }}
-                            className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]"
-                        />
+        <div className={`flex flex-col items-center h-full ${isRTL ? "rtl" : ""}`}>
+            <main className="w-full max-w-2xl flex-1 px-4 sm:px-6 py-6 pb-32">
+                <div className="flex items-center gap-6 mb-10">
+                    <button
+                        onClick={handleBack}
+                        className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-muted transition-all border border-border group shrink-0 shadow-sm active:scale-95"
+                    >
+                        <ChevronLeft className={`w-5 h-5 group-hover:-translate-x-1 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+                    </button>
+                    {/* Custom Technical Progress */}
+                    <div className="flex-1 relative">
+                        <div className="flex justify-between items-center mb-3">
+                           <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocol Step {currentStep} of 7</span>
+                           <span className="text-[10px] font-black text-text-hint uppercase tracking-widest">{Math.round((currentStep/7)*100)}% Complete</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(currentStep / 7) * 100}%` }}
+                                className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+                            />
+                        </div>
                     </div>
                 </div>
 

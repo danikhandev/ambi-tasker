@@ -60,11 +60,26 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
         id: m.id,
         conversationId: m.conversationId,
         senderId: m.senderId,
-        content: m.messageText,
+        content: m.messageText || null,
         createdAt: m.createdAt,
         readAt: m.isRead ? m.createdAt : null,
         status: m.isRead ? "read" : "delivered",
-        attachments: [], // Simplified for now
+        attachments: m.attachmentUrl ? [{
+          id: `${m.id}-att`,
+          fileUrl: m.attachmentUrl,
+          type: m.attachmentUrl.endsWith(".webm") || m.attachmentUrl.includes("voice-note")
+            ? "audio/webm"
+            : m.attachmentUrl.endsWith(".jpg") || m.attachmentUrl.endsWith(".jpeg") || m.attachmentUrl.endsWith(".png")
+              ? "image/jpeg"
+              : "application/octet-stream",
+          fileType: m.attachmentUrl.endsWith(".webm") || m.attachmentUrl.includes("voice-note")
+            ? "audio/webm"
+            : m.attachmentUrl.endsWith(".jpg") || m.attachmentUrl.endsWith(".jpeg") || m.attachmentUrl.endsWith(".png")
+              ? "image/jpeg"
+              : "application/octet-stream",
+          name: m.attachmentUrl.split("/").pop() || "Attachment",
+          fileName: m.attachmentUrl.split("/").pop() || "Attachment",
+        }] : [],
       }));
 
       setMessages(mapped);
@@ -125,11 +140,26 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
               id: newMessage.id,
               conversationId: newMessage.conversation_id,
               senderId: newMessage.sender_id,
-              content: newMessage.message_text,
+              content: newMessage.message_text || null,
               createdAt: newMessage.created_at,
               readAt: newMessage.is_read ? newMessage.created_at : null,
               status: newMessage.is_read ? "read" : "delivered",
-              attachments: [],
+              attachments: newMessage.attachment_url ? [{
+                id: `${newMessage.id}-att`,
+                fileUrl: newMessage.attachment_url,
+                type: newMessage.attachment_url.endsWith(".webm") || newMessage.attachment_url.includes("voice-note")
+                  ? "audio/webm"
+                  : newMessage.attachment_url.endsWith(".jpg") || newMessage.attachment_url.endsWith(".jpeg") || newMessage.attachment_url.endsWith(".png")
+                    ? "image/jpeg"
+                    : "application/octet-stream",
+                fileType: newMessage.attachment_url.endsWith(".webm") || newMessage.attachment_url.includes("voice-note")
+                  ? "audio/webm"
+                  : newMessage.attachment_url.endsWith(".jpg") || newMessage.attachment_url.endsWith(".jpeg") || newMessage.attachment_url.endsWith(".png")
+                    ? "image/jpeg"
+                    : "application/octet-stream",
+                name: newMessage.attachment_url.split("/").pop() || "Attachment",
+                fileName: newMessage.attachment_url.split("/").pop() || "Attachment",
+              }] : [],
             };
             return [...prev, mapped];
           });
@@ -213,10 +243,10 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
     };
   }, [conversationId, currentUserId]);
 
-  // ─── 5. Send a text message ───────────────────────────────────────
   const sendMessage = useCallback(
-    async (text: string): Promise<boolean> => {
-      if (!text.trim() || !conversationId || !currentUserId || isSendingRef.current) return false;
+    async (text: string, attachmentUrl?: string): Promise<boolean> => {
+      if (!text.trim() && !attachmentUrl) return false;
+      if (!conversationId || !currentUserId || isSendingRef.current) return false;
       isSendingRef.current = true;
 
       const optimisticId = `opt-${Date.now()}`;
@@ -224,11 +254,26 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
         id: optimisticId,
         conversationId,
         senderId: currentUserId,
-        content: text.trim(),
+        content: text.trim() || null,
         createdAt: new Date().toISOString(),
         readAt: null,
         status: "sending",
-        attachments: [],
+        attachments: attachmentUrl ? [{
+          id: `${optimisticId}-att`,
+          fileUrl: attachmentUrl,
+          type: attachmentUrl.endsWith(".webm") || attachmentUrl.includes("voice-note")
+            ? "audio/webm"
+            : attachmentUrl.endsWith(".jpg") || attachmentUrl.endsWith(".jpeg") || attachmentUrl.endsWith(".png")
+              ? "image/jpeg"
+              : "application/octet-stream",
+          fileType: attachmentUrl.endsWith(".webm") || attachmentUrl.includes("voice-note")
+            ? "audio/webm"
+            : attachmentUrl.endsWith(".jpg") || attachmentUrl.endsWith(".jpeg") || attachmentUrl.endsWith(".png")
+              ? "image/jpeg"
+              : "application/octet-stream",
+          name: attachmentUrl.split("/").pop() || "Attachment",
+          fileName: attachmentUrl.split("/").pop() || "Attachment",
+        }] : [],
       };
 
       // Optimistic insert
@@ -238,7 +283,7 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
         const res = await fetch("/api/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId, message: text.trim() })
+          body: JSON.stringify({ conversationId, message: text.trim(), attachmentUrl })
         });
         const json = await res.json();
 
@@ -248,11 +293,26 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
             id: json.data.id,
             conversationId: json.data.conversationId,
             senderId: json.data.senderId,
-            content: json.data.messageText,
+            content: json.data.messageText || null,
             createdAt: json.data.createdAt,
             readAt: null,
             status: "delivered",
-            attachments: []
+            attachments: json.data.attachmentUrl ? [{
+              id: `${json.data.id}-att`,
+              fileUrl: json.data.attachmentUrl,
+              type: json.data.attachmentUrl.endsWith(".webm") || json.data.attachmentUrl.includes("voice-note")
+                ? "audio/webm"
+                : json.data.attachmentUrl.endsWith(".jpg") || json.data.attachmentUrl.endsWith(".jpeg") || json.data.attachmentUrl.endsWith(".png")
+                  ? "image/jpeg"
+                  : "application/octet-stream",
+              fileType: json.data.attachmentUrl.endsWith(".webm") || json.data.attachmentUrl.includes("voice-note")
+                ? "audio/webm"
+                : json.data.attachmentUrl.endsWith(".jpg") || json.data.attachmentUrl.endsWith(".jpeg") || json.data.attachmentUrl.endsWith(".png")
+                  ? "image/jpeg"
+                  : "application/octet-stream",
+              name: json.data.attachmentUrl.split("/").pop() || "Attachment",
+              fileName: json.data.attachmentUrl.split("/").pop() || "Attachment",
+            }] : [],
         };
 
         // Update with real ID from database
