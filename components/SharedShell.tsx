@@ -105,18 +105,15 @@ export default function SharedShell({ children }: { children: React.ReactNode })
 
           {/* 4. Page Content with Unified Padding/Animation */}
           <main className={`flex-1 flex flex-col w-full mx-auto ${isAppPage ? 'p-4 md:p-8 lg:p-10 overflow-y-auto no-scrollbar' : ''}`}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname?.startsWith("/messages") ? "messages-root" : pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                className="flex-1 flex flex-col w-full"
-              >
-                <LocationGuard>{children}</LocationGuard>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              key={pathname?.startsWith("/messages") ? "messages-root" : pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              className="flex-1 flex flex-col w-full"
+            >
+              <LocationGuard>{children}</LocationGuard>
+            </motion.div>
             
             {/* Shared Footer for All Site Pages */}
             {isSitePage && <Footer />}

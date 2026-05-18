@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!isValidPassword(newPassword)) {
       return NextResponse.json({ 
         success: false, 
-        error: "New password must meet requirements: 8+ chars, number, and special character" 
+        error: "New password must be at least 8 characters long" 
       }, { status: 400 });
     }
 

@@ -34,15 +34,13 @@ function ResetPasswordContent() {
   useEffect(() => {
     setPasswordStrength({
       hasMinLength: formData.newPassword.length >= 8,
-      hasNumber: /[0-9]/.test(formData.newPassword),
-      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword),
+      hasNumber: true,
+      hasSpecialChar: true,
     });
   }, [formData.newPassword]);
 
   const isPasswordValid =
-    passwordStrength.hasMinLength &&
-    passwordStrength.hasNumber &&
-    passwordStrength.hasSpecialChar;
+    passwordStrength.hasMinLength;
 
   const isFormValid =
     formData.otp.length === 6 &&
@@ -325,24 +323,6 @@ function ResetPasswordContent() {
                         />
                         <span className={passwordStrength.hasMinLength ? "text-green-700" : "text-text/60"}>
                           At least 8 characters
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div
-                          className={`w-2 h-2 rounded-full ${passwordStrength.hasNumber ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                        />
-                        <span className={passwordStrength.hasNumber ? "text-green-700" : "text-text/60"}>
-                          One number
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div
-                          className={`w-2 h-2 rounded-full ${passwordStrength.hasSpecialChar ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                        />
-                        <span className={passwordStrength.hasSpecialChar ? "text-green-700" : "text-text/60"}>
-                          One special character (!@#...)
                         </span>
                       </div>
                     </motion.div>

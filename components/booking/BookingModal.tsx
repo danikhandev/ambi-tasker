@@ -84,8 +84,20 @@ export default function BookingModal({ isOpen, onClose, providerName, providerId
       // Combine date + time into scheduled_date
       const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
 
-      // Determine service_id — if "custom", use the first service or create a placeholder
-      const serviceId = selectedService !== "custom" ? selectedService : services[0]?.id;
+      // Determine service_id — if "custom", use the first service, or fetch a fallback system service if the provider catalog is empty
+      let serviceId = selectedService !== "custom" ? selectedService : services[0]?.id;
+
+      if (!serviceId) {
+        try {
+          const fallbackRes = await fetch("/api/services");
+          const fallbackData = await fallbackRes.json();
+          if (fallbackData?.success && fallbackData?.data?.length > 0) {
+            serviceId = fallbackData.data[0].id;
+          }
+        } catch (err) {
+          console.error("Error resolving fallback service:", err);
+        }
+      }
 
       if (!serviceId) {
         showToast("No service selected.", "error");

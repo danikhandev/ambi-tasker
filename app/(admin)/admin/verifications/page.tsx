@@ -98,6 +98,22 @@ export default function AdminVerificationsPage() {
         fetchVerifications(activeTab);
     }, [activeTab]);
 
+    // Lock background scroll when detail overlay is open
+    useEffect(() => {
+        const mainEl = document.querySelector("main");
+        if (selectedRequest) {
+            document.body.style.overflow = "hidden";
+            if (mainEl) mainEl.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+            if (mainEl) mainEl.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+            if (mainEl) mainEl.style.overflow = "";
+        };
+    }, [selectedRequest]);
+
     const handleUpdateStatus = async (providerId: string, action: "VERIFIED" | "REJECTED") => {
         setSubmitting(true);
         try {

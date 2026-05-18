@@ -29,12 +29,12 @@ export default function Brand({
 }: BrandProps) {
   const { t } = useTranslation();
   
-  // Font sizes corresponding to logo tiers
+  // Font sizes corresponding to logo tiers (enlarged for better prominence)
   const fontSizes = {
-    sm: "text-base",      // ~16px
-    md: "text-[20px]",    // ~20px
-    lg: "text-2xl",       // ~24px
-    xl: "text-[32px]"     // ~32px
+    sm: "text-[18px] sm:text-[20px]",      // Enlarged from 16px to ~18px/20px
+    md: "text-[22px] sm:text-[24px]",      // Enlarged from 20px to ~22px/24px
+    lg: "text-[26px] sm:text-[28px]",      // Enlarged from 24px to ~26px/28px
+    xl: "text-[36px] sm:text-[40px]"       // Enlarged from 32px to ~36px/40px
   };
 
   const fontSizeClass = fontSizes[size] || fontSizes.md;

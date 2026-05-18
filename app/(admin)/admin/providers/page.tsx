@@ -134,6 +134,22 @@ export default function ProviderManagementPage() {
     }
   }, [selectedProvider?.providerProfile?.id]);
 
+  // Lock background scroll when drawer is open
+  useEffect(() => {
+    const mainEl = document.querySelector("main");
+    if (selectedProvider || isAddModalOpen) {
+      document.body.style.overflow = "hidden";
+      if (mainEl) mainEl.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      if (mainEl) mainEl.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      if (mainEl) mainEl.style.overflow = "";
+    };
+  }, [selectedProvider, isAddModalOpen]);
+
   const fetchProviders = async () => {
     setLoading(true);
     try {

@@ -63,8 +63,6 @@ export default function ProviderSignupPage() {
       if (value && !cnicRegex.test(value)) error = "Invalid CNIC format (e.g., 12345-1234567-1)";
     } else if (name === "password") {
       if (value.length < 8) error = t("auth.passwordTooShort") || "Too short";
-      else if (!/[0-9]/.test(value)) error = "Need 1 number";
-      else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) error = "Need 1 special character (!@#$...)";
     } else if (name === "confirmPassword") {
       if (value !== formData.password) error = t("auth.passwordsDoNotMatch") || "Mismatch";
     }
@@ -100,8 +98,6 @@ export default function ProviderSignupPage() {
     if (!formData.phone.trim()) errors.phone = "Required";
     if (formData.cnic && !/^[0-9+]{5}-[0-9+]{7}-[0-9]{1}$/.test(formData.cnic)) errors.cnic = "Invalid CNIC format";
     if (formData.password.length < 8) errors.password = t("auth.passwordTooShort") || "Too short";
-    else if (!/[0-9]/.test(formData.password)) errors.password = "Need 1 number";
-    else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) errors.password = "Need 1 special character (!@#$...)";
     if (formData.password !== formData.confirmPassword) errors.confirmPassword = t("auth.passwordsDoNotMatch") || "Mismatch";
 
     if (Object.keys(errors).length > 0) {
@@ -410,15 +406,7 @@ export default function ProviderSignupPage() {
                       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 px-1">
                         <div className="flex items-center gap-1.5">
                           {formData.password.length >= 8 ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
-                          <span className={`text-[9px] font-black uppercase tracking-widest ${formData.password.length >= 8 ? "text-green-500" : "text-text-hint/50"}`}>8+ Chars</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          {/[0-9]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
-                          <span className={`text-[9px] font-black uppercase tracking-widest ${/[0-9]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Number</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500/50" />}
-                          <span className={`text-[9px] font-black uppercase tracking-widest ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? "text-green-500" : "text-text-hint/50"}`}>Special (!@#)</span>
+                          <span className={`text-[9px] font-black uppercase tracking-widest ${formData.password.length >= 8 ? "text-green-500" : "text-text-hint/50"}`}>Minimum 8 Characters</span>
                         </div>
                       </div>
                       <AnimatePresence mode="wait">
@@ -533,9 +521,7 @@ export default function ProviderSignupPage() {
               {/* Submit / Next Button (step 1 and 3 only — step 2 has its own buttons) */}
               {step !== 2 && (() => {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const isPasswordStrong = formData.password.length >= 8 &&
-                  /[0-9]/.test(formData.password) &&
-                  /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password);
+                const isPasswordStrong = formData.password.length >= 8;
                 const isStep1Invalid = !formData.firstName.trim() || 
                                       !formData.lastName.trim() || 
                                       !formData.email.trim() || 

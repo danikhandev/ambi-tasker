@@ -120,14 +120,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidPassword(password: string): boolean {
   const minLength = 8;
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-  return (
-    password.length >= minLength &&
-    hasNumber &&
-    hasSpecialChar
-  );
+  return password.length >= minLength;
 }
 
 /**

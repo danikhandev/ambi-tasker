@@ -56,20 +56,28 @@ export async function POST(req: NextRequest) {
     const generateUrl = async (storedPath: string | null): Promise<string | null> => {
       if (!storedPath) return null;
 
-      // If already a full URL (public URL or external), return as-is
+      let relativePath = storedPath;
+      // If already a full URL (public URL or external), check if it is in private kyc-documents bucket
       if (storedPath.startsWith("http://") || storedPath.startsWith("https://")) {
-        return storedPath;
+        if (storedPath.includes("/kyc-documents/")) {
+          const parts = storedPath.split("/kyc-documents/");
+          if (parts.length > 1) {
+            relativePath = parts[1];
+          }
+        } else {
+          return storedPath;
+        }
       }
       // Local upload paths
-      if (storedPath.startsWith("/uploads/") || storedPath.startsWith("/verifications/")) {
-        return storedPath;
+      if (relativePath.startsWith("/uploads/") || relativePath.startsWith("/verifications/")) {
+        return relativePath;
       }
 
       // Generate signed URL from Supabase private bucket
       try {
-        return await getSignedUrl(BUCKETS.KYC, storedPath, 3600);
+        return await getSignedUrl(BUCKETS.KYC, relativePath, 3600);
       } catch (err) {
-        logger.error(`Failed to generate signed URL for: ${storedPath}`, err);
+        logger.error(`Failed to generate signed URL for: ${relativePath}`, err);
         return null;
       }
     };

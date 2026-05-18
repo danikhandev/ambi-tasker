@@ -5,7 +5,7 @@ import {
   generateOTP, 
   generateSlug, 
   isOTPExpired 
-} from '@/services/auth/utils';
+} from '../../services/auth/utils';
 
 describe('Authentication Utilities', () => {
   describe('isValidEmail', () => {
@@ -22,14 +22,14 @@ describe('Authentication Utilities', () => {
   });
 
   describe('isValidPassword', () => {
-    it('should return true for strong passwords', () => {
+    it('should return true for valid passwords (8+ characters)', () => {
       expect(isValidPassword('Password123')).toBe(true);
       expect(isValidPassword('secure!password')).toBe(true);
+      expect(isValidPassword('alllowercase')).toBe(true);
     });
 
-    it('should return false for weak passwords', () => {
+    it('should return false for short passwords (less than 8 characters)', () => {
       expect(isValidPassword('short')).toBe(false);
-      expect(isValidPassword('alllowercase')).toBe(false);
     });
   });
 
