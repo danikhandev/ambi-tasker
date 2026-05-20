@@ -40,8 +40,8 @@ export default function LandingPage() {
     <div className="flex flex-col w-full overflow-hidden">
       {/* 1. Hero Section - Centered Production Style */}
       <section className="relative min-h-[85vh] flex items-center justify-center pt-32 pb-20 px-6 overflow-hidden bg-[rgba(248,250,252,0.5)]">
-        {/* Grid Background Pattern */}
-        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
+        {/* Grid Background Pattern - Hidden on mobile to prevent OLED subpixel aliasing/Moire patterns */}
+        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none hidden md:block" 
              style={{ backgroundImage: `radial-gradient(#2563EB 0.5px, transparent 0.5px), radial-gradient(#2563EB 0.5px, transparent 0.5px)`, backgroundSize: '24px 24px', backgroundPosition: '0 0, 12px 12px' }} />
         
         <motion.div 
@@ -112,10 +112,9 @@ export default function LandingPage() {
             {featuredServices.map((service, i) => (
               <Link key={service.name} href="/search">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 1, y: 0 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ delay: i * 0.1 }}
+                  whileTap={{ scale: 0.98 }}
                   viewport={{ once: true }}
                   className="p-8 bg-card rounded-[40px] border border-border/60 shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 transition-all group text-center cursor-pointer"
                 >

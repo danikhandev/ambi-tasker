@@ -74,11 +74,16 @@ export default function SharedShell({ children }: { children: React.ReactNode })
 
   return (
     <div className={`h-screen flex flex-col relative selection:bg-primary/20 ${pathname?.startsWith("/admin") ? (adminTheme === 'light' ? 'theme-admin-light' : 'theme-admin') : ''}`} dir={isRTL ? "rtl" : "ltr"}>
-      {/* 1. Global Background Design (Neutral & Unified) */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none transition-bg duration-1000">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[140px] rounded-full -translate-y-1/3 translate-x-1/3 opacity-40" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/5 blur-[140px] rounded-full translate-y-1/3 -translate-x-1/3 opacity-40" />
-      </div>
+      {/* 1. Global Background Design (Neutral & Unified - Vector-Crisp Premium Radial Gradients to prevent mobile blur artifacts) */}
+      <div 
+        className="fixed inset-0 z-[-1] pointer-events-none transition-all duration-1000 bg-background"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 80% 10%, var(--primary-glow) 0%, transparent 65%),
+            radial-gradient(circle at 20% 90%, var(--accent-glow) 0%, transparent 65%)
+          `
+        }}
+      />
 
       <div className="flex flex-1 w-full overflow-hidden">
         {/* 2. Unified Sidebar for App Pages */}
