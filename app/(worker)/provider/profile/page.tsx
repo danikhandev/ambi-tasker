@@ -47,6 +47,7 @@ interface ProviderProfile {
   services: ProviderService[];
   portfolio: PortfolioItem[];
   verificationStatus: "PENDING" | "VERIFIED" | "REJECTED" | "NOT_STARTED";
+  serviceAreas?: any[];
 }
 
 export default function ProviderProfilePage() {
@@ -77,7 +78,18 @@ export default function ProviderProfilePage() {
     categories: [] as string[],
     services: [] as ProviderService[],
     portfolio: [] as PortfolioItem[],
-    serviceAreas: [] as string[],
+    serviceAreas: [] as any[],
+  });
+
+  const [selectedLocation, setSelectedLocation] = useState({
+    provinceId: "",
+    provinceName: "",
+    districtId: "",
+    districtName: "",
+    cityId: "",
+    cityName: "",
+    areaId: "",
+    areaName: "",
   });
 
   useEffect(() => {
@@ -95,7 +107,7 @@ export default function ProviderProfilePage() {
             const category = dbWorker.professionalTitle || "";
             const services: any[] = [];
             const portfolio: any[] = [];
-            const serviceAreas = (dbWorker.serviceAreas || []).map((sa: any) => sa.id);
+            const serviceAreas = dbWorker.serviceAreas || [];
 
             setProviderProfile({
               id: dbWorker.id,
@@ -109,6 +121,7 @@ export default function ProviderProfilePage() {
               services: dbWorker.servicesList || [],
               portfolio: dbWorker.portfolio || [],
               verificationStatus: dbWorker.verificationStatus,
+              serviceAreas: serviceAreas,
             });
             
             setFormData({
@@ -217,6 +230,7 @@ export default function ProviderProfilePage() {
         hourlyRate: formData.hourlyRate,
         portfolio: formData.portfolio,
         servicesList: formData.services,
+        serviceAreas: formData.serviceAreas.map((sa: any) => sa.id),
       };
       
       if (formData.categories.length > 0) {
@@ -543,19 +557,19 @@ export default function ProviderProfilePage() {
               {/* Active Areas Tags */}
               <div className="flex flex-wrap gap-3">
                 {formData.serviceAreas?.length > 0 ? (
-                  formData.serviceAreas.map((areaId: string) => {
-                    // This is a UI simplified view, ideally we'd have the names pre-populated
-                    // For now, show them as active IDs or names if we can derive them
+                  formData.serviceAreas.map((area: any) => {
+                    const areaId = area.id;
+                    const displayName = area.name + (area.city?.name ? `, ${area.city.name}` : '');
                     return (
                       <div key={areaId} className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-xs group">
                         <MapPin size={12} />
-                        Area ID: {areaId.slice(0, 8)}...
+                        {displayName}
                         {isEditing && (
                           <button 
                             type="button" 
                             onClick={() => setFormData(prev => ({ 
                               ...prev, 
-                              serviceAreas: prev.serviceAreas.filter((id: string) => id !== areaId)
+                              serviceAreas: prev.serviceAreas.filter((item: any) => item.id !== areaId)
                             }))} 
                             className="p-1 hover:bg-primary/20 rounded-full transition-colors"
                           >
@@ -577,13 +591,34 @@ export default function ProviderProfilePage() {
                  <div className="p-6 bg-muted/30 rounded-2xl border border-border">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-text-hint mb-4">Add a new coverage area</h4>
                     <LocationSelector 
+                      value={selectedLocation}
                       onChange={(loc) => {
-                        if (loc.areaId && !formData.serviceAreas?.includes(loc.areaId)) {
+                        setSelectedLocation(loc);
+                        if (loc.areaId && !formData.serviceAreas?.some((sa: any) => sa.id === loc.areaId)) {
+                          const newArea = {
+                            id: loc.areaId,
+                            name: loc.areaName,
+                            city: {
+                              name: loc.cityName || ""
+                            }
+                          };
                           setFormData(prev => ({
                             ...prev,
-                            serviceAreas: [...(prev.serviceAreas || []), loc.areaId]
+                            serviceAreas: [...(prev.serviceAreas || []), newArea]
                           }));
-                          showToast("Area added to your coverage!", "success");
+                          showToast(`${loc.areaName} added to your coverage!`, "success");
+                          
+                          // Reset selection for selector
+                          setSelectedLocation({
+                            provinceId: "",
+                            provinceName: "",
+                            districtId: "",
+                            districtName: "",
+                            cityId: "",
+                            cityName: "",
+                            areaId: "",
+                            areaName: "",
+                          });
                         }
                       }}
                       fields={["province", "district", "city", "area"]}

@@ -314,6 +314,40 @@ export default function VerificationScreen() {
 
     const { showToast } = useUI();
 
+    const cnicFrontInputRef = useRef<HTMLInputElement>(null);
+    const cnicBackInputRef = useRef<HTMLInputElement>(null);
+
+    const handleCnicFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "front" | "back") => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file format
+            const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+            if (!allowedTypes.includes(file.type)) {
+                showToast("Invalid image format. Please use JPG, PNG, or WEBP.", "error");
+                return;
+            }
+
+            // Validate file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showToast("File size too large. Max limit is 10MB.", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (target === "front") {
+                    setCnicFront(reader.result as string);
+                    showToast("CNIC Front upload saved", "success");
+                } else {
+                    setCnicBack(reader.result as string);
+                    showToast("CNIC Back upload saved", "success");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     // Helper: upload a single base64 image via /api/upload (with compression)
     const uploadBase64Image = async (base64Data: string, fileName: string): Promise<string> => {
         // Compress image before upload (max 1200px, 80% quality)
@@ -567,7 +601,7 @@ export default function VerificationScreen() {
                                 <FileText size={24} />
                             </div>
                             <h2 className={`${unbounded.className} text-2xl font-black mb-3 text-foreground tracking-tighter`}>CNIC <span className="text-primary italic">Front-Side</span></h2>
-                            <p className="text-text-secondary text-sm font-medium leading-relaxed">Position the front-side (Face Side) of your National Identity Card within the optical markers.</p>
+                            <p className="text-text-secondary text-sm font-medium leading-relaxed">Upload a clear manual photo of the front-side (Face Side) of your National Identity Card for biometric synchronization.</p>
 
                             <div className="mb-4">
                                 {cnicFront ? (
@@ -577,19 +611,33 @@ export default function VerificationScreen() {
                                             <div className="absolute inset-0 bg-green-400/10 mix-blend-overlay" />
                                         </div>
                                         <button 
-                                            onClick={() => { setActiveCameraTarget("cnic-front"); setShowCameraModal(true); }} 
-                                            className="px-8 py-4 bg-white text-foreground font-black text-[10px] uppercase tracking-[0.15em] rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 border border-border shadow-lg transition-all flex items-center justify-center gap-3 active:scale-95"
+                                            onClick={() => cnicFrontInputRef.current?.click()} 
+                                            className="px-8 py-4 bg-white text-foreground font-black text-[10px] uppercase tracking-[0.15em] rounded-2xl hover:bg-indigo-50 hover:text-primary border border-border shadow-lg transition-all flex items-center justify-center gap-3 active:scale-95"
                                         >
-                                            <Camera className="w-4 h-4" /> Recapture Scan
+                                            <UploadCloud className="w-4 h-4" /> Upload Different Scan
                                         </button>
+                                        <input
+                                            ref={cnicFrontInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleCnicFileUpload(e, "front")}
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-indigo-200 rounded-[40px] bg-indigo-500/5 hover:bg-indigo-500/10 transition-all cursor-pointer group" onClick={() => { setActiveCameraTarget("cnic-front"); setShowCameraModal(true); }}>
+                                    <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-indigo-200 rounded-[40px] bg-indigo-500/5 hover:bg-indigo-500/10 transition-all cursor-pointer group" onClick={() => cnicFrontInputRef.current?.click()}>
                                         <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-xl text-indigo-500 group-hover:rotate-3 transition-transform">
-                                            <ShieldCheck className="w-10 h-10" />
+                                            <UploadCloud className="w-10 h-10 text-indigo-500" />
                                         </div>
-                                        <p className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-4">Ready for OCR Scan</p>
-                                        <p className="text-xs font-bold text-text-hint bg-white/50 px-6 py-2 rounded-full">Secure Document Uplink</p>
+                                        <p className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-4">Upload Front Side</p>
+                                        <p className="text-xs font-bold text-text-hint bg-white/50 px-6 py-2 rounded-full">Click to upload CNIC picture</p>
+                                        <input
+                                            ref={cnicFrontInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleCnicFileUpload(e, "front")}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -606,7 +654,7 @@ export default function VerificationScreen() {
                                 <FileText size={24} />
                             </div>
                             <h2 className={`${unbounded.className} text-2xl font-black mb-3 text-foreground tracking-tighter`}>CNIC <span className="text-primary italic">Back-Side</span></h2>
-                            <p className="text-text-secondary text-sm font-medium leading-relaxed">Position the back-side of your CNIC within the markers to capture the verification symbols and address info.</p>
+                            <p className="text-text-secondary text-sm font-medium leading-relaxed">Upload a clear manual photo of the back-side of your CNIC containing verification symbols and address info.</p>
 
                             <div className="mb-4">
                                 {cnicBack ? (
@@ -616,19 +664,33 @@ export default function VerificationScreen() {
                                             <div className="absolute inset-0 bg-green-400/10 mix-blend-overlay" />
                                         </div>
                                         <button 
-                                            onClick={() => { setActiveCameraTarget("cnic-back"); setShowCameraModal(true); }} 
-                                            className="px-8 py-4 bg-white text-foreground font-black text-[10px] uppercase tracking-[0.15em] rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 border border-border shadow-lg transition-all flex items-center justify-center gap-3 active:scale-95"
+                                            onClick={() => cnicBackInputRef.current?.click()} 
+                                            className="px-8 py-4 bg-white text-foreground font-black text-[10px] uppercase tracking-[0.15em] rounded-2xl hover:bg-indigo-50 hover:text-primary border border-border shadow-lg transition-all flex items-center justify-center gap-3 active:scale-95"
                                         >
-                                            <Camera className="w-4 h-4" /> Recapture Scan
+                                            <UploadCloud className="w-4 h-4" /> Upload Different Scan
                                         </button>
+                                        <input
+                                            ref={cnicBackInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleCnicFileUpload(e, "back")}
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-indigo-200 rounded-[40px] bg-indigo-500/5 hover:bg-indigo-500/10 transition-all cursor-pointer group" onClick={() => { setActiveCameraTarget("cnic-back"); setShowCameraModal(true); }}>
+                                    <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-indigo-200 rounded-[40px] bg-indigo-500/5 hover:bg-indigo-500/10 transition-all cursor-pointer group" onClick={() => cnicBackInputRef.current?.click()}>
                                         <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-xl text-indigo-500 group-hover:rotate-3 transition-transform">
-                                            <ShieldCheck className="w-10 h-10" />
+                                            <UploadCloud className="w-10 h-10 text-indigo-500" />
                                         </div>
-                                        <p className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-4">Awaiting Signal</p>
-                                        <p className="text-xs font-bold text-text-hint bg-white/50 px-6 py-2 rounded-full">Secure Document Uplink</p>
+                                        <p className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-4">Upload Back Side</p>
+                                        <p className="text-xs font-bold text-text-hint bg-white/50 px-6 py-2 rounded-full">Click to upload CNIC picture</p>
+                                        <input
+                                            ref={cnicBackInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => handleCnicFileUpload(e, "back")}
+                                        />
                                     </div>
                                 )}
                             </div>

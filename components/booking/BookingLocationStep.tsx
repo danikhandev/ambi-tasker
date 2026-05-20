@@ -48,6 +48,25 @@ export default function BookingLocationStep({ onConfirm, initialLocation }: Book
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
 
+  // Automatically sync manual address fields with selectedLocation as the user types
+  useEffect(() => {
+    if (mode === "manual") {
+      const { street, city, area } = manualAddress;
+      if (street.trim() && city.trim() && area.trim()) {
+        const addressStr = `${street.trim()}, ${area.trim()}, ${city.trim()}`;
+        setSelectedLocation({
+          address: addressStr,
+          lat: center[0],
+          lng: center[1],
+          city: city.trim(),
+          area: area.trim()
+        });
+      } else {
+        setSelectedLocation(null);
+      }
+    }
+  }, [manualAddress, mode, center]);
+
   useEffect(() => {
     if (user) {
       fetchSavedAddresses();

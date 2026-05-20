@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
             profileImage: true, district: true, area: true,
           },
         },
-        serviceAreas: true,
+        serviceAreas: {
+          include: {
+            city: true
+          }
+        },
         bookings: {
           where: { status: "Completed" },
           select: { id: true },
@@ -71,6 +75,7 @@ export async function PATCH(req: NextRequest) {
       portfolio,
       servicesList,
       skills,
+      serviceAreas,
     } = body;
 
     const updateData: Record<string, unknown> = {};
@@ -96,6 +101,11 @@ export async function PATCH(req: NextRequest) {
     if (portfolio !== undefined) updateData.portfolio = portfolio;
     if (servicesList !== undefined) updateData.servicesList = servicesList;
     if (skills !== undefined) updateData.skills = skills;
+    if (serviceAreas !== undefined) {
+      updateData.serviceAreas = {
+        set: serviceAreas.map((id: string) => ({ id }))
+      };
+    }
 
     const updated = await prisma.providerProfile.update({
       where: { userId: guard.user.id },

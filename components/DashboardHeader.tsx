@@ -218,42 +218,43 @@ export default function DashboardHeader({
         </div>
 
         {isAdminView && displayTitle && (
-          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center w-full max-w-[40%] pointer-events-none z-10">
-            <h1 className={`${unbounded.className} text-[14px] md:text-[16px] lg:text-[18px] font-black uppercase tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3`}>
-              <div className="hidden xl:flex gap-1">
-                <div className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
-                <div className="w-1 h-1 rounded-full bg-primary/30" />
-              </div>
-              {displayTitle}
-              <div className="hidden xl:flex gap-1 items-center rotate-180">
-                <div className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
-                <div className="w-1 h-1 rounded-full bg-primary/30" />
-              </div>
-            </h1>
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center pointer-events-none z-10">
+            <div className="px-4 py-1.5 bg-card/60 backdrop-blur-md border border-border/80 rounded-full shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] flex items-center gap-2.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <h1 className={`${unbounded.className} text-[11px] lg:text-[13px] font-black uppercase tracking-[0.16em] bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent`}>
+                {displayTitle}
+              </h1>
+            </div>
             {displaySubtitle && (
-              <p className="text-[7px] md:text-[8px] font-black text-text-hint/70 uppercase tracking-[0.2em] flex items-center gap-2 bg-secondary/40 px-2.5 py-0.5 rounded-full border border-border/40 backdrop-blur-md mt-1.5">
+              <p className="text-[7px] md:text-[8px] font-black text-text-hint/70 uppercase tracking-[0.2em] mt-1.5 bg-secondary/40 px-2.5 py-0.5 rounded-full border border-border/40 backdrop-blur-md pointer-events-none">
                 {displaySubtitle}
               </p>
             )}
           </div>
         )}
 
-        {/* Right Side Info (Admin Only) */}
-        {admin && isAdminView && (
-          <div className="hidden xl:flex items-center gap-4 w-[300px] justify-end">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-emerald-600 tracking-tight">{t("admin.systemPulse")}</span>
-            </div>
-            <div className="px-3 py-1.5 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center gap-2">
-              <ShieldCheck size={12} className="opacity-80" />
-              <span className="text-[10px] font-bold tracking-tight">{t("admin.rootUplink")}</span>
-            </div>
-          </div>
-        )}
-
         {/* Right Side */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6 flex-shrink-0">
+          {/* Admin System Status Indicators */}
+          {admin && isAdminView && (
+            <div className="hidden xl:flex items-center gap-3 mr-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500/40 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 tracking-tight">{t("admin.systemPulse")}</span>
+              </div>
+              <div className="px-3 py-1.5 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center gap-2">
+                <ShieldCheck size={12} className="opacity-80" />
+                <span className="text-[10px] font-bold tracking-tight">{t("admin.rootUplink")}</span>
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions Group */}
           <div className="flex items-center gap-2 md:gap-3">
             {!isAdminView && user?.isUserSignUpForProvider && user.role !== 'ADMIN' && (

@@ -43,7 +43,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Now, finding related information for the provider
     // Portfolio, services, reviews (we can fetch from related models if they exist)
     const [services, reviews, bookingsCount] = await Promise.all([
-      prisma.service.findMany({ where: { category: profile.professionalTitle || "", isActive: true } }), 
+      prisma.service.findMany({ 
+        where: { 
+          category: {
+            equals: profile.professionalTitle?.trim() || "",
+            mode: "insensitive"
+          }, 
+          isActive: true 
+        } 
+      }), 
       
       prisma.review.findMany({ 
         where: { providerId: profile.id },
@@ -71,7 +79,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       area: profile.user.area?.name || 'Main',
       skills: profile.skills || [],
       education: "Verified Expert",
-      services: (profile.servicesList as any) || services.map((s: any) => ({ id: s.id, title: s.name, price: s.price, type: "FIXED" })),
+      services: (Array.isArray(profile.servicesList) && (profile.servicesList as any).length > 0)
+        ? profile.servicesList
+        : services.map((s: any) => ({ id: s.id, title: s.name, price: s.price, type: "FIXED" })),
       portfolio: (profile.portfolio as any) || [],
       contact: profile.user.phone,
       email: profile.user.email,

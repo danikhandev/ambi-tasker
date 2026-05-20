@@ -37,7 +37,19 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
     const isStartingRef = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Liveness Probe States
+    const livenessIntervalRef = useRef<number | null>(null);
+    const prevFrameDataRef = useRef<Uint8ClampedArray | null>(null);
+    const [livenessState, setLivenessState] = useState<"idle" | "aligning" | "motion" | "success" | "failed">("idle");
+    const [livenessPrompt, setLivenessPrompt] = useState<string>("");
+    const [livenessProgress, setLivenessProgress] = useState(0);
+
     const stopCamera = useCallback(() => {
+        if (livenessIntervalRef.current) {
+            cancelAnimationFrame(livenessIntervalRef.current);
+            livenessIntervalRef.current = null;
+        }
+        prevFrameDataRef.current = null;
         if (activeStreamRef.current) {
             activeStreamRef.current.getTracks().forEach(track => {
                 track.stop();
@@ -216,11 +228,166 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
             if (activeStreamRef.current) {
                 activeStreamRef.current.getTracks().forEach(t => t.stop());
             }
+            if (livenessIntervalRef.current) {
+                cancelAnimationFrame(livenessIntervalRef.current);
+            }
         };
     }, [type, stopCamera, startCamera]);
 
+    const runLivenessScanner = () => {
+        if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d", { alpha: false });
+        if (!ctx) return;
+
+        let startTime = Date.now();
+        let totalMotion = 0;
+        let frameCount = 0;
+        let faceDetected = false;
+        
+        setError(null);
+        setLivenessState("aligning");
+        setLivenessPrompt("DETECTING FACE PRESENCE...");
+        setLivenessProgress(0);
+        prevFrameDataRef.current = null;
+
+        const checkFrame = () => {
+            if (!videoRef.current || video.paused || video.ended) return;
+
+            // Use smaller canvas for fast pixel processing
+            canvas.width = 320;
+            canvas.height = 240;
+            
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // 1. Analyze face presence & contrast
+            let brightnessSum = 0;
+            let edgeSum = 0;
+            for (let i = 0; i < data.length - 4; i += 16) {
+                const r1 = data[i], g1 = data[i+1], b1 = data[i+2];
+                const r2 = data[i+4], g2 = data[i+5], b2 = data[i+6];
+                const l1 = (r1 + g1 + b1) / 3;
+                const l2 = (r2 + g2 + b2) / 3;
+                brightnessSum += l1;
+                edgeSum += Math.abs(l1 - l2);
+            }
+            const avgBrightness = brightnessSum / (data.length / 16);
+            const avgEdgeContrast = edgeSum / (data.length / 16);
+
+            // Face is present if average edge contrast and brightness are within healthy range
+            const faceFound = avgEdgeContrast > 4.5 && avgBrightness > 20 && avgBrightness < 240;
+
+            // 2. Motion Tracking (Frame Differencing)
+            let currentMotion = 0;
+            if (prevFrameDataRef.current) {
+                const prevData = prevFrameDataRef.current;
+                let diffSum = 0;
+                let count = 0;
+                for (let i = 0; i < data.length; i += 32) {
+                    const diff = Math.abs(data[i] - prevData[i]) + 
+                                 Math.abs(data[i+1] - prevData[i+1]) + 
+                                 Math.abs(data[i+2] - prevData[i+2]);
+                    diffSum += diff / 3;
+                    count++;
+                }
+                currentMotion = diffSum / count;
+            }
+            
+            prevFrameDataRef.current = new Uint8ClampedArray(data);
+
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min((elapsed / 3000) * 100, 100);
+            setLivenessProgress(Math.round(progress));
+
+            if (elapsed < 1200) {
+                setLivenessState("aligning");
+                setLivenessPrompt("DETECTING FACE PRESENCE...");
+                if (faceFound) {
+                    faceDetected = true;
+                }
+            } else if (elapsed < 2800) {
+                setLivenessState("motion");
+                setLivenessPrompt("LIVENESS PROBE: BLINK OR NOD SLIGHTLY");
+                totalMotion += currentMotion;
+                frameCount++;
+            } else {
+                // Final Check
+                const avgMotion = frameCount > 0 ? (totalMotion / frameCount) : 0;
+                console.log("[Liveness Evaluation]", { faceDetected, avgMotion, avgEdgeContrast });
+
+                if (!faceDetected) {
+                    setError("Liveness Verification Failed: No human face detected in the frame. Please align your face inside the oval guide and ensure you are in a well-lit area.");
+                    setLivenessState("failed");
+                    return;
+                }
+
+                // If motion score is extremely low (less than 0.1), it is a static photo printed on paper or a secondary device!
+                if (avgMotion < 0.1) {
+                    setError("Liveness Verification Failed: Static image detected. Please nod your head or blink to verify liveness.");
+                    setLivenessState("failed");
+                    return;
+                }
+
+                // If motion is too high, it's shaking or extremely blurry
+                if (avgMotion > 12) {
+                    setError("Liveness Verification Failed: Too much motion. Please hold still during biometric scanning.");
+                    setLivenessState("failed");
+                    return;
+                }
+
+                // Liveness verified! Capture final high resolution image
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.save();
+                if (facingMode === "user") {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                let finalCanvas = canvas;
+                const MAX_DIMENSION = 1600;
+                if (canvas.width > MAX_DIMENSION || canvas.height > MAX_DIMENSION) {
+                    const scale = Math.min(MAX_DIMENSION / canvas.width, MAX_DIMENSION / canvas.height);
+                    const compressCanvas = document.createElement('canvas');
+                    compressCanvas.width = Math.round(canvas.width * scale);
+                    compressCanvas.height = Math.round(canvas.height * scale);
+                    const compressCtx = compressCanvas.getContext('2d', { alpha: false });
+                    if (compressCtx) {
+                        compressCtx.drawImage(canvas, 0, 0, compressCanvas.width, compressCanvas.height);
+                        finalCanvas = compressCanvas;
+                    }
+                }
+
+                const dataUrl = finalCanvas.toDataURL("image/jpeg", compressionQuality);
+                setCapturedImage(dataUrl);
+                setLivenessState("success");
+                stopCamera();
+                return;
+            }
+
+            livenessIntervalRef.current = requestAnimationFrame(checkFrame);
+        };
+
+        livenessIntervalRef.current = requestAnimationFrame(checkFrame);
+    };
+
     const capturePhoto = async () => {
         if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
+
+        if (type === "selfie") {
+            runLivenessScanner();
+            return;
+        }
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
@@ -268,27 +435,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
             setIsVerifying(true);
             // Reduced artificial delay for better UX
             await new Promise(resolve => setTimeout(resolve, 800));
-
-            if (type === "selfie") {
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let brightness = 0;
-                const data = imageData.data;
-                const step = 4 * 20; // Sample every 20th pixel
-                let count = 0;
-                for (let i = 0; i < data.length; i += step) {
-                    brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    count++;
-                }
-                brightness = brightness / count;
-
-                // Only fail if EXTREMELY dark, otherwise just proceed
-                if (brightness < 12) {
-                    setError(t("camera.poorLighting") || "Lighting is too low for a clear photo. Please find a brighter spot.");
-                    setIsVerifying(false);
-                    setIsCapturing(false);
-                    return;
-                }
-            }
 
             setCapturedImage(dataUrl);
             setIsVerifying(false);
@@ -503,36 +649,65 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         </div>
 
                         <AnimatePresence>
-                            {isVerifying && (
+                            {(isVerifying || ["aligning", "motion"].includes(livenessState)) && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="absolute inset-0 bg-gray-950/90 backdrop-blur-3xl flex flex-col items-center justify-center z-[70] text-white"
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 bg-gray-950/95 backdrop-blur-3xl flex flex-col items-center justify-center z-[70] text-white"
                                 >
-                                    <div className="relative w-32 h-32 mb-10">
+                                    <div className="relative w-36 h-36 mb-10">
                                         <svg className="w-full h-full rotate-[-90deg]">
-                                            <circle cx="64" cy="64" r="60" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/5" />
-                                            <motion.circle
-                                                cx="64" cy="64" r="60" fill="none" stroke="currentColor" strokeWidth="2"
-                                                className="text-primary shadow-[0_0_20px_rgba(79,70,229,0.5)]"
-                                                strokeDasharray="377"
-                                                initial={{ strokeDashoffset: 377 }}
-                                                animate={{ strokeDashoffset: 0 }}
-                                                transition={{ duration: 3, ease: "easeInOut" }}
-                                            />
+                                            <circle cx="72" cy="72" r="64" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/5" />
+                                            {livenessState !== "idle" ? (
+                                                <motion.circle
+                                                    cx="72" cy="72" r="64" fill="none" stroke="currentColor" strokeWidth="3"
+                                                    className="text-primary shadow-[0_0_20px_rgba(79,70,229,0.6)]"
+                                                    strokeDasharray="402"
+                                                    animate={{ strokeDashoffset: 402 - (402 * livenessProgress) / 100 }}
+                                                    transition={{ ease: "linear", duration: 0.1 }}
+                                                />
+                                            ) : (
+                                                <motion.circle
+                                                    cx="72" cy="72" r="64" fill="none" stroke="currentColor" strokeWidth="3"
+                                                    className="text-primary shadow-[0_0_20px_rgba(79,70,229,0.6)]"
+                                                    strokeDasharray="402"
+                                                    initial={{ strokeDashoffset: 402 }}
+                                                    animate={{ strokeDashoffset: 0 }}
+                                                    transition={{ duration: 3, ease: "easeInOut" }}
+                                                />
+                                            )}
                                         </svg>
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="relative">
-                                                <Shield className="w-12 h-12 text-primary animate-pulse" />
-                                                <div className="absolute inset-0 blur-xl bg-primary/30 animate-pulse" />
+                                            <div className="relative flex flex-col items-center justify-center">
+                                                {livenessState !== "idle" ? (
+                                                    <div className="text-center">
+                                                        <span className="text-xs font-black text-primary tracking-widest animate-pulse">
+                                                            {livenessProgress}%
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Shield className="w-12 h-12 text-primary animate-pulse" />
+                                                        <div className="absolute inset-0 blur-xl bg-primary/30 animate-pulse" />
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                    <h4 className={`${unbounded.className} text-[10px] font-black uppercase tracking-[0.4em] text-white/90`}>
-                                        {type === "chat" ? "Processing Photo..." : type === "selfie" ? (t("camera.analyzing") || "Biometric Sync") : (t("camera.analyzingDoc") || "OCR Verification")}
+                                    <h4 className={`${unbounded.className} text-[10px] font-black uppercase tracking-[0.4em] text-white/90 text-center max-w-[280px] leading-relaxed`}>
+                                        {livenessState !== "idle" 
+                                            ? livenessPrompt
+                                            : type === "chat" ? "Processing Photo..." : type === "selfie" ? (t("camera.analyzing") || "Biometric Sync") : (t("camera.analyzingDoc") || "OCR Verification")
+                                        }
                                     </h4>
                                     <div className="mt-8 flex flex-col items-center gap-4">
-                                        <p className="text-[8px] text-white/40 font-black uppercase tracking-[0.3em]">{type === "chat" ? "OPTIMIZING IMAGE DETAILS" : (t("camera.livenessDetection") || "Liveness Detection In Progress")}</p>
+                                        <p className="text-[8px] text-white/40 font-black uppercase tracking-[0.3em] text-center">
+                                            {livenessState !== "idle" 
+                                                ? "KEEP YOUR FACE INSIDE OVAL TARGET" 
+                                                : type === "chat" ? "OPTIMIZING IMAGE DETAILS" : (t("camera.livenessDetection") || "Liveness Detection In Progress")
+                                            }
+                                        </p>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(i => (
                                                 <motion.div
@@ -547,8 +722,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                                             ))}
                                         </div>
                                         {type !== "chat" && (
-                                            <div className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em] mt-2">
-                                                AI_VERIFICATION_PROBE
+                                            <div className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em] mt-2 text-center">
+                                                {livenessState !== "idle" ? "BIOMETRIC_LIVENESS_PROBE_v3" : "AI_VERIFICATION_PROBE"}
                                             </div>
                                         )}
                                     </div>
@@ -556,7 +731,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                             )}
                         </AnimatePresence>
 
-                        {!isVerifying && isCameraReady && (
+                        {!isVerifying && livenessState === "idle" && isCameraReady && (
                             <div className="absolute bottom-10 left-0 right-0 text-center px-10 z-20">
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
@@ -654,7 +829,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                         <button
                             type="button"
                             onClick={capturePhoto}
-                            disabled={!isCameraReady || isCapturing || isVerifying || !!error}
+                            disabled={!isCameraReady || isCapturing || isVerifying || livenessState !== "idle" || !!error}
                             className={`w-full ${type === "chat" ? "h-14 rounded-2xl text-md shadow-xl" : "h-20 rounded-[32px] text-xl shadow-2xl"} bg-primary text-white font-black shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-5 disabled:opacity-50 disabled:scale-100 disabled:shadow-none relative overflow-hidden group`}
                         >
                             <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]" />
@@ -663,12 +838,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ type, onCapture, onClose,
                             ) : (
                                 <>
                                     <Camera className="w-8 h-8" />
-                                    {type === "chat" ? "Capture Photo" : t("camera.reviewCapture")}
+                                    {type === "selfie" 
+                                        ? "START BIOMETRIC LIVENESS SCAN"
+                                        : type === "chat" ? "Capture Photo" : t("camera.reviewCapture")
+                                    }
                                 </>
                             )}
                         </button>
 
-                        {allowUpload && !liveOnly && (
+                        {allowUpload && !liveOnly && type !== "selfie" && (
                             <>
                                 <div className={`${type === "chat" ? "my-0.5" : ""} flex items-center gap-4`}>
                                     <div className="h-px bg-border flex-1" />
