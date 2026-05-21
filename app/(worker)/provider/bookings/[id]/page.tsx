@@ -229,59 +229,67 @@ export default function JobDetailPage() {
 
   const isVerified = user?.idVerificationStatus === "VERIFIED";
 
-  // Fetch job from Supabase
+  // Fetch job via API (uses Prisma with proper auth guards)
   useEffect(() => {
     async function fetchJob() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select(`
-            *,
-            consumer:profiles!user_id(*),
-            service:services(*)
-          `)
-          .eq('id', params.id)
-          .single();
+        const res = await fetch(`/api/bookings/${params.id}`);
+        const json = await res.json();
 
-        if (error) throw error;
-
-        if (data) {
-          // Parse enriched location: "Address ||| lat,lng"
-          let locationStr = data.location || 'Unknown';
-          let locData: LocationData | undefined = undefined;
-
-          if (locationStr.includes(' ||| ')) {
-            const [address, coords] = locationStr.split(' ||| ');
-            const [lat, lng] = coords.split(',').map(Number);
-            locationStr = address;
-            locData = {
-              address: address,
-              lat,
-              lng
-            };
-          }
-
-          const transformedJob: Job = {
-            id: data.id,
-            service: data.service?.title || 'Specialized Task',
-            consumer: data.consumer?.full_name || 'Client',
-            consumerId: data.user_id,
-            status: data.booking_status.toUpperCase(),
-            date: data.scheduled_date,
-            quotedPrice: Number(data.total_price),
-            description: data.notes || 'No description provided.',
-            attachments: [],
-            location: locationStr,
-            locationData: locData,
-            timeline: [
-              { status: data.booking_status.toUpperCase(), date: data.created_at, note: 'Booking created' },
-            ],
-            paymentMethod: data.payment_method || 'CASH',
-          };
-          setJob(transformedJob);
-          setCurrentStatus(data.booking_status.toUpperCase());
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || "Booking not found");
         }
+
+        const data = json.data;
+
+        // Map Prisma BookingStatus enum to frontend status keys
+        const dbToFrontendStatus: Record<string, string> = {
+          'Requested': 'PENDING',
+          'Accepted': 'ACCEPTED',
+          'Arrived': 'ARRIVED',
+          'InProgress': 'IN_PROGRESS',
+          'Completed': 'COMPLETED',
+          'Cancelled': 'CANCELLED',
+        };
+        const frontendStatus = dbToFrontendStatus[data.status] || data.status?.toUpperCase() || 'PENDING';
+
+        // Parse enriched location: "Address ||| lat,lng"
+        let locationStr = data.location || 'Unknown';
+        let locData: LocationData | undefined = undefined;
+
+        if (locationStr.includes(' ||| ')) {
+          const [address, coords] = locationStr.split(' ||| ');
+          const [lat, lng] = coords.split(',').map(Number);
+          locationStr = address;
+          locData = { address, lat, lng };
+        } else if (data.latitude && data.longitude) {
+          locData = {
+            address: locationStr,
+            lat: data.latitude,
+            lng: data.longitude,
+          };
+        }
+
+        const transformedJob: Job = {
+          id: data.id,
+          service: data.service?.name || 'Specialized Task',
+          consumer: data.customer?.name || 'Client',
+          consumerId: data.userId,
+          status: frontendStatus,
+          date: data.scheduledAt || data.createdAt,
+          quotedPrice: Number(data.totalPrice),
+          description: data.notes || 'No description provided.',
+          attachments: [],
+          location: locationStr,
+          locationData: locData,
+          timeline: [
+            { status: frontendStatus, date: data.createdAt, note: 'Booking created' },
+          ],
+          paymentMethod: data.payment?.method || 'CASH',
+        };
+        setJob(transformedJob);
+        setCurrentStatus(frontendStatus);
       } catch (err: any) {
         showToast('Error loading job: ' + err.message, 'error');
       } finally {
@@ -292,33 +300,8 @@ export default function JobDetailPage() {
     if (params.id) fetchJob();
   }, [params.id]);
 
-  // Fetch slip if it exists
-  useEffect(() => {
-    async function fetchSlip() {
-      if (!params.id) return;
-      const { data, error } = await supabase
-        .from('booking_slips')
-        .select('*')
-        .eq('booking_id', params.id)
-        .single();
-      
-      if (data) {
-        setSlipData({
-          slipNumber: data.slip_number,
-          generatedAt: data.generated_at,
-          serviceTitle: data.service_title,
-          providerName: data.provider_name,
-          consumerName: data.consumer_name,
-          totalAmount: data.total_amount,
-          paymentMethod: data.payment_method,
-          paymentStatus: data.payment_status,
-          serviceDate: data.service_date,
-          bookingId: data.booking_id
-        });
-      }
-    }
-    fetchSlip();
-  }, [params.id, currentStatus]);
+  // Slip data is generated client-side during status updates in handleStatusUpdate.
+  // No separate database fetch needed — slips are ephemeral UI-only receipts.
 
   // Real-time location updates when ACCEPTED (representing "On the way")
   useEffect(() => {
@@ -355,15 +338,26 @@ export default function JobDetailPage() {
   useEffect(() => {
     if (!params.id) return;
 
+    // Map Prisma BookingStatus enum to frontend status keys
+    const dbToFrontendStatus: Record<string, string> = {
+      'Requested': 'PENDING',
+      'Accepted': 'ACCEPTED',
+      'Arrived': 'ARRIVED',
+      'InProgress': 'IN_PROGRESS',
+      'Completed': 'COMPLETED',
+      'Cancelled': 'CANCELLED',
+    };
+
     const channel = supabase
       .channel(`booking-${params.id}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'bookings',
+        table: 'Booking',
         filter: `id=eq.${params.id}`,
       }, (payload) => {
-        const newStatus = payload.new.booking_status?.toUpperCase();
+        const dbStatus = payload.new.status;
+        const newStatus = dbToFrontendStatus[dbStatus] || dbStatus?.toUpperCase();
         if (newStatus) {
           setCurrentStatus(newStatus);
           setJob(prev => prev ? { ...prev, status: newStatus } : null);

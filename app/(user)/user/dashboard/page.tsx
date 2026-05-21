@@ -51,7 +51,7 @@ export default function UserDashboardPage() {
         .channel(`user-bookings-${user.id}`)
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'bookings', filter: `user_id=eq.${user.id}` },
+          { event: '*', schema: 'public', table: 'Booking', filter: `user_id=eq.${user.id}` },
           () => fetchDashboardData(true)
         )
         .subscribe();

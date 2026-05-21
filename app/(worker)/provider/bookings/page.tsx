@@ -88,7 +88,7 @@ function ProviderJobsPageContent() {
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
-          table: 'bookings',
+          table: 'Booking',
           filter: `provider_id=eq.${user.id}`,
         }, () => {
           fetchJobs(); // Re-fetch on any booking change
