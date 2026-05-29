@@ -236,7 +236,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        {user && (
+                         {user && (
                             <button
                                 onClick={async () => {
                                     const nextPerspective = activePerspective === 'provider' ? 'consumer' : 'provider';
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                                         showToast(`Switched to ${nextPerspective === 'provider' ? 'Provider' : 'User'} Mode`, "success");
                                     }
                                 }}
-                                className="px-6 py-4 bg-white text-gray-950 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center gap-3 whitespace-nowrap"
+                                className="w-full md:w-auto px-5 py-3.5 md:px-6 md:py-4 bg-white text-gray-950 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center gap-3"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
                                 {!user.isUserSignUpForProvider
@@ -659,7 +659,9 @@ export default function SettingsPage() {
                                 <button onClick={() => setActiveSection(null)} className="p-2 hover:bg-secondary rounded-full transition-colors">
                                     <X className="w-5 h-5 text-text-hint" />
                                 </button>
-                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                                 {(Object.entries(themes) as [ThemeType, typeof themes.blue][]).map(([id, themeData]) => (
                                     <motion.button
                                         key={id}
@@ -719,7 +721,7 @@ export default function SettingsPage() {
                                         )}
                                     </motion.button>
                                 ))}
-                            </div>                      </div>
+                            </div>
 
                             <button
                                 onClick={() => handleSave("Theme settings")}

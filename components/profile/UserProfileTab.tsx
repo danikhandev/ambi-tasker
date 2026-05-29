@@ -205,9 +205,9 @@ export default function UserProfileTab({ user, onSuccess, onError }: { user: Use
       className="bg-card p-8 rounded-2xl shadow-sm border border-border"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex gap-6 items-center">
-          <div className="relative group">
+      <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 mb-8">
+        <div className="flex flex-col sm:flex-row gap-6 items-center text-center sm:text-left w-full">
+          <div className="relative group shrink-0">
             {formData.avatar ? (
               <CircularFrame
                 src={formData.avatar}
@@ -251,10 +251,10 @@ export default function UserProfileTab({ user, onSuccess, onError }: { user: Use
               </div>
             )}
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-foreground leading-tight mb-1">{user.firstName} {user.lastName}</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-xl">{t("common.verified")}</span>
+          <div className="min-w-0">
+            <h2 className="text-2xl font-black text-foreground leading-tight mb-2 truncate">{user.firstName} {user.lastName}</h2>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <span className="text-primary text-xs font-bold uppercase tracking-widest bg-primary/10 px-2.5 py-1 rounded-xl">{t("common.verified")}</span>
               <div className="flex items-center gap-1 text-yellow-400">
                 <span>★</span>
                 <span className="text-foreground font-bold text-sm ml-1">{user.rating || "5.0"}</span>
@@ -264,7 +264,7 @@ export default function UserProfileTab({ user, onSuccess, onError }: { user: Use
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
           {user && user.role !== 'ADMIN' && (
             <button
               onClick={async () => {
@@ -277,21 +277,23 @@ export default function UserProfileTab({ user, onSuccess, onError }: { user: Use
                 router.push(nextPerspective === 'provider' ? '/provider/dashboard' : '/dashboard');
                 showToast(`${t("header.switchTo")} ${nextPerspective === 'provider' ? t("header.proMode") : t("header.userMode")} ${t("common.success")}`, "success");
               }}
-              className="flex items-center gap-2 text-sm font-bold text-text-secondary hover:text-primary transition-colors px-4 py-2 bg-secondary rounded-xl border border-border hover:border-primary/30"
+              className="flex items-center justify-center gap-2 text-sm font-bold text-text-secondary hover:text-primary transition-colors px-4 py-3 bg-secondary rounded-xl border border-border hover:border-primary/30 w-full sm:w-auto shrink-0"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
-              {!user.isUserSignUpForProvider
-                ? t("header.becomeProvider")
-                : (t("header.switchTo") + " " + (activePerspective === 'consumer' ? t("header.proMode") : t("header.userMode")))
-              }
+              <span className="whitespace-nowrap">
+                {!user.isUserSignUpForProvider
+                  ? t("header.becomeProvider")
+                  : (t("header.switchTo") + " " + (activePerspective === 'consumer' ? t("header.proMode") : t("header.userMode")))
+                }
+              </span>
             </button>
           )}
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 hover:border-primary/30">
+            <button onClick={() => setIsEditing(true)} className="flex items-center justify-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors px-5 py-3 bg-primary/5 rounded-xl border border-primary/10 hover:border-primary/30 w-full sm:w-auto whitespace-nowrap shrink-0">
               <Edit3 className="w-4 h-4" /> {t("settings.editProfile")}
             </button>
           ) : (
-            <button onClick={handleSave} disabled={isLoading} className="flex items-center gap-2 text-sm font-bold text-white hover:bg-green-700 bg-green-600 px-4 py-2 rounded-xl border border-green-600 shadow-lg shadow-green-600/20 disabled:opacity-50 transition-all active:scale-95 transition-all duration-200">
+            <button onClick={handleSave} disabled={isLoading} className="flex items-center justify-center gap-2 text-sm font-bold text-white hover:bg-green-700 bg-green-600 px-5 py-3 rounded-xl border border-green-600 shadow-lg shadow-green-600/20 disabled:opacity-50 transition-all active:scale-95 transition-all duration-200 w-full sm:w-auto whitespace-nowrap shrink-0">
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isLoading ? t("settings.saving") : t("settings.saveChanges")}
             </button>

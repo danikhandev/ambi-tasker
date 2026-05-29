@@ -227,7 +227,7 @@ export default function ProviderSignupPage() {
               </p>
             </div>
 
-            <form onSubmit={step === 1 ? handleNextStep : step === 3 ? handleFinalSubmit : (e) => e.preventDefault()} className="space-y-6">
+            <form onSubmit={step === 1 ? handleNextStep : step === 3 ? handleFinalSubmit : (e) => e.preventDefault()} className="space-y-6" autoComplete="off">
               {step === 1 ? (
                 <>
                   <div className="grid md:grid-cols-2 gap-6">
@@ -238,6 +238,7 @@ export default function ProviderSignupPage() {
                       <input
                         id="firstName"
                         type="text"
+                        autoComplete="nope"
                         value={formData.firstName}
                         onChange={(e) => handleInputChange("firstName", e.target.value)}
                         onBlur={() => handleBlur("firstName")}
@@ -266,6 +267,7 @@ export default function ProviderSignupPage() {
                       <input
                         id="lastName"
                         type="text"
+                        autoComplete="nope"
                         value={formData.lastName}
                         onChange={(e) => handleInputChange("lastName", e.target.value)}
                         onBlur={() => handleBlur("lastName")}
@@ -296,6 +298,7 @@ export default function ProviderSignupPage() {
                       <input
                         id="email"
                         type="email"
+                        autoComplete="nope"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
                         onBlur={() => handleBlur("email")}
@@ -325,6 +328,7 @@ export default function ProviderSignupPage() {
                       <input
                         id="phone"
                         type="tel"
+                        autoComplete="nope"
                         value={formData.phone}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
                         onBlur={() => handleBlur("phone")}
@@ -356,6 +360,7 @@ export default function ProviderSignupPage() {
                     <input
                       id="cnic"
                       type="text"
+                      autoComplete="nope"
                       value={formData.cnic}
                       onChange={(e) => handleInputChange("cnic", e.target.value)}
                       onBlur={() => handleBlur("cnic")}
@@ -386,6 +391,7 @@ export default function ProviderSignupPage() {
                         <input
                           id="password"
                           type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           value={formData.password}
                           onChange={(e) => handleInputChange("password", e.target.value)}
                           onBlur={() => handleBlur("password")}
@@ -430,6 +436,7 @@ export default function ProviderSignupPage() {
                         <input
                           id="confirmPassword"
                           type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           value={formData.confirmPassword}
                           onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                           onBlur={() => handleBlur("confirmPassword")}

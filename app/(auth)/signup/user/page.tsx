@@ -224,7 +224,7 @@ export default function UserSignupPage() {
             </div>
 
             {step === 1 ? (
-              <form onSubmit={handleNextStep} className="space-y-6">
+              <form onSubmit={handleNextStep} className="space-y-6" autoComplete="off">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-text-hint block">
@@ -233,6 +233,7 @@ export default function UserSignupPage() {
                     <input
                       id="firstName"
                       type="text"
+                      autoComplete="nope"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       onBlur={() => handleBlur("firstName")}
@@ -261,6 +262,7 @@ export default function UserSignupPage() {
                     <input
                       id="lastName"
                       type="text"
+                      autoComplete="nope"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       onBlur={() => handleBlur("lastName")}
@@ -291,6 +293,7 @@ export default function UserSignupPage() {
                     <input
                       id="email"
                       type="email"
+                      autoComplete="nope"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       onBlur={() => handleBlur("email")}
@@ -320,6 +323,7 @@ export default function UserSignupPage() {
                     <input
                       id="phone"
                       type="tel"
+                      autoComplete="nope"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       onBlur={() => handleBlur("phone")}
@@ -352,6 +356,7 @@ export default function UserSignupPage() {
                       <input
                         id="password"
                         type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
                         onBlur={() => handleBlur("password")}
@@ -396,6 +401,7 @@ export default function UserSignupPage() {
                       <input
                         id="confirmPassword"
                         type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                         onBlur={() => handleBlur("confirmPassword")}

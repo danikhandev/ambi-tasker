@@ -119,7 +119,8 @@ function AddServiceContent() {
         try {
             const avgPrice = ((Number(form.priceMin) || 0) + (Number(form.priceMax) || 0)) / 2;
 
-            const res = await fetch('/api/provider/profile', {
+            // 1. Update Provider Profile (Existing functionality)
+            const profileRes = await fetch('/api/provider/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -129,8 +130,22 @@ function AddServiceContent() {
                     experienceYears: parseInt(form.experience.split(' ')[0]) || 0
                 })
             });
-            const resJson = await res.json();
-            if (!resJson.success) throw new Error(resJson.error || "Failed");
+            const profileJson = await profileRes.json();
+            if (!profileJson.success) throw new Error(profileJson.error || "Failed to update profile");
+
+            // 2. Submit Service Application for Admin Approval
+            const applyRes = await fetch('/api/provider/services/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: form.name,
+                    category: form.category,
+                    description: form.description,
+                    price: avgPrice
+                })
+            });
+            const applyJson = await applyRes.json();
+            if (!applyJson.success) throw new Error(applyJson.error || "Failed to submit application");
 
             setIsSubmitting(false);
             setIsSuccess(true);

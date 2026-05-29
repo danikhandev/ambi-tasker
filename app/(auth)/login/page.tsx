@@ -311,7 +311,7 @@ function LoginContent() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
               {/* Email */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
@@ -324,6 +324,7 @@ function LoginContent() {
 
                     <input
                       type="email"
+                      autoComplete="nope"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       onBlur={() => handleBlur("email")}
@@ -361,6 +362,7 @@ function LoginContent() {
                   <Lock className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-5" : "left-5"} w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors`} />
                   <input
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     onBlur={() => handleBlur("password")}
@@ -410,6 +412,7 @@ function LoginContent() {
                   <div className="relative">
                     <input
                       type="text"
+                      autoComplete="one-time-code"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       placeholder="0  0  0  0  0  0"
