@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Plus, Upload, X, Check, Loader2, ChevronDown, AlertCircle,
     CheckCircle2, Image, DollarSign, FileText, Tag, Clock,
-    Send, Eye, Briefcase
+    Send, Eye, Briefcase, MoreVertical
 } from "lucide-react";
-import { unbounded } from "@/app/fonts";
+import { StatusBadge, ServiceStatus } from "@/components/StatusBadge";
 import { SERVICE_CATEGORIES } from "@/constants/services";
 import Link from "next/link";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -192,8 +192,6 @@ export default function AddServicePage() {
                         </div>
                     ) : (
                         requests.map((req, i) => {
-                            const status = req.service_status || "pending";
-                            const sc = statusConfig[status] || statusConfig.pending;
                             const categoryName = req.category?.category_name || "Uncategorized";
                             
                             return (
@@ -208,10 +206,7 @@ export default function AddServicePage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h3 className="text-sm font-black text-foreground">{req.title}</h3>
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[10px] font-bold uppercase ${sc.color}`}>
-                                                    <sc.icon className="w-3 h-3" />
-                                                    {status}
-                                                </span>
+                                                <StatusBadge status={req.service_status} />
                                             </div>
                                             <p className="text-xs text-text-hint font-medium mb-2">
                                                 {categoryName} • Rs. {Number(req.price).toLocaleString()}
@@ -223,17 +218,44 @@ export default function AddServicePage() {
                                         <span className="text-[10px] font-bold text-text-disabled uppercase tracking-wider">
                                             Created {new Date(req.created_at).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
                                         </span>
-                                        <div className="flex items-center gap-3">
-                                            {status === "active" && (
-                                                <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider flex items-center gap-1">
-                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Published
-                                                </span>
-                                            )}
-                                            {status === "paused" && (
-                                                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
-                                                    <Clock className="w-3.5 h-3.5" /> Under Review
-                                                </span>
-                                            )}
+                                        <div className="relative group">
+                                            <button
+                                                className="p-2 hover:bg-primary/10 text-text-hint hover:text-primary rounded-xl transition-all"
+                                                aria-label="More actions"
+                                            >
+                                                <MoreVertical size={16} />
+                                            </button>
+                                            <div className="absolute right-0 mt-2 w-40 bg-card border border-border rounded-xl shadow-lg z-10 hidden group-hover:block">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedService(req);
+                                                        setFormData({
+                                                            name: req.title,
+                                                            category: req.category?.category_name || "",
+                                                            price: req.price,
+                                                            description: req.description || "",
+                                                        });
+                                                        setIsEditing(true);
+                                                    }}
+                                                    className="block w-full text-left px-4 py-2 hover:bg-primary/10 text-text-hint hover:text-primary"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="block w-full text-left px-4 py-2 hover:bg-rose-50 text-text-hint hover:text-rose-500"
+                                                >
+                                                    Delete
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        // Placeholder for view details modal
+                                                    }}
+                                                    className="block w-full text-left px-4 py-2 hover:bg-muted text-text-hint hover:text-primary"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>

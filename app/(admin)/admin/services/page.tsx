@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { 
   Plus, Edit3, Trash2, Search, Briefcase, 
   CheckCircle2, XCircle, Loader2, ArrowRight,
-  ChevronRight, Activity, DollarSign, Tag
+  ChevronRight, Activity, DollarSign, Tag, MoreVertical
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { unbounded } from "@/app/fonts";
@@ -157,27 +157,39 @@ export default function ServiceManagementPage() {
       ),
     },
     {
+      header: "Images",
+      accessor: (srv: any) => (
+        <div className="flex gap-2">
+          {srv.images?.slice(0, 3).map((img: string, i: number) => (
+            <img key={i} src={img} alt="service" className="w-10 h-10 object-cover rounded" />
+          ))}
+        </div>
+      ),
+    },
+    {
       header: "Actions",
       accessor: (srv: any) => (
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-           <button 
-            onClick={() => { setSelectedService(srv); setFormData({
-              name: srv.name,
-              category: srv.category,
-              price: srv.price,
-              description: srv.description || "",
-              isActive: srv.isActive
-            }); setIsEditing(true); }}
+        <div className="relative group" onClick={(e) => e.stopPropagation()}>
+          <button
             className="p-2 hover:bg-primary/10 text-text-hint hover:text-primary rounded-xl transition-all"
-           >
-              <Edit3 size={16} />
-           </button>
-           <button 
-            onClick={() => handleDelete(srv.id)}
-            className="p-2 hover:bg-rose-50 text-text-hint hover:text-rose-500 rounded-xl transition-all"
-           >
-              <Trash2 size={16} />
-           </button>
+            aria-label="More actions"
+          >
+            <MoreVertical size={16} />
+          </button>
+          <div className="absolute right-0 mt-2 w-40 bg-card border border-border rounded-xl shadow-lg z-10 hidden group-hover:block">
+            <button
+              onClick={() => { setSelectedService(srv); setFormData({ name: srv.name, category: srv.category, price: srv.price, description: srv.description || "", isActive: srv.isActive }); setIsEditing(true); }}
+              className="block w-full text-left px-4 py-2 hover:bg-primary/10 text-text-hint hover:text-primary"
+            >
+              <Edit3 size={14} className="inline mr-2" /> Edit
+            </button>
+            <button
+              onClick={() => handleDelete(srv.id)}
+              className="block w-full text-left px-4 py-2 hover:bg-rose-50 text-text-hint hover:text-rose-500"
+            >
+              <Trash2 size={14} className="inline mr-2" /> Delete
+            </button>
+          </div>
         </div>
       ),
     }

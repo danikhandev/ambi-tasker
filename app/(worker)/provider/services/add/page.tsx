@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronRight, ChevronLeft, Check, Loader2, AlertCircle,
     CheckCircle2, Image, DollarSign, FileText, Tag, Clock,
     Send, Briefcase, MapPin, Calendar as CalendarIcon, Upload, X, Info
 } from "lucide-react";
+import { validateImage } from "@/services/upload/validation";
 import { unbounded } from "@/app/fonts";
 import { SERVICE_CATEGORIES } from "@/constants/services";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -54,8 +55,6 @@ function AddServiceContent() {
     const [images, setImages] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Form is initialized blank for new services.
-
     const validateStep = (step: number) => {
         const errs: Record<string, string> = {};
         if (step === 1) {
@@ -95,7 +94,6 @@ function AddServiceContent() {
         try {
             const avgPrice = ((Number(form.priceMin) || 0) + (Number(form.priceMax) || 0)) / 2;
 
-            // 1. Update Provider Profile (Existing functionality)
             const profileRes = await fetch('/api/provider/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -109,7 +107,6 @@ function AddServiceContent() {
             const profileJson = await profileRes.json();
             if (!profileJson.success) throw new Error(profileJson.error || "Failed to update profile");
 
-            // 2. Submit Service Application for Admin Approval
             const applyRes = await fetch('/api/provider/services/apply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -117,7 +114,8 @@ function AddServiceContent() {
                     name: form.name,
                     category: form.category,
                     description: form.description,
-                    price: avgPrice
+                    price: avgPrice,
+                    images: images
                 })
             });
             const applyJson = await applyRes.json();
@@ -131,15 +129,45 @@ function AddServiceContent() {
         }
     };
 
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
     const handleImageAdd = () => {
-        const demoImages = [
-            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400&h=300&fit=crop",
-            "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=400&h=300&fit=crop",
-            "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=400&h=300&fit=crop",
-        ];
-        if (images.length < 5) {
-            setImages(prev => [...prev, demoImages[prev.length % demoImages.length]]);
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+        const newImages: string[] = [];
+        for (let i = 0; i < files.length && images.length + newImages.length < 5; i++) {
+            const file = files[i];
+            const validation = validateImage(file);
+            if (!validation.isValid) {
+                showToast(validation.error || "Invalid image", "error");
+                continue;
+            }
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("bucket", "posters");
+                const res = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+                const json = await res.json();
+                if (json.success && json.url) {
+                    newImages.push(json.url);
+                } else {
+                    showToast(json.error || "Upload failed", "error");
+                }
+            } catch (err: any) {
+                showToast(err.message || "Upload error", "error");
+            }
         }
+        if (newImages.length) {
+            setImages(prev => [...prev, ...newImages]);
+        }
+        e.target.value = "";
     };
 
     const toggleDay = (day: string) => {
@@ -181,7 +209,6 @@ function AddServiceContent() {
     return (
         <div className="flex-1 bg-muted/30 min-h-screen pb-20">
             <div className="max-w-4xl mx-auto px-6 py-12">
-                {/* Header */}
                 <div className="mb-12">
                     <Link
                         href="/provider/services"
@@ -193,7 +220,6 @@ function AddServiceContent() {
                     <p className="text-text-secondary font-medium">{t("providerServices.addSubtitle")}</p>
                 </div>
 
-                {/* Stepper */}
                 <div className="flex items-center justify-between mb-16 relative">
                     <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-border -translate-y-1/2 z-0" />
                     {getSteps(t).map((step) => {
@@ -220,7 +246,6 @@ function AddServiceContent() {
                     })}
                 </div>
 
-                {/* Form Content */}
                 <form onSubmit={(e) => e.preventDefault()} autoComplete="off" className="bg-card rounded-[40px] border border-border shadow-sm hover:shadow-md transition-all duration-300 p-8 md:p-12">
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
@@ -454,13 +479,23 @@ function AddServiceContent() {
                                             </div>
                                         ))}
                                         {images.length < 5 && (
-                                            <button
-                                                onClick={handleImageAdd}
-                                                className="aspect-square rounded-3xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-text-hint hover:border-primary hover:text-primary transition-all active:scale-95 transition-all duration-200"
-                                            >
-                                                <Upload className="w-6 h-6" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Add Image</span>
-                                            </button>
+                                            <>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    ref={fileInputRef}
+                                                    style={{ display: 'none' }}
+                                                    onChange={handleFileChange}
+                                                />
+                                                <button
+                                                    onClick={handleImageAdd}
+                                                    className="aspect-square rounded-3xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-text-hint hover:border-primary hover:text-primary transition-all active:scale-95 transition-all duration-200"
+                                                >
+                                                    <Upload className="w-6 h-6" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Add Image</span>
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                     <p className="text-[10px] font-black text-text-hint uppercase tracking-widest">{images.length} / 5 Images</p>
