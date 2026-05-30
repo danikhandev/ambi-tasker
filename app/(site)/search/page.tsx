@@ -271,7 +271,7 @@ function SearchContent() {
             {/* Avatar block: Left-aligned on mobile, overlap on desktop */}
             <div className="relative shrink-0 md:-mt-14 md:mb-4 z-10">
               <div className="w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-3xl border-2 md:border-4 border-card bg-muted overflow-hidden shadow-md md:shadow-xl group-hover:scale-105 transition-transform relative">
-                <Image src={worker.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${worker.id}`} fill sizes="(max-width: 768px) 48px, 80px" className="object-cover" alt={worker.name} />
+                <Image src={worker.avatar || "/default-avatar.svg"} fill sizes="(max-width: 768px) 48px, 80px" className="object-cover" alt={worker.name} />
                 <div className="absolute bottom-0.5 right-0.5 z-10">
                   <OnlineDot isOnline={worker.isOnline} size={10} />
                 </div>

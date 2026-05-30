@@ -9,6 +9,8 @@ export interface FaceDetectionResult {
   landmarks?: any[];
   boundingBox?: any;
   isPerson?: boolean;
+  hasGlare?: boolean;
+  fraudFlags?: string[];
 }
 
 export interface OCRResult {
@@ -17,6 +19,9 @@ export interface OCRResult {
   cnic?: string;
   dob?: string;
   expiry?: string;
+  isBlurred?: boolean;
+  hasGlare?: boolean;
+  fraudFlags?: string[];
 }
 
 export class GoogleVisionService {
@@ -24,7 +29,7 @@ export class GoogleVisionService {
   private static apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${this.apiKey}`;
 
   /**
-   * Detect faces in an image
+   * Detect faces in an image with Liveness and Fraud Heuristics
    */
   static async detectFaces(imageUri: string): Promise<FaceDetectionResult> {
     try {
@@ -36,7 +41,9 @@ export class GoogleVisionService {
             image: { source: { imageUri } },
             features: [
                 { type: "FACE_DETECTION", maxResults: 10 },
-                { type: "LABEL_DETECTION", maxResults: 10 }
+                { type: "LABEL_DETECTION", maxResults: 10 },
+                { type: "SAFE_SEARCH_DETECTION" },
+                { type: "IMAGE_PROPERTIES" }
             ]
           }
         ]
@@ -53,6 +60,17 @@ export class GoogleVisionService {
       const data = await response.json();
       const faceAnnotations = data.responses?.[0]?.faceAnnotations || [];
       const labelAnnotations = data.responses?.[0]?.labelAnnotations || [];
+      const safeSearch = data.responses?.[0]?.safeSearchAnnotation || {};
+      
+      // Fraud Analysis (Detecting Screens / Spoofs)
+      const fraudFlags: string[] = [];
+      const spoofLabels = ["Screen", "Display device", "Electronic device", "Computer monitor", "Mobile phone"];
+      const hasSpoofLabel = labelAnnotations.some((l: any) => spoofLabels.includes(l.description) && l.score > 0.6);
+      
+      if (hasSpoofLabel) fraudFlags.push("POSSIBLE_DIGITAL_SCREEN_SPOOF");
+      if (safeSearch.spoof === "LIKELY" || safeSearch.spoof === "VERY_LIKELY") {
+        fraudFlags.push("VISION_SPOOF_DETECTED");
+      }
 
       // Check if image contains a person
       const personLabels = ["Person", "Face", "Human", "Selfie", "Portrait"];
@@ -67,14 +85,14 @@ export class GoogleVisionService {
             confidence: 0, 
             isBlurred: false, 
             isUnderExposed: false,
-            isPerson 
+            isPerson,
+            fraudFlags
         };
       }
 
       const primaryFace = faceAnnotations[0];
       
       // Calculate blur and exposure from likelihoods
-      // Likelihoods: UNKNOWN, VERY_UNLIKELY, UNLIKELY, POSSIBLE, LIKELY, VERY_LIKELY
       const isBlurred = ["LIKELY", "VERY_LIKELY"].includes(primaryFace.blurredLikelihood);
       const isUnderExposed = ["LIKELY", "VERY_LIKELY"].includes(primaryFace.underExposedLikelihood);
 
@@ -86,7 +104,8 @@ export class GoogleVisionService {
         isUnderExposed,
         landmarks: primaryFace.landmarks,
         boundingBox: primaryFace.boundingPoly,
-        isPerson
+        isPerson,
+        fraudFlags
       };
     } catch (error) {
       logger.error("Google Vision Face Detection Failed:", error);
@@ -95,7 +114,7 @@ export class GoogleVisionService {
   }
 
   /**
-   * Extract text from an image (OCR)
+   * Extract text from an image (OCR) with Document Quality Checks
    */
   static async extractText(imageUri: string): Promise<OCRResult> {
     try {
@@ -105,7 +124,11 @@ export class GoogleVisionService {
         requests: [
           {
             image: { source: { imageUri } },
-            features: [{ type: "DOCUMENT_TEXT_DETECTION" }]
+            features: [
+              { type: "DOCUMENT_TEXT_DETECTION" },
+              { type: "LABEL_DETECTION", maxResults: 10 },
+              { type: "SAFE_SEARCH_DETECTION" }
+            ]
           }
         ]
       };
@@ -120,13 +143,25 @@ export class GoogleVisionService {
 
       const data = await response.json();
       const fullTextAnnotation = data.responses?.[0]?.fullTextAnnotation;
+      const labelAnnotations = data.responses?.[0]?.labelAnnotations || [];
+      const safeSearch = data.responses?.[0]?.safeSearchAnnotation || {};
+
+      // Fraud / Spoof checks
+      const fraudFlags: string[] = [];
+      const spoofLabels = ["Screen", "Display device", "Electronic device", "Computer monitor"];
+      const hasSpoofLabel = labelAnnotations.some((l: any) => spoofLabels.includes(l.description) && l.score > 0.6);
+      
+      if (hasSpoofLabel) fraudFlags.push("POSSIBLE_DIGITAL_SCREEN_SPOOF");
+      if (safeSearch.spoof === "LIKELY" || safeSearch.spoof === "VERY_LIKELY") {
+        fraudFlags.push("VISION_SPOOF_DETECTED");
+      }
 
       if (!fullTextAnnotation) {
-        return { fullText: "" };
+        return { fullText: "", fraudFlags };
       }
 
       const fullText = fullTextAnnotation.text;
-      const result: OCRResult = { fullText };
+      const result: OCRResult = { fullText, fraudFlags };
 
       // Improved Extraction Logic (Pakistan CNIC specific)
       // CNIC Number: 00000-0000000-0

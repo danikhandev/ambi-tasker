@@ -751,7 +751,7 @@ export default function JobDetailPage() {
             <h3 className="font-bold text-lg mb-4">{t("dashboard.customerInfo") || "Consumer Info"}</h3>
             <div className="flex items-center gap-4">
               <CircularFrame
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Asma"
+                src="/default-avatar.svg"
                 alt={job.consumer}
                 size={48}
                 border={true}

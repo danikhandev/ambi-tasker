@@ -53,9 +53,7 @@ const CircularFrame = React.memo(({
                         quality={90}
                     />
                 ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-[10px] font-black text-text-hint uppercase">{alt?.[0] || "?"}</span>
-                    </div>
+                    <div className="w-full h-full" />
                 )}
             </div>
         </motion.div>

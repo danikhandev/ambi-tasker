@@ -86,7 +86,7 @@ export default function ApplicationsManagementPage() {
       header: "Provider",
       accessor: (app: any) => (
         <div className="flex flex-col">
-           <span className="text-xs font-black text-foreground">{app.provider?.user?.firstName} {app.provider?.user?.lastName}</span>
+           <span className="text-xs font-black text-foreground">{app.provider?.user?.name || "Unknown Provider"}</span>
            <span className="text-[10px] font-medium text-text-hint">{app.provider?.user?.email}</span>
         </div>
       ),

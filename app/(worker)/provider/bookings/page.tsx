@@ -57,7 +57,7 @@ const transformJobData = (b: any) => {
     date: new Date(b.scheduled_date || b.scheduledAt || b.created_at).toLocaleDateString() + ", " + new Date(b.scheduled_date || b.scheduledAt || b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     price: Number(b.total_price || b.totalPrice || 0),
     address: b.location || "On-site Deployment",
-    consumerAvatar: b.consumer?.profile_image || b.consumer?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.id}`
+    consumerAvatar: b.consumer?.profile_image || b.consumer?.profileImage || "/default-avatar.svg"
   };
 };
 
@@ -114,7 +114,7 @@ function ProviderJobsPageContent() {
         ...transformJobData(b),
         consumer: b.customer?.name || "Client",
         address: b.location || "On-site Deployment",
-        consumerAvatar: b.customer?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.id}`
+        consumerAvatar: b.customer?.profileImage || "/default-avatar.svg"
       }));
       setDbJobs(formatted);
 

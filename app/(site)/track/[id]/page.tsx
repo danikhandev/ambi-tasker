@@ -64,7 +64,7 @@ export default function TrackingPage() {
                         name: p.user?.name || 'Expert Provider',
                         title: p.professionalTitle || 'Service specialist',
                         rating: p.rating || 5.0,
-                        avatar: p.user?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.id}`,
+                        avatar: p.user?.profileImage || "/default-avatar.svg",
                         contact: p.user?.phone || '+923000000000',
                         lat: p.latitude,
                         lng: p.longitude

@@ -488,7 +488,7 @@ export default function RequestDetailPage() {
               <h3 className={`${unbounded.className} text-[10px] font-black text-text-hint uppercase tracking-[0.3em] mb-8`}>Service Personnel</h3>
               <div className="flex flex-col items-center gap-4 mb-8">
                 <CircularFrame
-                  src={request.provider_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.provider_name}`}
+                  src={request.provider_avatar || "/default-avatar.svg"}
                   alt={request.provider_name}
                   size={100}
                   className="shadow-2xl border-4 border-white p-1 bg-gradient-to-br from-primary to-accent"

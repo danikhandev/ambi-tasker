@@ -54,31 +54,7 @@ function AddServiceContent() {
     const [images, setImages] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Pre-fill if editing an existing service
-    useEffect(() => {
-        const fetchService = async () => {
-            const res = await fetch('/api/provider/profile');
-            const resJson = await res.json();
-
-            if (resJson.success && resJson.data) {
-                const data = resJson.data;
-                setForm({
-                    name: data.professionalTitle || "",
-                    category: data.professionalTitle || "",
-                    description: data.serviceDescription || "",
-                    priceMin: String(data.hourlyRate || ""),
-                    priceMax: String(data.hourlyRate || ""),
-                    experience: String(data.experienceYears ? `${data.experienceYears} years` : ""),
-                    location: data.user?.district?.name || "",
-                    coverageArea: data.user?.area?.name || "",
-                    availabilityDays: [],
-                    startTime: "09:00",
-                    endTime: "18:00",
-                });
-            }
-        };
-        fetchService();
-    }, []);
+    // Form is initialized blank for new services.
 
     const validateStep = (step: number) => {
         const errs: Record<string, string> = {};

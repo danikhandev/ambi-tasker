@@ -382,7 +382,7 @@ export default function ProviderProfilePage() {
           <div className="flex items-center gap-6">
             <div className="relative group">
               <CircularFrame
-                src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName}`}
+                src={user.avatar || "/default-avatar.svg"}
                 alt="Provider Avatar"
                 size={96}
                 className="border-4 border-primary/20 shadow-xl"

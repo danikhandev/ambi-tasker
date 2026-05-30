@@ -87,7 +87,7 @@ export default function UserDashboardPage() {
         status: b.status.toUpperCase(),
         date: b.scheduledAt ? new Date(b.scheduledAt).toLocaleDateString() : "TBD",
         price: `${t("common.currency")} ${b.totalPrice?.toLocaleString() || 0}`,
-        avatar: b.provider?.user?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.id}`,
+        avatar: b.provider?.user?.profileImage || "/default-avatar.svg",
       }));
       setActiveRequests(active);
 

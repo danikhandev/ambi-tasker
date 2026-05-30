@@ -155,7 +155,7 @@ export default function BookingsPage() {
                       <div className="flex gap-5">
                         <div className="w-16 h-16 rounded-2xl bg-muted shrink-0 overflow-hidden shadow-inner border border-border">
                           <img 
-                            src={b.provider?.user?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.providerId}`} 
+                            src={b.provider?.user?.profileImage || "/default-avatar.svg"} 
                             alt="Provider" 
                             className="w-full h-full object-cover" 
                           />

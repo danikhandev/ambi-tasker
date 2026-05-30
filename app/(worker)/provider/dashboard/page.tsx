@@ -173,7 +173,7 @@ export default function ProviderDashboardPage() {
     location: b.location || "Client Location",
     price: `${t("common.currency")} ${Number(b.totalPrice).toLocaleString()}`,
     status: b.status.toUpperCase(),
-    avatar: b.customer?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.id}`,
+    avatar: b.customer?.profileImage || "/default-avatar.svg",
     startedAt: b.updatedAt ? new Date(b.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "---"
   });
 
@@ -341,39 +341,41 @@ export default function ProviderDashboardPage() {
                           initial={{ opacity: 0, x: -10 }} 
                           animate={{ opacity: 1, x: 0 }} 
                           transition={{ delay: i * 0.05 }}
-                          className="p-6 md:p-8 bg-muted/20 dark:bg-white/5 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-white dark:hover:bg-primary/5 transition-all duration-300 flex flex-col md:flex-row gap-6 md:gap-8 items-center group shadow-sm hover:shadow-xl hover:shadow-primary/5"
+                          className="p-5 md:p-6 bg-muted/20 dark:bg-white/5 rounded-3xl border border-border hover:border-primary/20 hover:bg-white dark:hover:bg-primary/5 transition-all duration-300 flex flex-col xl:flex-row gap-5 items-center xl:items-start group shadow-sm hover:shadow-xl hover:shadow-primary/5"
                         >
                           <div className="relative shrink-0">
                             <div className="absolute -inset-1 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <CircularFrame src={job.avatar} alt={job.consumer} size={64} className="relative z-10 border-2 border-white shadow-md" />
+                            <CircularFrame src={job.avatar} alt={job.consumer} size={56} className="relative z-10 border-2 border-white shadow-md" />
                           </div>
 
-                          <div className="flex-1 text-center md:text-left min-w-0">
-                             <h4 className={`${unbounded.className} text-lg md:text-xl font-bold mb-1 truncate`}>{job.service}</h4>
-                             <p className="text-[11px] font-black text-text-hint uppercase tracking-widest mb-4">
-                               {job.consumer} <span className="mx-2 opacity-30">•</span> <span className="text-primary">{job.price}</span>
-                             </p>
-                             <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black text-text-hint/80 uppercase tracking-tighter">
-                               <span className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-xl border border-border/40 shadow-sm hover:border-primary/30 transition-colors"><Calendar size={12} className="text-primary" /> {job.date}</span>
-                               <span className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-xl border border-border/40 shadow-sm hover:border-primary/30 transition-colors"><MapPin size={12} className="text-primary" /> {job.location}</span>
+                          <div className="flex-1 min-w-0 w-full text-center xl:text-left flex flex-col gap-3">
+                             <div className="min-w-0">
+                                 <h4 className={`${unbounded.className} text-base md:text-lg font-bold mb-1 truncate`}>{job.service}</h4>
+                                 <p className="text-[10px] md:text-[11px] font-black text-text-hint uppercase tracking-widest truncate">
+                                   {job.consumer} <span className="mx-2 opacity-30">•</span> <span className="text-primary">{job.price}</span>
+                                 </p>
+                             </div>
+                             
+                             <div className="flex flex-col sm:flex-row justify-center xl:justify-start gap-3 text-[10px] font-black text-text-hint/80 uppercase tracking-tighter">
+                               <span className="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-background rounded-xl border border-border/40 shadow-sm whitespace-nowrap"><Calendar size={12} className="text-primary shrink-0" /> {job.date}</span>
+                               <span className="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-background rounded-xl border border-border/40 shadow-sm truncate max-w-full" title={job.location}><MapPin size={12} className="text-primary shrink-0" /> <span className="truncate">{job.location}</span></span>
                              </div>
                           </div>
 
-                          <div className="flex flex-row md:flex-col lg:flex-row gap-3 w-full md:w-auto">
+                          <div className="flex flex-row gap-3 w-full xl:w-auto mt-2 xl:mt-0 shrink-0">
                              {activeTab === 'requests' ? (
                                <>
                                  <button 
                                    onClick={() => handleJobAction(job.id, 'accept')} 
                                    disabled={!!processingJobId || user?.idVerificationStatus === "PENDING"}
-                                   className={`flex-1 lg:flex-none h-12 px-6 ${user?.idVerificationStatus === "PENDING" ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary hover:shadow-xl hover:shadow-primary/20 active:scale-95'} text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2`}
+                                   className={`flex-1 xl:w-28 h-11 px-4 ${user?.idVerificationStatus === "PENDING" ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary hover:shadow-lg hover:shadow-primary/20 active:scale-95'} text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2`}
                                  >
-                                   {processingJobId === job.id ? <Loader2 size={14} className="animate-spin" /> : null}
-                                   {processingJobId === job.id ? "Syncing..." : "Accept"}
+                                   {processingJobId === job.id ? <Loader2 size={14} className="animate-spin" /> : "Accept"}
                                  </button>
                                  <button 
                                    onClick={() => handleJobAction(job.id, 'decline')} 
                                    disabled={!!processingJobId}
-                                   className="flex-1 lg:flex-none h-12 px-6 bg-white border border-border text-text-hint text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center gap-2"
+                                   className="flex-1 xl:w-28 h-11 px-4 bg-white border border-border text-text-hint text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center"
                                  >
                                    Decline
                                  </button>
@@ -381,7 +383,7 @@ export default function ProviderDashboardPage() {
                              ) : (
                                <Link 
                                  href={`/messages`} 
-                                 className="w-full lg:w-32 h-12 flex items-center justify-center bg-foreground text-background text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-primary transition-all active:scale-95 shadow-lg shadow-black/5"
+                                 className="w-full xl:w-32 h-11 flex items-center justify-center bg-foreground text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all active:scale-95 shadow-lg shadow-black/5"
                                >
                                  Open Chat
                                </Link>

@@ -1,6 +1,7 @@
 import { prisma } from "@/services/prisma";
 import { logger } from "@/utils/logger";
 import { GoogleVisionService } from "./googleVision";
+import { sendNotification } from "@/services/notifications";
 
 export type KycStatus = "NOT_SUBMITTED" | "PENDING" | "UNDER_REVIEW" | "VERIFIED" | "REJECTED";
 
@@ -34,7 +35,7 @@ export class KycEngine {
       });
       if (!user) throw new Error("Provider not found");
 
-      // 2. Selfie Validation
+      // 2. Liveness & Selfie Quality Validation
       const selfieResult = await GoogleVisionService.detectFaces(files.selfie);
       
       if (!selfieResult.isPerson) {
@@ -52,21 +53,34 @@ export class KycEngine {
       if (selfieResult.isBlurred) {
         return this.rejection(providerId, "Selfie is blurry. Please hold the camera still.");
       }
+      if (selfieResult.fraudFlags && selfieResult.fraudFlags.length > 0) {
+        // Step 7: Fraud Detection during selfie capture
+        return this.rejection(providerId, "Security verification failed. Digital screen or spoofing detected during selfie capture.");
+      }
 
-      // 3. ID Card Face Detection
+      // 3. Document Quality & Face Detection
       const idFaceResult = await GoogleVisionService.detectFaces(files.front);
       const idFaceDetected = idFaceResult.faceDetected;
       
+      if (idFaceResult.fraudFlags && idFaceResult.fraudFlags.length > 0) {
+        return this.rejection(providerId, "Security verification failed on identity document. Screen or forgery artifacts detected.");
+      }
+      if (idFaceResult.isBlurred || idFaceResult.isUnderExposed) {
+        return this.rejection(providerId, "Identity document is illegible. Please ensure the scan is clear, well-lit, and without glare.");
+      }
       if (!idFaceDetected) {
-        return this.rejection(providerId, "No face detected on the ID card. Please ensure the card is clear and well-lit.");
+        return this.rejection(providerId, "No face detected on the ID card. Please ensure the document is clear and well-lit.");
       }
 
       // 4. Face Similarity Check
       const similarityScore = GoogleVisionService.compareFaces(selfieResult, idFaceResult);
       logger.info(`Face Similarity Score: ${similarityScore}%`);
 
-      // 5. OCR Data Extraction
+      // 5. OCR Data Extraction & Secondary Fraud Analysis
       const ocrResult = await GoogleVisionService.extractText(files.front);
+      if (ocrResult.fraudFlags && ocrResult.fraudFlags.length > 0) {
+        return this.rejection(providerId, "Security check failed. Automated fraud detection flagged the document.");
+      }
       if (!ocrResult.fullText) {
         return this.rejection(providerId, "Could not read ID card. Please ensure the text is legible.");
       }
@@ -83,7 +97,7 @@ export class KycEngine {
         return this.rejection(providerId, "This CNIC is already registered with another account.");
       }
 
-      // 8. Decision Logic
+      // 8. Risk Scoring & Decision Engine
       let finalStatus: KycStatus = "VERIFIED";
       let confidenceScore = Math.round((selfieResult.confidence * 0.4 + (similarityScore / 100) * 0.6) * 100);
       let message = "Your identity has been successfully verified.";
@@ -94,6 +108,7 @@ export class KycEngine {
           return this.rejection(providerId, "Face match failed. The selfie does not match the ID card portrait.");
       }
 
+      // Step 9: Waitlisting / Admin Review Trigger
       // If confidence is moderate or OCR data is missing key fields, send to review instead of instant verify
       if (similarityScore < 85 || !ocrResult.cnic || !ocrResult.name) {
         finalStatus = "UNDER_REVIEW";
@@ -101,7 +116,7 @@ export class KycEngine {
         resultMode = "REVIEW";
       }
 
-      // 9. Persistent Storage
+      // 10. Persistent Storage & Status Update
       if (!checkOnly) {
           await prisma.providerProfile.update({
             where: { userId: providerId },
@@ -123,15 +138,31 @@ export class KycEngine {
                     confidence: selfieResult.confidence,
                     isBlurred: selfieResult.isBlurred,
                     isUnderExposed: selfieResult.isUnderExposed,
-                    faceCount: selfieResult.faceCount
+                    faceCount: selfieResult.faceCount,
+                    fraudFlags: selfieResult.fraudFlags
                 },
                 idQuality: {
                     faceDetected: idFaceDetected,
-                    confidence: idFaceResult.confidence
+                    confidence: idFaceResult.confidence,
+                    isBlurred: idFaceResult.isBlurred,
+                    isUnderExposed: idFaceResult.isUnderExposed,
+                    fraudFlags: idFaceResult.fraudFlags
                 },
-                engine: "Google Cloud Vision v1 + Heuristic Matcher"
+                fraudRisk: resultMode === "REVIEW" ? "MEDIUM" : "LOW",
+                engine: "AmbiTasker Enterprise KYC - Google Cloud Vision v1 + Heuristic Matcher"
               } as any
             }
+          });
+
+          // Step 11: Provider Notification
+          await sendNotification({
+            userId: providerId,
+            title: finalStatus === "VERIFIED" ? "KYC Approved" : "KYC Under Review",
+            body: finalStatus === "VERIFIED" 
+              ? "Your identity has been verified. You can now accept bookings on the platform."
+              : "Your KYC documents require manual audit. We will notify you once complete.",
+            type: "SYSTEM",
+            actionUrl: "/provider/dashboard"
           });
       }
 
@@ -160,10 +191,30 @@ export class KycEngine {
     return !!existing;
   }
 
-  private static rejection(providerId: string, message: string): KycVerificationResult {
+  private static async rejection(providerId: string, message: string): Promise<KycVerificationResult> {
     // Persistent record of rejection if possible, or just return result
-    // For production, we log it
     logger.warn(`KYC Rejected for ${providerId}: ${message}`);
+    
+    // Update Provider Profile immediately to REJECTED if called during processing
+    try {
+      await prisma.providerProfile.update({
+        where: { userId: providerId },
+        data: {
+          verificationStatus: "REJECTED",
+          rejectionReason: message
+        }
+      });
+
+      await sendNotification({
+        userId: providerId,
+        title: "KYC Rejected",
+        body: `Your identity verification failed: ${message}`,
+        type: "ALERT",
+        actionUrl: "/provider/verify"
+      });
+    } catch (e) {
+      logger.error("Failed to update status on rejection", e);
+    }
     
     return {
       providerId,

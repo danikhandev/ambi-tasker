@@ -74,7 +74,7 @@ export default function ServiceDetailsPage() {
                     name: p.name || 'System Provider',
                     title: p.professionalTitle || p.serviceDescription || 'Professional Service Provider',
                     rating: p.rating || 5.0,
-                    avatar: p.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.id}`,
+                    avatar: p.profileImage || "/default-avatar.svg",
                     location: `${p.district || 'Haripur'}, ${p.area || 'City'}`,
                     area: p.area || 'City Area',
                     category: p.professionalTitle || 'General',

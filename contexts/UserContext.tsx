@@ -266,6 +266,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 1. Instantly update local context state for immediate UI reflection
+      setIsSwitchingPerspective(true);
       setActivePerspective(perspective);
       localStorage.setItem(PERSPECTIVE_STORAGE_KEY, perspective);
 
@@ -280,6 +281,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const targetUrl = perspective === "provider" ? "/provider/dashboard" : "/user/dashboard";
       router.push(targetUrl);
       router.refresh();
+
+      // Clear the switching loader after routing transition completes
+      setTimeout(() => {
+        setIsSwitchingPerspective(false);
+      }, 1000);
     },
     [user, router]
   );
@@ -292,20 +298,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("serve_u_auth_token");
   }, []);
 
+  const [isSwitchingPerspective, setIsSwitchingPerspective] = useState(false);
+
   const contextValue = useMemo(
     () => ({
       user,
       loading,
       error,
       activePerspective,
-      isSwitchingPerspective: false,
+      isSwitchingPerspective,
       login,
       logout,
       refetch,
       switchPerspective,
       clearAllUsers,
     }),
-    [user, loading, error, activePerspective, login, logout, refetch, switchPerspective, clearAllUsers]
+    [user, loading, error, activePerspective, isSwitchingPerspective, login, logout, refetch, switchPerspective, clearAllUsers]
   );
 
   return (

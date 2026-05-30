@@ -415,7 +415,7 @@ export default function ProviderOnboardingPage() {
                 <div className="p-10 bg-card rounded-[46px] border border-white/40 shadow-2xl relative text-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-green-500 mx-auto mb-6 shadow-xl relative bg-card">
                     <Image
-                      src={formData.selfieImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`}
+                      src={formData.selfieImage || "/default-avatar.svg"}
                       alt="Selfie"
                       fill
                       className="object-cover"
@@ -472,7 +472,7 @@ export default function ProviderOnboardingPage() {
                 <div className="p-10 bg-card rounded-[40px] border border-white/40 shadow-2xl relative text-center">
                   <div className="w-72 aspect-video rounded-3xl overflow-hidden border-4 border-blue-500 mx-auto mb-8 shadow-xl relative bg-black">
                     <Image
-                      src={cnicImg || `https://api.dicebear.com/7.x/avataaars/svg?seed=cnic`}
+                      src={cnicImg || "/default-avatar.svg"}
                       alt="CNIC"
                       fill
                       className="object-cover"

@@ -281,7 +281,7 @@ export default function ChatSidebar({
                             <div className="w-full h-full bg-primary flex items-center justify-center rounded-full">
                               <Headphones className="w-6 h-6 text-white" />
                             </div>
-                          ) : otherUser.avatar && !otherUser.avatar.includes("dicebear.com") ? (
+                          ) : otherUser.avatar ? (
                             <Image src={otherUser.avatar} alt={otherUser.firstName || "User"} fill className="rounded-full object-cover bg-card" />
                           ) : (
                             <User2 className="w-6 h-6 text-gray-400" />

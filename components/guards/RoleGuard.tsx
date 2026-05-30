@@ -22,7 +22,7 @@ interface RoleGuardProps {
  * Complements middleware by providing granular UI protection.
  */
 export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuardProps) {
-  const { user, activePerspective, loading: userLoading } = useUser();
+  const { user, activePerspective, loading: userLoading, isSwitchingPerspective } = useUser();
   const { admin, loading: adminLoading } = useAdmin();
   const router = useRouter();
   const pathname = usePathname();
@@ -54,7 +54,7 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
     }
   }, [user, admin, userLoading, adminLoading, activePerspective, allowedRoles]);
 
-  if (userLoading || adminLoading || isAuthorized === null) {
+  if (userLoading || adminLoading || isSwitchingPerspective || isAuthorized === null) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

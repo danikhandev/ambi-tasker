@@ -40,6 +40,19 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Notify admins
+    try {
+      const { sendNotification } = await import('@/services/notifications');
+      await sendNotification({
+        title: "New Service Application",
+        body: `A provider has submitted a new service: ${name}. Please review it in the applications center.`,
+        type: "SYSTEM",
+        actionUrl: "/admin/applications",
+      });
+    } catch (notifyError) {
+      logger.error('Failed to notify admins of new service application:', notifyError);
+    }
+
     return NextResponse.json({ success: true, data: application });
   } catch (error: any) {
     logger.error('Failed to submit service application:', error);

@@ -19,7 +19,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const application = await prisma.serviceApplication.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
+      include: { provider: true }
     });
 
     if (!application) {
@@ -52,6 +53,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
       return updated;
     });
+
+    // Notify Provider
+    try {
+      const { sendNotification } = await import('@/services/notifications');
+      await sendNotification({
+        title: `Service Application ${status}`,
+        body: status === 'APPROVED' 
+          ? `Your application for the service '${application.name}' has been approved and is now live!` 
+          : `Your application for the service '${application.name}' was rejected.${rejectionReason ? ' Reason: ' + rejectionReason : ''}`,
+        type: "GENERAL",
+        targetType: "INDIVIDUAL",
+        userId: application.provider.userId,
+        actionUrl: "/provider/services",
+      });
+    } catch (notifyError) {
+      logger.error(`Failed to notify provider for application ${params.id}:`, notifyError);
+    }
 
     return NextResponse.json({ success: true, data: updatedApplication });
   } catch (error: any) {

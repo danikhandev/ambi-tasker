@@ -29,6 +29,15 @@ interface VerificationRequest {
         faceMatchScore?: number;
         documentValid?: boolean;
         blurScore?: number;
+        fraudRisk?: string;
+        selfieQuality?: {
+            confidence?: number;
+            isBlurred?: boolean;
+            fraudFlags?: string[];
+        };
+        idQuality?: {
+            fraudFlags?: string[];
+        };
         ocrData?: {
             name?: string;
             cnic?: string;
@@ -389,9 +398,23 @@ export default function AdminVerificationsPage() {
                                                 <span className="font-black text-gray-900">{selectedRequest.kycData?.faceMatchScore || 0}%</span>
                                             </div>
                                             <div className="flex justify-between items-center text-xs">
-                                                <span className="text-gray-500 font-bold flex items-center gap-2"><ImageIcon size={12}/> Document Validity</span>
-                                                <span className={`font-black ${selectedRequest.kycData?.documentValid ? "text-emerald-600" : "text-red-600"}`}>
-                                                    {selectedRequest.kycData?.documentValid ? "Pass" : "Fail"}
+                                                <span className="text-gray-500 font-bold flex items-center gap-2"><ShieldAlert size={12}/> Fraud Risk</span>
+                                                <span className={`font-black ${
+                                                    selectedRequest.kycData?.fraudRisk === "HIGH" ? "text-red-600" :
+                                                    selectedRequest.kycData?.fraudRisk === "MEDIUM" ? "text-amber-600" : "text-emerald-600"
+                                                }`}>
+                                                    {selectedRequest.kycData?.fraudRisk || "UNKNOWN"}
+                                                </span>
+                                            </div>
+                                            {(selectedRequest.kycData?.selfieQuality?.fraudFlags?.length || selectedRequest.kycData?.idQuality?.fraudFlags?.length) ? (
+                                                <div className="bg-red-50 p-2 rounded-lg text-[9px] font-bold text-red-600 uppercase">
+                                                    Flags: {selectedRequest.kycData?.selfieQuality?.fraudFlags?.join(', ')} {selectedRequest.kycData?.idQuality?.fraudFlags?.join(', ')}
+                                                </div>
+                                            ) : null}
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-500 font-bold flex items-center gap-2"><ImageIcon size={12}/> Document Quality</span>
+                                                <span className={`font-black ${selectedRequest.kycData?.idQuality ? "text-emerald-600" : "text-amber-600"}`}>
+                                                    {selectedRequest.kycData?.idQuality ? "Scanned" : "N/A"}
                                                 </span>
                                             </div>
                                             

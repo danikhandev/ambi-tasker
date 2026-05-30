@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       rating: u.providerProfile?.rating,
       hourlyRate: u.providerProfile?.hourlyRate,
       bio: u.providerProfile?.serviceDescription,
-      avatar: u.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
+      avatar: u.profileImage || "/default-avatar.svg",
       // Show their primary location or coverage summary
       location: u.providerProfile?.serviceAreas?.[0]?.name || "Pakistan",
       district: u.providerProfile?.serviceAreas?.[0]?.city?.district?.name || "Multiple",

@@ -352,7 +352,7 @@ export default function ChatWindow({
               <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border ${otherUserRole === "ADMIN" ? "bg-primary border-primary/20" : "bg-gradient-to-tr from-gray-100 to-gray-200 border-gray-200"}`}>
                 {otherUserRole === "ADMIN" ? (
                   <Headphones className="w-5 h-5 text-white" />
-                ) : userImage && !userImage.includes("dicebear.com") ? (
+                ) : userImage ? (
                   <Image
                     src={userImage}
                     alt={userName}
@@ -459,7 +459,7 @@ export default function ChatWindow({
                     <div className="flex-shrink-0 mb-1">
                       {showAvatar ? (
                         <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
-                          {userImage && !userImage.includes("dicebear.com") ? (
+                          {userImage ? (
                             <Image
                               src={userImage}
                               alt={userName}
@@ -531,7 +531,7 @@ export default function ChatWindow({
               >
                 <div className="flex-shrink-0 w-10">
                   <div className="w-10 h-10 rounded-xl bg-secondary p-0.5 relative overflow-hidden flex items-center justify-center">
-                    {userImage && !userImage.includes("dicebear.com") ? (
+                    {userImage ? (
                       <Image
                         src={userImage}
                         alt={userName}

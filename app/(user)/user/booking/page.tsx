@@ -56,7 +56,7 @@ function BookingForm() {
                             name: data.full_name || 'Expert Provider',
                             title: data.providers?.[0]?.professional_title || data.providers?.[0]?.bio || 'Service specialist',
                             rating: data.providers?.[0]?.rating || 5.0,
-                            avatar: data.profile_image || data.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.id}`,
+                            avatar: data.profile_image || data.avatar_url || "/default-avatar.svg",
                             hourlyRate: data.providers?.[0]?.hourly_rate || 1000,
                             services: [] // Handled by service resolution
                         });

@@ -79,7 +79,7 @@ export default function SupportConversationList({
                 <div className="flex items-center gap-4">
                   <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 overflow-hidden flex items-center justify-center relative">
-                      {user?.profileImage && !user.profileImage.includes("dicebear.com") ? (
+                      {user?.profileImage ? (
                         <Image src={user.profileImage} alt={user.name} fill className="object-cover" />
                       ) : (
                         <User2 className="w-6 h-6 text-primary/40" />
