@@ -18,6 +18,8 @@ export default function ApplicationsManagementPage() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
 
   useEffect(() => {
+    // Initial load and set up periodic refresh
+    const interval = setInterval(fetchApplications, 30000); // refresh every 30 seconds
     setPageTitle("Service Applications", "");
     fetchApplications();
   }, [setPageTitle, statusFilter]);

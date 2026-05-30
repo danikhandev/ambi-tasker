@@ -47,7 +47,12 @@ export async function POST(req: NextRequest) {
         title: "New Service Application",
         body: `A provider has submitted a new service: ${name}. Please review it in the applications center.`,
         type: "SYSTEM",
+        targetType: "ALL_USERS",
         actionUrl: "/admin/applications",
+        // Ensure admins receive the notification
+        // The service checks this flag to also create admin notifications
+        // @ts-ignore
+        notifyAdmins: true,
       });
     } catch (notifyError) {
       logger.error('Failed to notify admins of new service application:', notifyError);
