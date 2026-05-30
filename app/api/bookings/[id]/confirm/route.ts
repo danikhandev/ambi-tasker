@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Booking must be marked as Completed by the provider first" }, { status: 400 });
     }
 
-    if (booking.payment?.status === "COMPLETED") {
+    if (booking.payment?.status === "PAID") {
       return NextResponse.json({ success: false, error: "Booking is already confirmed" }, { status: 400 });
     }
 
@@ -43,12 +43,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const platformFee = amount * 0.1;
     const netEarning = amount - platformFee;
 
-    // Update Payment to COMPLETED and increment Provider Earnings
+    // Update Payment to PAID and increment Provider Earnings
     await prisma.$transaction([
       prisma.payment.update({
         where: { bookingId },
         data: {
-          status: "COMPLETED",
+          status: "PAID",
           paidAt: new Date(),
         },
       }),

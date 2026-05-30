@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { userGuard } from "@/services/auth/guards";
+import { PaymentStatus } from "@prisma/client";
 import { logger } from "@/utils/logger";
 import { sendNotification } from "@/services/notifications";
 import crypto from "crypto";
@@ -44,17 +45,17 @@ export async function POST(req: NextRequest) {
     // In a real production app, this would be triggered by a webhook from Stripe/Paypal.
     // For this requirement, we implement a secure manual confirmation for COD and a simulation for card.
 
-    let paymentStatus: "COMPLETED" | "PENDING" = "PENDING";
+    let paymentStatus: PaymentStatus = PaymentStatus.PENDING;
     let message = "Payment recorded as pending";
     let bookingUpdateData: any = {};
 
     if (method === "CASH") {
-      paymentStatus = "PENDING"; // COD is always pending until service completion
+      paymentStatus = PaymentStatus.PENDING; // COD is always pending until service completion
       message = "Cash on Delivery selected. Pay after service completion.";
     } else if (method === "ONLINE") {
       // Simulate real verification logic here
       // In production, we'd check transactionId against the gateway provider
-      paymentStatus = "COMPLETED";
+      paymentStatus = PaymentStatus.PAID;
       message = "Online payment successful and verified.";
       
       // Requirement: Paid -> booking confirmed (Accepted)
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
           method: method,
           status: paymentStatus,
           transactionId: transactionId || null,
-          paidAt: paymentStatus === "COMPLETED" ? new Date() : null,
+          paidAt: paymentStatus === PaymentStatus.PAID ? new Date() : null,
         },
         create: {
           bookingId: booking.id,
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
           method: method,
           status: paymentStatus,
           transactionId: transactionId || null,
-          paidAt: paymentStatus === "COMPLETED" ? new Date() : null,
+          paidAt: paymentStatus === PaymentStatus.PAID ? new Date() : null,
         }
       });
 
@@ -95,8 +96,8 @@ export async function POST(req: NextRequest) {
     // Notify provider
     await sendNotification({
       userId: booking.provider.userId,
-      title: paymentStatus === "COMPLETED" ? "Booking Fully Paid" : "Payment Method Selection",
-      body: paymentStatus === "COMPLETED" 
+      title: paymentStatus === PaymentStatus.PAID ? "Booking Fully Paid" : "Payment Method Selection",
+      body: paymentStatus === PaymentStatus.PAID 
         ? `Customer ${guard.user.name} has paid Rs. ${booking.totalPrice || booking.service.price}. Booking is now confirmed.` 
         : `Customer ${guard.user.name} selected Cash on Delivery for booking ${booking.id.slice(0,8)}.`,
       type: "PAYMENT",

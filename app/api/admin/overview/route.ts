@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       prisma.providerProfile.count({ where: { verificationStatus: "PENDING" } }),
       prisma.payment.aggregate({
         _sum: { amount: true },
-        where: { status: "COMPLETED" }
+        where: { status: "PAID" }
       }),
       prisma.district.count({ where: { isActive: true } })
     ]);
@@ -61,10 +61,7 @@ export async function GET(req: NextRequest) {
     sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42);
 
     const revenueByWeekRaw = await prisma.payment.findMany({
-      where: {
-        status: "COMPLETED",
-        createdAt: { gte: sixWeeksAgo }
-      },
+      where: { status: "PAID", createdAt: { gte: sixWeeksAgo } },
       select: { amount: true, createdAt: true },
       orderBy: { createdAt: "asc" }
     });

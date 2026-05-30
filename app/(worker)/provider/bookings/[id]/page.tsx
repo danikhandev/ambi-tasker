@@ -231,66 +231,54 @@ export default function JobDetailPage() {
 
   // Fetch job from Supabase
   useEffect(() => {
-    async function fetchJob() {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select(`
-            *,
-            consumer:profiles!user_id(*),
-            service:services(*)
-          `)
-          .eq('id', params.id)
-          .single();
+  async function fetchJob() {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/bookings/${params.id}`, { credentials: 'include' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to fetch job');
 
-        if (error) throw error;
+      const data = result.data;
+      // Parse enriched location: "Address ||| lat,lng"
+      let locationStr = data.location || 'Unknown';
+      let locData: LocationData | undefined = undefined;
 
-        if (data) {
-          // Parse enriched location: "Address ||| lat,lng"
-          let locationStr = data.location || 'Unknown';
-          let locData: LocationData | undefined = undefined;
-
-          if (locationStr.includes(' ||| ')) {
-            const [address, coords] = locationStr.split(' ||| ');
-            const [lat, lng] = coords.split(',').map(Number);
-            locationStr = address;
-            locData = {
-              address: address,
-              lat,
-              lng
-            };
-          }
-
-          const transformedJob: Job = {
-            id: data.id,
-            service: data.service?.title || 'Specialized Task',
-            consumer: data.consumer?.full_name || 'Client',
-            consumerId: data.user_id,
-            status: data.booking_status.toUpperCase(),
-            date: data.scheduled_date,
-            quotedPrice: Number(data.total_price),
-            description: data.notes || 'No description provided.',
-            attachments: [],
-            location: locationStr,
-            locationData: locData,
-            timeline: [
-              { status: data.booking_status.toUpperCase(), date: data.created_at, note: 'Booking created' },
-            ],
-            paymentMethod: data.payment_method || 'CASH',
-          };
-          setJob(transformedJob);
-          setCurrentStatus(data.booking_status.toUpperCase());
-        }
-      } catch (err: any) {
-        showToast('Error loading job: ' + err.message, 'error');
-      } finally {
-        setLoading(false);
+      if (locationStr.includes(' ||| ')) {
+        const [address, coords] = locationStr.split(' ||| ');
+        const [lat, lng] = coords.split(',').map(Number);
+        locationStr = address;
+        locData = { address, lat, lng };
       }
-    }
 
-    if (params.id) fetchJob();
-  }, [params.id]);
+      const status = (data.booking_status ?? data.status) ?? "UNKNOWN";
+      const transformedJob: Job = {
+        id: data.id,
+        service: data.service?.title || 'Specialized Task',
+        consumer: data.consumer?.full_name || 'Client',
+        consumerId: data.user_id,
+        status: status.toUpperCase(),
+        date: data.scheduled_date,
+        quotedPrice: Number(data.total_price),
+        description: data.notes || 'No description provided.',
+        attachments: [],
+        location: locationStr,
+        locationData: locData,
+        timeline: [
+          { status: status.toUpperCase(), date: data.created_at, note: 'Booking created' },
+        ],
+        paymentMethod: data.payment_method || 'CASH',
+      };
+      setJob(transformedJob);
+      setCurrentStatus(status.toUpperCase());
+    } catch (err: any) {
+      showToast('Error loading job: ' + err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (params.id) fetchJob();
+}, [params.id]);
 
   // Fetch slip if it exists
   useEffect(() => {

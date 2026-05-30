@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/services/prisma";
 import { headers } from "next/headers";
+import { PaymentStatus } from "@prisma/client";
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -30,14 +31,14 @@ export async function POST(req: Request) {
                 await tx.payment.upsert({
                     where: { bookingId },
                     update: {
-                        status: "COMPLETED",
+                        status: PaymentStatus.PAID,
                         paidAt: new Date(),
                         transactionId: session.payment_intent,
                     },
                     create: {
                         bookingId,
                         amount: session.amount_total / 100,
-                        status: "COMPLETED",
+                        status: PaymentStatus.PAID,
                         paidAt: new Date(),
                         transactionId: session.payment_intent,
                         method: "STRIPE"

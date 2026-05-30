@@ -27,7 +27,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Booking not found" }, { status: 404 });
         }
 
-        if (booking.payment?.status === "COMPLETED") {
+        if (booking.payment?.status === "PAID") {
             return NextResponse.json({ error: "Booking already paid" }, { status: 400 });
         }
 

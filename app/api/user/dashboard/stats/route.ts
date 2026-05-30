@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { userGuard } from "@/services/auth/guards";
 import { logger } from "@/utils/logger";
+import { PaymentStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       prisma.payment.aggregate({
         where: { 
           booking: { userId: guard.user.id },
-          status: "COMPLETED"
+          status: PaymentStatus.PAID
         },
         _sum: { amount: true }
       })

@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       prisma.providerProfile.count({ where: { verificationStatus: "VERIFIED", isAvailable: true } }),
       prisma.booking.count(),
       prisma.booking.groupBy({ by: ["status"], _count: { id: true } }),
-      prisma.payment.aggregate({ where: { status: "COMPLETED" }, _sum: { amount: true } }),
+      prisma.payment.aggregate({ where: { status: "PAID" }, _sum: { amount: true } }),
       prisma.booking.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
