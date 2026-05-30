@@ -245,7 +245,7 @@ function AddServiceContent() {
                 </div>
 
                 {/* Form Content */}
-                <div className="bg-card rounded-[40px] border border-border shadow-sm hover:shadow-md transition-all duration-300 p-8 md:p-12">
+                <form onSubmit={(e) => e.preventDefault()} autoComplete="off" className="bg-card rounded-[40px] border border-border shadow-sm hover:shadow-md transition-all duration-300 p-8 md:p-12">
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
                             <motion.div
@@ -264,6 +264,7 @@ function AddServiceContent() {
                                             type="text"
                                             value={form.name}
                                             onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                            autoComplete="nope"
                                             className={`w-full px-6 py-4 bg-muted border rounded-2xl text-sm font-bold focus:ring-4 transition-all ${errors.name ? "border-red-500 ring-red-500/10" : "border-border focus:ring-primary/5 focus:border-primary/30"
                                                 }`}
                                             placeholder="e.g., Deep Home Cleaning"
@@ -330,6 +331,7 @@ function AddServiceContent() {
                                                 type="number"
                                                 value={form.priceMin}
                                                 onChange={(e) => setForm({ ...form, priceMin: e.target.value })}
+                                                autoComplete="nope"
                                                 className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-sm font-bold"
                                                 placeholder="Min"
                                             />
@@ -338,6 +340,7 @@ function AddServiceContent() {
                                                 type="number"
                                                 value={form.priceMax}
                                                 onChange={(e) => setForm({ ...form, priceMax: e.target.value })}
+                                                autoComplete="nope"
                                                 className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-sm font-bold"
                                                 placeholder="Max"
                                             />
@@ -353,6 +356,7 @@ function AddServiceContent() {
                                             type="text"
                                             value={form.experience}
                                             onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                                            autoComplete="nope"
                                             className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-sm font-bold"
                                             placeholder="e.g., 5 years"
                                         />
@@ -369,6 +373,7 @@ function AddServiceContent() {
                                             type="text"
                                             value={form.location}
                                             onChange={(e) => setForm({ ...form, location: e.target.value })}
+                                            autoComplete="nope"
                                             className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-sm font-bold"
                                             placeholder="City (e.g., Haripur)"
                                         />
@@ -383,6 +388,7 @@ function AddServiceContent() {
                                             type="text"
                                             value={form.coverageArea}
                                             onChange={(e) => setForm({ ...form, coverageArea: e.target.value })}
+                                            autoComplete="nope"
                                             className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-sm font-bold"
                                             placeholder="e.g., Khalabat, Hattar"
                                         />
@@ -542,7 +548,7 @@ function AddServiceContent() {
                             </div>
                         )}
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );

@@ -480,7 +480,7 @@ export default function ProviderProfilePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSave}>
+        <form onSubmit={handleSave} autoComplete="off">
           {/* General Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
@@ -499,6 +499,7 @@ export default function ProviderProfilePage() {
               <input
                 type="text"
                 id="experience"
+                autoComplete="nope"
                 value={formData.experience}
                 onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                 disabled={!isEditing}
@@ -508,6 +509,7 @@ export default function ProviderProfilePage() {
               <input
                 type="text"
                 id="education"
+                autoComplete="nope"
                 value={formData.education}
                 onChange={(e) => setFormData({ ...formData, education: e.target.value })}
                 disabled={!isEditing}
@@ -639,6 +641,7 @@ export default function ProviderProfilePage() {
                   <label className="block text-sm font-medium text-foreground mb-1">Project Title</label>
                   <input
                     type="text"
+                    autoComplete="nope"
                     value={item.title}
                     onChange={(e) => handlePortfolioChange(index, 'title', e.target.value)}
                     disabled={!isEditing}
@@ -664,6 +667,7 @@ export default function ProviderProfilePage() {
                       <div className="flex-1">
                         <input
                           type="text"
+                          autoComplete="nope"
                           value={item.image}
                           onChange={(e) => handlePortfolioChange(index, 'image', e.target.value)}
                           placeholder="Image URL"

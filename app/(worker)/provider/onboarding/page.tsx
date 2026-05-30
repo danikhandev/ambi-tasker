@@ -326,6 +326,7 @@ export default function ProviderOnboardingPage() {
                     <User className={`absolute ${isRTL ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 w-5 h-5 text-text-hint group-focus-within/input:text-primary transition-colors`} />
                     <input
                       type="text"
+                      autoComplete="nope"
                       className={`w-full ${isRTL ? "pr-16 pl-6" : "pl-16 pr-6"} py-5 bg-muted/40 border border-border/60 rounded-[20px] focus:bg-card focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-foreground text-md outline-none`}
                       value={formData.firstName}
                       placeholder={t("providerOnboarding.steps.firstName")}
@@ -339,6 +340,7 @@ export default function ProviderOnboardingPage() {
                     <User className={`absolute ${isRTL ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 w-5 h-5 text-text-hint group-focus-within/input:text-primary transition-colors`} />
                     <input
                       type="text"
+                      autoComplete="nope"
                       className={`w-full ${isRTL ? "pr-16 pl-6" : "pl-16 pr-6"} py-5 bg-muted/40 border border-border/60 rounded-[20px] focus:bg-card focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-foreground text-md outline-none`}
                       value={formData.lastName}
                       placeholder={t("providerOnboarding.steps.lastName")}
@@ -355,6 +357,7 @@ export default function ProviderOnboardingPage() {
                     <Phone className={`absolute ${isRTL ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 w-5 h-5 text-text-hint group-focus-within/input:text-primary transition-colors`} />
                     <input
                       type="tel"
+                      autoComplete="nope"
                       placeholder="+92 3XX XXXXXXX"
                       className={`w-full ${isRTL ? "pr-16 pl-6" : "pl-16 pr-6"} py-5 bg-muted/40 border border-border/60 rounded-[20px] focus:bg-card focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-foreground text-md outline-none`}
                       value={formData.phoneNumber}
@@ -521,6 +524,7 @@ export default function ProviderOnboardingPage() {
                   </div>
                   <input
                     type="text"
+                    autoComplete="nope"
                     placeholder="e.g. House #123, Sector G-11/2..."
                     className={`w-full ${isRTL ? "pr-20 pl-6" : "pl-20 pr-6"} py-5 bg-muted/30 border border-border/60 rounded-[24px] focus:bg-card focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 transition-all font-bold text-foreground text-md outline-none`}
                     value={formData.address}

@@ -252,7 +252,7 @@ export default function AddServicePage() {
                             initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             className="fixed inset-0 m-auto w-full max-w-lg h-fit bg-card border border-border rounded-[40px] shadow-2xl z-[70] overflow-hidden"
                         >
-                            <form onSubmit={handleRequestService}>
+                            <form onSubmit={handleRequestService} autoComplete="off">
                                 <div className="p-8 border-b border-border flex justify-between items-center bg-muted/20">
                                     <div className="space-y-1">
                                         <h3 className={`${unbounded.className} text-xl font-black`}>Request New <span className="text-primary italic">Service</span></h3>
@@ -265,15 +265,15 @@ export default function AddServicePage() {
                                 <div className="p-8 space-y-5">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Service Name</label>
-                                        <input required value={requestForm.name} onChange={e => setRequestForm({...requestForm, name: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Solar Panel Cleaning" />
+                                        <input required autoComplete="nope" value={requestForm.name} onChange={e => setRequestForm({...requestForm, name: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Solar Panel Cleaning" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Suggested Category</label>
-                                        <input required value={requestForm.category} onChange={e => setRequestForm({...requestForm, category: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Maintenance" />
+                                        <input required autoComplete="nope" value={requestForm.category} onChange={e => setRequestForm({...requestForm, category: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. Maintenance" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Estimated Price (Rs.)</label>
-                                        <input type="number" required value={requestForm.price} onChange={e => setRequestForm({...requestForm, price: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. 1500" />
+                                        <input type="number" required autoComplete="nope" value={requestForm.price} onChange={e => setRequestForm({...requestForm, price: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none" placeholder="e.g. 1500" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Description</label>
