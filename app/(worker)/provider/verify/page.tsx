@@ -22,6 +22,7 @@ export default function VerificationScreen() {
 
     // Steps: 1 - Profile, 2 - Selfie, 3 - CNIC Front, 4 - CNIC Back, 5 - Identity Match, 6 - Category, 7 - Submit
     const [currentStep, setCurrentStep] = useState(1);
+    const [isResubmitting, setIsResubmitting] = useState(false);
 
     // Selfie
     const [isSelfieCaptured, setIsSelfieCaptured] = useState(false);
@@ -48,6 +49,8 @@ export default function VerificationScreen() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [kycResultState, setKycResultState] = useState<{ status: string, message: string, confidence?: number } | null>(null);
     const [idDetails, setIdDetails] = useState({ cnic: "", dob: "", expiry: "" });
+    const cnicFrontInputRef = useRef<HTMLInputElement>(null);
+    const cnicBackInputRef = useRef<HTMLInputElement>(null);
 
     const handleNext = () => {
         setErrorMsg("");
@@ -93,7 +96,7 @@ export default function VerificationScreen() {
         fetchCategories();
     }, []);
 
-    const { setPageTitle } = useUI();
+    const { setPageTitle, showToast } = useUI();
     useEffect(() => {
         setPageTitle("Worker KYC", "Identity Protocol", "Verification");
         return () => setPageTitle("", "", "");
@@ -102,8 +105,8 @@ export default function VerificationScreen() {
     // ─── Already Verified / Pending / Rejected Guard ─────────────────────
     const verificationStatus = user?.idVerificationStatus;
     
-    // Allow the full KYC flow only if the user hasn't submitted anything yet
-    const allowKycFlow = !verificationStatus || verificationStatus === "NOT_STARTED" || verificationStatus === "NOT_SUBMITTED";
+    // Allow the full KYC flow only if the user hasn't submitted anything yet, or if they are resubmitting
+    const allowKycFlow = isResubmitting || !verificationStatus || verificationStatus === "NOT_STARTED" || verificationStatus === "NOT_SUBMITTED";
     
     if (!allowKycFlow) {
         // Normalize UNDER_REVIEW to show the same UI as PENDING
@@ -150,10 +153,14 @@ export default function VerificationScreen() {
                 message: user?.rejectionReason || "Your verification was not approved. Please re-submit your documents ensuring your photos are clear and match your identity card.",
                 buttonText: "Re-Submit Documents",
                 buttonAction: () => {
-                    // Reset state so user can re-do KYC
+                    setIsSelfieCaptured(false);
+                    setSelfieData(null);
+                    setCnicFront(null);
+                    setCnicBack(null);
+                    setMatchResult(null);
+                    setIsResubmitting(true);
                     setCurrentStep(1);
-                    // Force a re-render by clearing the guard
-                    window.location.reload();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                 },
                 buttonStyle: "bg-red-600 hover:bg-red-700 shadow-red-600/30",
             },
@@ -312,10 +319,6 @@ export default function VerificationScreen() {
         }
     };
 
-    const { showToast } = useUI();
-
-    const cnicFrontInputRef = useRef<HTMLInputElement>(null);
-    const cnicBackInputRef = useRef<HTMLInputElement>(null);
 
     const handleCnicFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "front" | "back") => {
         const file = e.target.files?.[0];

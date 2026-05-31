@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@/utils/cn";
+import { cn } from "@/utils";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 
 export type ServiceStatus = "active" | "paused" | "inactive";

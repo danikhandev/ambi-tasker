@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Plus, Upload, X, Check, Loader2, ChevronDown, AlertCircle,
@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUser } from "@/contexts/UserContext";
 import { useUI } from "@/contexts/UIContext";
+import { unbounded } from "@/app/fonts";
 
 type SubmissionStatus = "idle" | "submitting" | "success";
 type RequestStatus = "pending" | "approved" | "rejected" | "draft";
@@ -81,8 +82,43 @@ export default function AddServicePage() {
     const [status, setStatus] = useState<SubmissionStatus>("idle");
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
-    const [requestForm, setRequestForm] = useState({ name: "", category: "", price: "", description: "" });
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [requestForm, setRequestForm] = useState({ name: "", category: "", price: "", description: "", images: [] as string[] });
+    const [selectedService, setSelectedService] = useState<any>(null);
     const pendingCount = requests.filter(r => r.service_status === "paused").length;
+
+    const handleDelete = async (id: string) => {
+        showToast("Delete functionality coming soon", "info");
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingImage(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("bucket", "posters");
+
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.success && data.url) {
+                setRequestForm(prev => ({ ...prev, images: [...prev.images, data.url] }));
+            } else {
+                showToast("Failed to upload image", "error");
+            }
+        } catch (error) {
+            showToast("Upload error", "error");
+        } finally {
+            setIsUploadingImage(false);
+            if (e.target) e.target.value = '';
+        }
+    };
 
     const handleRequestService = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -97,7 +133,7 @@ export default function AddServicePage() {
             if (json.success) {
                 showToast("Application submitted successfully!", "success");
                 setShowRequestModal(false);
-                setRequestForm({ name: "", category: "", price: "", description: "" });
+                setRequestForm({ name: "", category: "", price: "", description: "", images: [] });
             } else {
                 throw new Error(json.error || "Failed to submit application");
             }
@@ -229,13 +265,14 @@ export default function AddServicePage() {
                                                 <button
                                                     onClick={() => {
                                                         setSelectedService(req);
-                                                        setFormData({
+                                                        setRequestForm({
                                                             name: req.title,
                                                             category: req.category?.category_name || "",
-                                                            price: req.price,
+                                                            price: req.price?.toString() || "",
                                                             description: req.description || "",
+                                                            images: []
                                                         });
-                                                        setIsEditing(true);
+                                                        setShowRequestModal(true);
                                                     }}
                                                     className="block w-full text-left px-4 py-2 hover:bg-primary/10 text-text-hint hover:text-primary"
                                                 >
@@ -300,6 +337,33 @@ export default function AddServicePage() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-text-hint uppercase tracking-widest">Description</label>
                                         <textarea required value={requestForm.description} onChange={e => setRequestForm({...requestForm, description: e.target.value})} className="w-full px-5 py-3.5 bg-muted/40 rounded-2xl border border-border/50 font-bold text-sm outline-none resize-none h-24 no-scrollbar" placeholder="Describe the service scope..." />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-text-hint uppercase tracking-widest flex items-center justify-between">
+                                            <span>Service Images <span className="text-text-hint/50 lowercase font-medium">(Optional)</span></span>
+                                            {requestForm.images.length > 0 && <span>{requestForm.images.length}/5</span>}
+                                        </label>
+                                        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                                            {requestForm.images.map((img, i) => (
+                                                <div key={i} className="relative w-20 h-20 shrink-0 rounded-2xl overflow-hidden border border-border group">
+                                                    <img src={img} alt="service" className="w-full h-full object-cover" />
+                                                    <button type="button" onClick={() => setRequestForm(p => ({...p, images: p.images.filter((_, idx) => idx !== i)}))} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                        <X className="w-5 h-5 text-white" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {requestForm.images.length < 5 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={isUploadingImage}
+                                                    className="w-20 h-20 shrink-0 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-text-hint hover:border-primary hover:text-primary transition-all bg-muted/20"
+                                                >
+                                                    {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageUpload} />
                                     </div>
                                 </div>
                                 <div className="p-8 bg-muted/20 border-t border-border flex gap-3">

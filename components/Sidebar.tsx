@@ -313,7 +313,7 @@ export default function Sidebar({ type }: SidebarProps) {
                       {active && (
                         <motion.div 
                           layoutId="activeIndicator"
-                          className={`absolute ${isOpen ? '-left-2' : '-left-1'} top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)]`}
+                          className={`absolute ${isOpen ? 'left-2' : 'left-1'} top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white rounded-full shadow-sm`}
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
