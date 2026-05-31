@@ -83,6 +83,11 @@ export async function POST(req: NextRequest) {
       if (url.startsWith("/uploads/") || url.startsWith("/verifications/")) {
         continue;
       }
+      // Allow relative storage paths returned by the KYC upload endpoint
+      // (format: userId/uuid.ext — no leading slash, no protocol)
+      if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("/")) {
+        continue; // relative path from private bucket upload
+      }
       try {
         const parsedUrl = new URL(url);
         const isTrusted = trustedDomains.some((d) => parsedUrl.hostname === d || parsedUrl.hostname.endsWith(d));

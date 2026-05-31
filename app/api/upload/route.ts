@@ -81,8 +81,11 @@ export async function POST(req: NextRequest) {
       throw new Error("Upload succeeded but no data was returned");
     }
 
-    // Get public URL
-    const publicUrl = getPublicUrl(bucket, fileName);
+    // For private KYC bucket, return the relative file path so the admin
+    // API can generate a proper signed URL when needed.
+    // For public buckets (profiles, chat, etc.) return the public URL.
+    const isKycBucket = bucket === BUCKETS.KYC;
+    const publicUrl = isKycBucket ? data.path : getPublicUrl(bucket, fileName);
 
     return NextResponse.json({
       success: true,

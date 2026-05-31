@@ -43,13 +43,54 @@ export async function GET(req: NextRequest) {
     });
 
     // Generate signed URLs for private documents
-    const { getSignedUrl, BUCKETS } = await import("@/services/storage");
+    const { getSignedUrl, getPublicUrl, BUCKETS } = await import("@/services/storage");
+
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    // Supabase stores KYC files as public-URL format even for private buckets.
+    // We must detect those, extract the path, and issue a proper signed URL.
+    const KYC_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${BUCKETS.KYC}/`;
+    const KYC_SIGN_PREFIX   = `${SUPABASE_URL}/storage/v1/object/sign/${BUCKETS.KYC}/`;
+
+    // Helper to robustly resolve image URLs (24 h expiry for admin review sessions)
+    const SIGNED_URL_TTL = 86400; // 24 hours
+    const resolveImageUrl = async (path: string | null): Promise<string | null> => {
+        if (!path) return null;
+
+        // Already a signed URL → return as-is
+        if (path.startsWith(KYC_SIGN_PREFIX)) return path;
+
+        // Stored as a Supabase public URL for the private KYC bucket
+        // → extract relative path and generate a real signed URL
+        if (path.startsWith(KYC_PUBLIC_PREFIX)) {
+            const relativePath = path.slice(KYC_PUBLIC_PREFIX.length);
+            try {
+                return await getSignedUrl(BUCKETS.KYC, relativePath, SIGNED_URL_TTL);
+            } catch {
+                return null;
+            }
+        }
+
+        // Already some other absolute URL (seeded data, external CDN, etc.) → use as-is
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+
+        // Relative / storage-path format → try signed URL, fall back to public
+        try {
+            return await getSignedUrl(BUCKETS.KYC, path, SIGNED_URL_TTL);
+        } catch {
+            try {
+                return getPublicUrl(BUCKETS.KYC, path);
+            } catch {
+                return null;
+            }
+        }
+    };
+
     const providers = await Promise.all(
       rawProviders.map(async (p) => {
         const kycDocs = {
-          cnicFront: p.cnicFrontUrl ? await getSignedUrl(BUCKETS.KYC, p.cnicFrontUrl).catch(() => null) : null,
-          cnicBack: p.cnicBackUrl ? await getSignedUrl(BUCKETS.KYC, p.cnicBackUrl).catch(() => null) : null,
-          selfie: p.selfieUrl ? await getSignedUrl(BUCKETS.KYC, p.selfieUrl).catch(() => null) : null,
+          cnicFront: await resolveImageUrl(p.cnicFrontUrl),
+          cnicBack: await resolveImageUrl(p.cnicBackUrl),
+          selfie: await resolveImageUrl(p.selfieUrl),
         };
         return { ...p, kycDocs };
       })

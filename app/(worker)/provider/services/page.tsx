@@ -43,7 +43,7 @@ export default function AddServicePage() {
     const { showToast } = useUI();
     const [isLoading, setIsLoading] = useState(true);
     const [requests, setRequests] = useState<any[]>([]);
-
+    const [kycStatus, setKycStatus] = useState<string>('');
     useEffect(() => {
         if (user?.id) {
             fetchServices();
@@ -59,6 +59,8 @@ export default function AddServicePage() {
             if (data.success && data.data) {
                 // Formatting into array to match existing mapping logic UI
                 const profile = data.data;
+                // Store KYC status for UI gating
+                setKycStatus(profile.verificationStatus || '');
                 setRequests([{
                     id: profile.id,
                     title: profile.professionalTitle || "General Service",
@@ -200,6 +202,18 @@ export default function AddServicePage() {
                         <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
                         <p className="text-sm font-semibold text-amber-800">
                             You have <span className="font-black">{pendingCount}</span> service{pendingCount > 1 ? "s" : ""} pending admin approval
+                        </p>
+                    </motion.div>
+                )}
+                {kycStatus === "PENDING" && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center gap-3"
+                    >
+                        <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                        <p className="text-sm font-semibold text-amber-800">
+                            Your KYC verification is pending. Jobs will appear once approved.
                         </p>
                     </motion.div>
                 )}

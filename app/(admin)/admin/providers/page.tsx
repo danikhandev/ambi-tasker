@@ -245,7 +245,7 @@ export default function ProviderManagementPage() {
       { url: providerImages.selfie || "", label: "Live Selfie Verification" },
       { url: providerImages.cnicFront || "", label: "CNIC Front (Face Side)" },
       { url: providerImages.cnicBack || "", label: "CNIC Back (Address Side)" },
-    ].filter(img => img.url); // Only include images that have URLs
+    ];
   }, [providerImages]);
 
   const openLightbox = (index: number) => {

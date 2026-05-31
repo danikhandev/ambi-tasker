@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn, ZoomOut, RotateCw, Download, ChevronLeft, ChevronRight, Loader2, ImageOff } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import {
+  X, ZoomIn, ZoomOut, RotateCw, Download,
+  ChevronLeft, ChevronRight, Loader2, ImageOff,
+  Maximize2, RotateCcw,
+} from "lucide-react";
 
 interface LightboxImage {
   url: string;
@@ -16,224 +20,357 @@ interface ImageLightboxProps {
   onClose: () => void;
 }
 
-export default function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: ImageLightboxProps) {
+export default function ImageLightbox({
+  images,
+  initialIndex = 0,
+  isOpen,
+  onClose,
+}: ImageLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Framer Motion values for drag-to-pan
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   const currentImage = images[currentIndex];
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-    resetView();
-  };
+  // Sync when initialIndex changes (user clicks a different thumbnail card)
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentIndex(initialIndex);
+      resetView();
+    }
+  }, [initialIndex, isOpen]);
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  // Auto-focus the container for keyboard events & reset on open
+  useEffect(() => {
+    if (isOpen) {
+      resetView();
+      setTimeout(() => containerRef.current?.focus(), 50);
+    }
+  }, [isOpen]);
+
+  // Reset position & zoom when image changes
+  useEffect(() => {
     resetView();
-  };
+  }, [currentIndex]);
 
   const resetView = () => {
     setZoom(1);
     setRotation(0);
     setIsLoading(true);
     setHasError(false);
+    x.set(0);
+    y.set(0);
   };
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.5, 4));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.5, 0.5));
-  const handleRotate = () => setRotation((prev) => prev + 90);
+  const resetPosition = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const handlePrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  }, [images.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  }, [images.length]);
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 5));
+  const handleZoomOut = () => {
+    setZoom((prev) => {
+      const next = Math.max(prev - 0.25, 0.5);
+      if (next <= 1) resetPosition();
+      return next;
+    });
+  };
+  const handleRotateCW = () => setRotation((prev) => prev + 90);
+  const handleRotateCCW = () => setRotation((prev) => prev - 90);
+  const handleResetZoom = () => { setZoom(1); setRotation(0); resetPosition(); };
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.12 : -0.12;
+    setZoom((prev) => {
+      const next = Math.max(0.5, Math.min(5, prev + delta));
+      if (next <= 1) resetPosition();
+      return next;
+    });
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "Escape":   onClose(); break;
+      case "ArrowLeft":  handlePrev(); break;
+      case "ArrowRight": handleNext(); break;
+      case "+": case "=": handleZoomIn(); break;
+      case "-": handleZoomOut(); break;
+      case "r": case "R": handleRotateCW(); break;
+      case "0": handleResetZoom(); break;
+    }
+  }, [handlePrev, handleNext, onClose]);
 
   const handleDownload = async () => {
     if (!currentImage?.url) return;
     try {
       const response = await fetch(currentImage.url);
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = blobUrl;
       a.download = `${currentImage.label.replace(/\s+/g, "_").toLowerCase()}.jpg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(blobUrl);
     } catch {
-      // Fallback: open in new tab
       window.open(currentImage.url, "_blank");
     }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-    if (e.key === "ArrowLeft") handlePrev();
-    if (e.key === "ArrowRight") handleNext();
-    if (e.key === "+") handleZoomIn();
-    if (e.key === "-") handleZoomOut();
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={containerRef}
+          key="lightbox"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex flex-col"
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[9999] flex flex-col bg-gray-950/98 backdrop-blur-2xl outline-none"
           onKeyDown={handleKeyDown}
-          tabIndex={0}
+          onWheel={handleWheel}
+          tabIndex={-1}
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-gray-950/95 backdrop-blur-2xl" onClick={onClose} />
-
-          {/* Top Bar */}
-          <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/10">
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
-                {currentIndex + 1} / {images.length}
+          {/* ── Top Bar ───────────────────────────────────────────── */}
+          <div className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/20 flex-shrink-0">
+            {/* Left: label + counter */}
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 flex-shrink-0">
+                {currentIndex + 1}&nbsp;/&nbsp;{images.length}
               </span>
-              <span className="text-xs font-bold text-white/80">{currentImage?.label}</span>
+              <span className="text-xs font-bold text-white/70 truncate">{currentImage?.label}</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right: controls */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {/* Zoom controls */}
               <button
                 onClick={handleZoomOut}
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
-                title="Zoom Out"
+                disabled={zoom <= 0.5}
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                title="Zoom Out (−)"
               >
-                <ZoomOut size={18} />
+                <ZoomOut size={16} />
               </button>
-              <span className="text-[10px] font-black text-white/40 w-12 text-center">{Math.round(zoom * 100)}%</span>
+              <button
+                onClick={handleResetZoom}
+                className="h-9 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[10px] font-black transition-all min-w-[52px]"
+                title="Reset (0)"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
               <button
                 onClick={handleZoomIn}
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
-                title="Zoom In"
+                disabled={zoom >= 5}
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                title="Zoom In (+)"
               >
-                <ZoomIn size={18} />
+                <ZoomIn size={16} />
+              </button>
+
+              <div className="w-px h-5 bg-white/10 mx-1" />
+
+              {/* Rotate */}
+              <button
+                onClick={handleRotateCCW}
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                title="Rotate Left"
+              >
+                <RotateCcw size={16} />
               </button>
               <button
-                onClick={handleRotate}
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
-                title="Rotate"
+                onClick={handleRotateCW}
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                title="Rotate Right (R)"
               >
-                <RotateCw size={18} />
+                <RotateCw size={16} />
               </button>
+
+              <div className="w-px h-5 bg-white/10 mx-1" />
+
+              {/* Download */}
               <button
                 onClick={handleDownload}
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                disabled={!currentImage?.url}
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white/60 hover:text-white flex items-center justify-center transition-all"
                 title="Download"
               >
-                <Download size={18} />
+                <Download size={16} />
               </button>
-              <div className="w-px h-6 bg-white/10 mx-2" />
+
+              {/* Open in new tab */}
+              {currentImage?.url && (
+                <a
+                  href={currentImage.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all"
+                  title="Open in New Tab"
+                >
+                  <Maximize2 size={15} />
+                </a>
+              )}
+
+              <div className="w-px h-5 bg-white/10 mx-1" />
+
+              {/* Close */}
               <button
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 flex items-center justify-center transition-all"
-                title="Close"
+                className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 hover:text-red-300 flex items-center justify-center transition-all"
+                title="Close (Esc)"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Image Area */}
-          <div className="relative z-10 flex-1 flex items-center justify-center overflow-hidden p-8">
-            {/* Prev Button */}
+          {/* ── Image Area ────────────────────────────────────────── */}
+          <div className="relative flex-1 flex items-center justify-center overflow-hidden">
+            {/* Prev */}
             {images.length > 1 && (
               <button
                 onClick={handlePrev}
-                className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-14 h-14 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-md text-white/60 hover:text-white flex items-center justify-center transition-all border border-white/10 group"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/12 backdrop-blur-md text-white/50 hover:text-white flex items-center justify-center transition-all border border-white/8 group"
               >
-                <ChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform" />
+                <ChevronLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
               </button>
             )}
 
-            {/* Image */}
-            <div className="relative max-w-full max-h-full flex items-center justify-center">
-              {isLoading && !hasError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <Loader2 className="w-10 h-10 text-white/40 animate-spin" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Loading Document...</span>
-                </div>
-              )}
-              
-              {hasError ? (
-                <div className="flex flex-col items-center justify-center gap-4 text-white/30">
-                  <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center">
-                    <ImageOff size={40} />
+            {/* Image or placeholder */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.18 }}
+                className="flex items-center justify-center w-full h-full"
+              >
+                {/* Loading shimmer */}
+                {isLoading && !hasError && currentImage?.url && (
+                  <div className="absolute flex flex-col items-center gap-3">
+                    <Loader2 className="w-10 h-10 text-white/30 animate-spin" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white/25">
+                      Loading…
+                    </span>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Document Unavailable</span>
-                  <span className="text-[9px] font-bold text-white/20">The image could not be loaded or has expired</span>
-                </div>
-              ) : currentImage?.url ? (
-                <motion.img
-                  key={currentImage.url}
-                  src={currentImage.url}
-                  alt={currentImage.label}
-                  className="max-w-full max-h-[calc(100vh-160px)] object-contain rounded-2xl shadow-2xl select-none"
-                  style={{
-                    transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                    transition: "transform 0.3s ease",
-                  }}
-                  onLoad={() => setIsLoading(false)}
-                  onError={() => {
-                    setIsLoading(false);
-                    setHasError(true);
-                  }}
-                  draggable={false}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-4 text-white/30">
-                  <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center">
-                    <ImageOff size={40} />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">No Document Uploaded</span>
-                </div>
-              )}
-            </div>
+                )}
 
-            {/* Next Button */}
+                {hasError ? (
+                  <div className="flex flex-col items-center gap-4 text-white/25">
+                    <div className="w-28 h-28 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+                      <ImageOff size={44} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Document Unavailable</span>
+                    <span className="text-[9px] text-white/15">The image could not be loaded or the URL has expired.</span>
+                    {currentImage?.url && (
+                      <a
+                        href={currentImage.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 px-4 py-2 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                      >
+                        Try Opening Directly ↗
+                      </a>
+                    )}
+                  </div>
+                ) : !currentImage?.url ? (
+                  <div className="flex flex-col items-center gap-4 text-white/25">
+                    <div className="w-28 h-28 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+                      <ImageOff size={44} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Not Uploaded</span>
+                  </div>
+                ) : (
+                  <motion.img
+                    key={`img-${currentImage.url}`}
+                    src={currentImage.url}
+                    alt={currentImage.label}
+                    drag={zoom > 1}
+                    dragMomentum={false}
+                    dragElastic={0}
+                    style={{ x, y, scale: zoom, rotate: rotation }}
+                    className={`max-w-[90vw] max-h-[calc(100vh-180px)] object-contain rounded-xl shadow-2xl select-none ${zoom > 1 ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
+                    onLoad={() => { setIsLoading(false); setHasError(false); }}
+                    onError={() => { setIsLoading(false); setHasError(true); }}
+                    draggable={false}
+                    transition={{ scale: { duration: 0.15 }, rotate: { duration: 0.15 } }}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Next */}
             {images.length > 1 && (
               <button
                 onClick={handleNext}
-                className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-14 h-14 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-md text-white/60 hover:text-white flex items-center justify-center transition-all border border-white/10 group"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/12 backdrop-blur-md text-white/50 hover:text-white flex items-center justify-center transition-all border border-white/8 group"
               >
-                <ChevronRight size={24} className="group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight size={22} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
             )}
+
+            {/* Keyboard hint */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 text-[8px] font-bold text-white/15 uppercase tracking-widest pointer-events-none select-none">
+              <span>← → Navigate</span>
+              <span>·</span>
+              <span>+/− Zoom</span>
+              <span>·</span>
+              <span>R Rotate</span>
+              <span>·</span>
+              <span>Drag to Pan</span>
+              <span>·</span>
+              <span>Scroll to Zoom</span>
+              <span>·</span>
+              <span>Esc Close</span>
+            </div>
           </div>
 
-          {/* Bottom Thumbnails */}
-          {images.length > 1 && (
-            <div className="relative z-10 flex items-center justify-center gap-3 px-6 py-4 border-t border-white/10">
-              {images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setCurrentIndex(idx);
-                    resetView();
-                  }}
-                  className={`relative w-16 h-12 rounded-xl overflow-hidden border-2 transition-all ${
-                    idx === currentIndex
-                      ? "border-primary ring-2 ring-primary/30 scale-110"
-                      : "border-white/10 opacity-50 hover:opacity-80"
-                  }`}
-                >
-                  {img.url ? (
-                    <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                      <ImageOff size={14} className="text-white/30" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* ── Bottom Thumbnails ─────────────────────────────────── */}
+          <div className="relative z-10 flex items-center justify-center gap-2.5 px-6 py-3 border-t border-white/10 bg-black/20 flex-shrink-0 overflow-x-auto no-scrollbar">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative flex-shrink-0 w-16 h-11 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                  idx === currentIndex
+                    ? "border-indigo-500 ring-2 ring-indigo-500/30 scale-110 shadow-lg shadow-indigo-500/20"
+                    : "border-white/10 opacity-45 hover:opacity-75 hover:border-white/25"
+                }`}
+                title={img.label}
+              >
+                {img.url ? (
+                  <img src={img.url} alt={img.label} className="w-full h-full object-cover" draggable={false} />
+                ) : (
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                    <ImageOff size={12} className="text-white/25" />
+                  </div>
+                )}
+                {/* Active indicator dot */}
+                {idx === currentIndex && (
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-sm" />
+                )}
+              </button>
+            ))}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

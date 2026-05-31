@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { verifyAdminAccess } from "@/utils/adminAuth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await verifyAdminAccess(request);

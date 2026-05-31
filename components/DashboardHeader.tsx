@@ -332,7 +332,7 @@ export default function DashboardHeader({
               aria-label="Account menu"
             >
               <div className="relative">
-                {profileImage && !profileImage.includes("dicebear.com") ? (
+                {profileImage ? (
                   <>
                     <div className="hidden md:block">
                       <CircularFrame

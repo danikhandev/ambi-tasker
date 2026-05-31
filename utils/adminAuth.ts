@@ -25,11 +25,12 @@ export async function verifyAdminAccess(
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET_KEY);
     
-    if (!payload.isAdmin || !payload.adminId) {
+    const adminId = (payload.adminId || payload.id) as string;
+
+    if (!payload.isAdmin || !adminId) {
       return { authorized: false, error: "Invalid administrative token", errorStatus: 403 };
     }
 
-    const adminId = payload.adminId as string;
     const admin = await prisma.admin.findUnique({
       where: { id: adminId },
       select: { id: true, role: true, permissions: true, status: true }

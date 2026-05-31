@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Menu,
   X,
@@ -61,6 +61,35 @@ export default function Sidebar({ type }: SidebarProps) {
   const { user, logout: userLogout, activePerspective, switchPerspective, loading: userLoading } = useUser();
   const { playClickSound } = useSound();
   const { t, isRTL } = useTranslation();
+  
+  const [pendingVerificationCount, setPendingVerificationCount] = useState<number>(0);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchPendingVerifications = async () => {
+      if (type !== "admin" || !admin || adminLoading) return;
+      
+      const hasPerm = admin.role === "SUPER_ADMIN" || admin.permissions?.includes("providers.manage");
+      if (!hasPerm) return;
+
+      try {
+        const res = await fetch("/api/admin/verifications/pending-count");
+        const data = await res.json();
+        if (data.success && mounted) {
+          setPendingVerificationCount(data.count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch pending verifications count", err);
+      }
+    };
+
+    fetchPendingVerifications();
+    const interval = setInterval(fetchPendingVerifications, 60000); // refresh every minute
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [type, admin, adminLoading]);
 
   if (type === "admin" && pathname === AUTH_ROUTES.LOGIN) {
     return null;
@@ -129,7 +158,7 @@ export default function Sidebar({ type }: SidebarProps) {
       group: t("admin.sidebar.operations"),
       items: [
         { icon: MessageCircle, label: t("admin.sidebar.supportChat"), href: USER_ROUTES.MESSAGES, requiredPerm: "reports.view" },
-        { icon: ShieldCheck, label: t("admin.sidebar.verifications"), href: ADMIN_ROUTES.VERIFICATIONS, requiredPerm: "providers.manage" },
+        { icon: ShieldCheck, label: t("admin.sidebar.verifications"), href: ADMIN_ROUTES.VERIFICATIONS, requiredPerm: "providers.manage", badgeCount: pendingVerificationCount },
         { icon: ShieldAlert, label: t("admin.sidebar.reports"), href: ADMIN_ROUTES.REPORTS, requiredPerm: "reports.view" },
         { icon: Activity, label: t("admin.sidebar.messaging"), href: ADMIN_ROUTES.MESSAGING, requiredPerm: "reports.view" },
         { icon: Bell, label: t("admin.sidebar.notifications"), href: ADMIN_ROUTES.NOTIFICATIONS, requiredPerm: "notifications.manage" },
@@ -239,7 +268,15 @@ export default function Sidebar({ type }: SidebarProps) {
                         }`}
                       >
                         <item.icon size={18} className={!active && item.iconClass ? item.iconClass : ""} />
-                        <span className={`text-[11px] font-black uppercase tracking-widest ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>
+                        <span className={`text-[11px] font-black uppercase tracking-widest flex-1 ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>
+                        {item.badgeCount > 0 && (
+                          <div className="relative flex items-center justify-center">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex items-center justify-center bg-red-500 text-white font-black rounded-full shadow-lg h-5 px-2 text-[10px]">
+                              {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                            </span>
+                          </div>
+                        )}
                       </Link>
                     );
                   })}
@@ -316,7 +353,17 @@ export default function Sidebar({ type }: SidebarProps) {
                         size={active ? 20 : 18} 
                         className={`${active ? 'scale-110' : `group-hover:scale-110 group-hover:rotate-3 ${item.iconClass || ''}`} transition-all duration-300`} 
                       />
-                      {isOpen && <span className={`text-[11px] font-black uppercase tracking-widest leading-none ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>}
+                      {isOpen && <span className={`text-[11px] font-black uppercase tracking-widest leading-none flex-1 ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>}
+                      
+                      {/* Badge */}
+                      {item.badgeCount > 0 && (
+                        <div className={`absolute ${isOpen ? 'right-4' : 'top-1 right-1'} flex items-center justify-center`}>
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60"></span>
+                          <span className={`relative inline-flex items-center justify-center bg-red-500 text-white font-black rounded-full shadow-lg border-2 border-card ${isOpen ? 'h-5 px-2 text-[10px]' : 'h-4 w-4 text-[9px]'}`}>
+                            {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                          </span>
+                        </div>
+                      )}
                       
                       {/* Active Indicator (Vertical Pill) */}
                       {active && (

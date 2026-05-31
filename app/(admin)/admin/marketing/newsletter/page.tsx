@@ -32,6 +32,7 @@ export default function NewsletterDashboard() {
   const [metrics, setMetrics] = useState({ total: 0, active: 0, unsubscribed: 0 });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [exportingCSV, setExportingCSV] = useState(false);
   
   // Campaign States
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -147,26 +148,30 @@ export default function NewsletterDashboard() {
   };
 
   const exportCSV = () => {
-    const headers = ["Email", "Status", "Subscribed At", "Emails Sent"];
-    const csvContent = [
-      headers.join(","),
-      ...subscribers.map(sub => [
-        sub.email,
-        sub.status,
-        new Date(sub.subscribedAt).toLocaleString(),
-        sub.emailsSent
-      ].join(","))
-    ].join("\n");
+    setExportingCSV(true);
+    setTimeout(() => {
+      const headers = ["Email", "Status", "Subscribed At", "Emails Sent"];
+      const csvContent = [
+        headers.join(","),
+        ...subscribers.map(sub => [
+          sub.email,
+          sub.status,
+          new Date(sub.subscribedAt).toLocaleString(),
+          sub.emailsSent
+        ].join(","))
+      ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `subscribers_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `subscribers_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setExportingCSV(false);
+    }, 500);
   };
 
   return (
@@ -257,9 +262,11 @@ export default function NewsletterDashboard() {
               </div>
               <button
                 onClick={exportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground text-sm font-bold rounded-xl hover:bg-secondary/80 transition-colors w-full sm:w-auto justify-center"
+                disabled={exportingCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground text-sm font-bold rounded-xl hover:bg-secondary/80 transition-colors w-full sm:w-auto justify-center disabled:opacity-50"
               >
-                <Download className="w-4 h-4" /> Export CSV
+                {exportingCSV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
+                {exportingCSV ? "Exporting..." : "Export CSV"}
               </button>
             </div>
 
@@ -285,17 +292,24 @@ export default function NewsletterDashboard() {
                     </tr>
                   ) : subscribers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-text-hint">
-                        No subscribers found.
+                      <td colSpan={5} className="py-16 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                          <img src="/empty-subscribers.png" alt="No subscribers" className="w-40 h-40 object-contain opacity-80 mix-blend-multiply dark:mix-blend-screen" />
+                          <p className="text-text-hint font-medium">No subscribers found.</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     subscribers.map((sub) => (
-                      <tr key={sub.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                      <tr key={sub.id} className="border-b border-border/30 hover:bg-muted/40 transition-all hover:shadow-sm">
                         <td className="py-4 px-4 font-medium">{sub.email}</td>
                         <td className="py-4 px-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                            sub.status === 'ACTIVE' ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'
+                            sub.status === 'ACTIVE' 
+                              ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/20' 
+                              : sub.status === 'UNSUBSCRIBED'
+                              ? 'bg-orange-500/15 text-orange-600 border border-orange-500/20'
+                              : 'bg-red-500/15 text-red-600 border border-red-500/20'
                           }`}>
                             {sub.status === 'ACTIVE' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                             {sub.status}
