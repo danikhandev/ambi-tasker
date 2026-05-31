@@ -87,13 +87,22 @@ export default function Sidebar({ type }: SidebarProps) {
     { icon: Settings, label: t("nav.settings"), href: USER_ROUTES.SETTINGS },
   ];
 
+  const kycStatus = user?.idVerificationStatus;
+  const getKycMenuProps = () => {
+    if (kycStatus === "VERIFIED") return { icon: CheckCircle2, label: "Identity Verified", color: "text-emerald-500", iconColor: "text-emerald-500" };
+    if (kycStatus === "PENDING" || kycStatus === "UNDER_REVIEW") return { icon: ShieldAlert, label: "KYC Pending", color: "text-amber-500", iconColor: "text-amber-500" };
+    if (kycStatus === "REJECTED") return { icon: ShieldAlert, label: "KYC Rejected", color: "text-red-500", iconColor: "text-red-500" };
+    return { icon: ShieldCheck, label: t("nav.kycVerification"), color: "", iconColor: "" };
+  };
+  const kycProps = getKycMenuProps();
+
   const providerMenuItems = [
     { icon: LayoutDashboard, label: t("nav.dashboard"), href: PROVIDER_ROUTES.DASHBOARD },
     { icon: Briefcase, label: t("nav.bookings"), href: PROVIDER_ROUTES.BOOKINGS },
     { icon: Banknote, label: t("nav.earnings"), href: PROVIDER_ROUTES.EARNINGS },
     { icon: UserCircle, label: t("nav.profile"), href: PROVIDER_ROUTES.PROFILE },
     { icon: Settings, label: t("nav.settings"), href: PROVIDER_ROUTES.SETTINGS },
-    { icon: ShieldCheck, label: t("nav.kycVerification"), href: PROVIDER_ROUTES.VERIFY },
+    { icon: kycProps.icon, label: kycProps.label, href: PROVIDER_ROUTES.VERIFY, colorClass: kycProps.color, iconClass: kycProps.iconColor },
   ];
 
   const adminMenuItemsRaw = [
@@ -229,8 +238,8 @@ export default function Sidebar({ type }: SidebarProps) {
                             : "text-text-secondary hover:bg-muted hover:text-foreground"
                         }`}
                       >
-                        <item.icon size={18} />
-                        <span className="text-[11px] font-black uppercase tracking-widest">{item.label}</span>
+                        <item.icon size={18} className={!active && item.iconClass ? item.iconClass : ""} />
+                        <span className={`text-[11px] font-black uppercase tracking-widest ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>
                       </Link>
                     );
                   })}
@@ -305,9 +314,9 @@ export default function Sidebar({ type }: SidebarProps) {
                     >
                       <item.icon 
                         size={active ? 20 : 18} 
-                        className={`${active ? 'scale-110' : 'group-hover:scale-110 group-hover:rotate-3'} transition-all duration-300`} 
+                        className={`${active ? 'scale-110' : `group-hover:scale-110 group-hover:rotate-3 ${item.iconClass || ''}`} transition-all duration-300`} 
                       />
-                      {isOpen && <span className="text-[11px] font-black uppercase tracking-widest leading-none">{item.label}</span>}
+                      {isOpen && <span className={`text-[11px] font-black uppercase tracking-widest leading-none ${!active && item.colorClass ? item.colorClass : ""}`}>{item.label}</span>}
                       
                       {/* Active Indicator (Vertical Pill) */}
                       {active && (
