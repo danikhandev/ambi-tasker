@@ -202,6 +202,18 @@ export default function RequestDetailPage() {
     if (!request) return;
     setIsProcessing(true);
     try {
+      // Step 1: Update status to COMPLETED if not already
+      if (request.status !== "COMPLETED") {
+        const statusRes = await fetch("/api/bookings/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingId: request.id, status: "Completed" }),
+        });
+        const statusJson = await statusRes.json();
+        if (!statusRes.ok || !statusJson.success) throw new Error(statusJson.error || "Failed to mark as completed");
+      }
+
+      // Step 2: Handle Payment & Confirm
       if (request.payment_method === "ONLINE" || request.payment_method === "STRIPE") {
         const res = await fetch("/api/checkout", {
            method: "POST",
@@ -564,7 +576,7 @@ export default function RequestDetailPage() {
                   <ShieldCheck size={32} />
                   <span className="text-[10px] uppercase tracking-[0.3em]">Completion Confirmed</span>
                 </div>
-              ) : request.status === "COMPLETED" ? (
+              ) : (request.status === "COMPLETED" || request.status === "IN_PROGRESS") ? (
                 <div className="space-y-4">
                   <button
                     disabled={isProcessing}
@@ -572,12 +584,17 @@ export default function RequestDetailPage() {
                     className="w-full py-6 bg-primary text-white font-black rounded-3xl hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-3"
                   >
                     {isProcessing ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                    <span className="text-[10px] uppercase tracking-[0.2em]">Confirm Completion</span>
+                    <span className="text-[10px] uppercase tracking-[0.2em]">Confirm Completion & Pay</span>
                   </button>
                   <div className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center gap-3">
                     <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary shadow-sm"><CreditCard size={16} /></div>
                     <span className="text-[10px] font-black text-text-hint uppercase tracking-widest">{request.payment_method} GATEWAY SELECTED</span>
                   </div>
+                  {request.status === "IN_PROGRESS" && (
+                    <p className="text-[10px] text-center font-black text-text-hint uppercase tracking-[0.2em] mt-2">
+                      Click only when the provider has finished the job to your satisfaction.
+                    </p>
+                  )}
                 </div>
               ) : request.status === "CANCELLED" ? (
                 <div className="w-full py-6 bg-red-50 text-red-500 font-black rounded-3xl border border-red-100 flex flex-col items-center gap-2">

@@ -681,9 +681,11 @@ export default function JobDetailPage() {
                 )}
 
                 {currentStatus === "IN_PROGRESS" && (
-                  <button onClick={() => handleStatusUpdate("COMPLETED")} disabled={actionLoading} className="w-full py-4 bg-gray-900 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-primary transition-all disabled:opacity-50 mb-3 shadow-xl shadow-black/10">
-                    {actionLoading ? 'Completing...' : 'Finalize Deployment'}
-                  </button>
+                  <div className="w-full py-4 px-6 bg-muted text-text-disabled font-black text-[10px] uppercase tracking-widest rounded-2xl border border-border flex flex-col items-center gap-2 mb-3">
+                    <Loader2 className="animate-spin mb-1" size={24} />
+                    <span>Work in Progress</span>
+                    <span className="text-center font-bold text-[9px] tracking-normal opacity-80 normal-case mt-1">Please ask the customer to confirm completion and release payment from their app.</span>
+                  </div>
                 )}
               </>
             )}

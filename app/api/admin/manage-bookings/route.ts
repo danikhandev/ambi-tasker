@@ -86,9 +86,28 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "bookingId is required" }, { status: 400 });
     }
 
+    // Get current booking state
+    const currentBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { customer: true, provider: { include: { user: true } } }
+    });
+
+    if (!currentBooking) {
+      return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
+    }
+
     const updateData: any = {};
-    if (status) updateData.status = status;
+    let statusChanged = false;
+
+    if (status && currentBooking.status !== status) {
+      updateData.status = status;
+      statusChanged = true;
+    }
     if (providerId) updateData.providerId = providerId;
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ success: true, data: currentBooking, message: "No changes needed" });
+    }
 
     const updated = await prisma.booking.update({
       where: { id: bookingId },
@@ -105,6 +124,37 @@ export async function PATCH(req: NextRequest) {
       targetId: bookingId,
       details: `Admin updated booking: ${JSON.stringify(updateData)}`
     });
+
+    // Send notifications if status changed
+    if (statusChanged) {
+      const { sendNotification } = await import("@/services/notifications");
+      
+      const statusMessage = `Your booking status has been updated to ${status} by administration.`;
+      
+      // Notify Customer
+      if (currentBooking.userId) {
+        await sendNotification({
+          title: "Booking Status Update",
+          body: statusMessage,
+          type: "SYSTEM",
+          targetType: "INDIVIDUAL",
+          userId: currentBooking.userId,
+          actionUrl: `/user/bookings/${bookingId}`
+        });
+      }
+
+      // Notify Provider (if exists)
+      if (currentBooking.provider?.userId) {
+        await sendNotification({
+          title: "Booking Status Update",
+          body: `Admin updated node status to ${status}.`,
+          type: "SYSTEM",
+          targetType: "INDIVIDUAL",
+          userId: currentBooking.provider.userId,
+          actionUrl: `/provider/bookings/${bookingId}`
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: unknown) {

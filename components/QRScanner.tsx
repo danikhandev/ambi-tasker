@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useState } from 'react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { unbounded } from '@/app/fonts';
 import { logger } from '@/utils/logger';
 import { AlertCircle, Camera, Loader2, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface QRScannerProps {
   onScan: (decodedText: string) => void;
@@ -15,49 +15,23 @@ interface QRScannerProps {
 
 export default function QRScanner({ onScan, onClose, title = "Scan Arrival Pass" }: QRScannerProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
-  useEffect(() => {
-    // Create scanner instance
-    const scanner = new Html5QrcodeScanner(
-      "qr-reader",
-      { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      },
-      /* verbose= */ false
-    );
-
-    scannerRef.current = scanner;
-
-    const onScanSuccess = (decodedText: string) => {
-      logger.debug(`Scan success: ${decodedText}`);
-      scanner.clear().then(() => {
+  const handleScan = (detectedCodes: any[]) => {
+    if (detectedCodes && detectedCodes.length > 0) {
+      const decodedText = detectedCodes[0].rawValue;
+      if (decodedText) {
+        logger.debug(`Scan success: ${decodedText}`);
         onScan(decodedText);
-      }).catch(err => {
-        logger.error("Failed to clear scanner", err);
-        onScan(decodedText);
-      });
-    };
-
-    const onScanFailure = (error: string) => {
-      // Quietly ignore scan failures as they happen frequently during searching
-      // console.warn(`Scan failure: ${error}`);
-    };
-
-    setTimeout(() => {
-        scanner.render(onScanSuccess, onScanFailure);
-        setIsLoading(false);
-    }, 500);
-
-    return () => {
-        if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => logger.error("Error clearing scanner", err));
       }
-    };
-  }, [onScan]);
+    }
+  };
+
+  const handleError = (err: unknown) => {
+    logger.error("QR Scan Error", err);
+    if (err instanceof Error && err.name === "NotAllowedError") {
+        setError("Camera permission denied.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
@@ -81,22 +55,24 @@ export default function QRScanner({ onScan, onClose, title = "Scan Arrival Pass"
 
         <div className="p-8">
           <div className="relative aspect-square bg-muted rounded-[32px] overflow-hidden border-4 border-muted flex items-center justify-center">
-            <div id="qr-reader" className="w-full h-full" />
             
-            <AnimatePresence>
-              {isLoading && (
-                <motion.div 
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-muted flex flex-col items-center justify-center gap-4 text-text-hint"
-                >
-                  <Loader2 className="w-10 h-10 animate-spin" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Initializing Optical Hub</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Scanner 
+              onScan={handleScan}
+              onError={handleError}
+              components={{
+                audio: false,
+                onOff: false,
+                finder: false, // We use custom finder overlay
+                zoom: false,
+              }}
+              styles={{
+                container: { width: '100%', height: '100%', padding: 0 },
+                video: { objectFit: 'cover' }
+              }}
+            />
 
-            {/* Custom Overlay (Optional) */}
-            <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+            {/* Custom Overlay */}
+            <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10">
                 <div className="w-[250px] h-[250px] border-2 border-primary/50 rounded-3xl relative">
                     <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
                     <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />

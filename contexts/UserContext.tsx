@@ -277,15 +277,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ perspective }),
       }).catch(err => console.error("Failed to persist role switch:", err));
 
-      // 3. Push to the new route and refresh Next.js cache to load the correct RSC payload
+      // 3. Navigate to the new route using hard navigation to prevent Next.js push/refresh race conditions
+      // and ensure RSC cache is fully flushed for the new perspective.
       const targetUrl = perspective === "provider" ? "/provider/dashboard" : "/user/dashboard";
-      router.push(targetUrl);
-      router.refresh();
-
-      // Clear the switching loader after routing transition completes
-      setTimeout(() => {
-        setIsSwitchingPerspective(false);
-      }, 1000);
+      window.location.href = targetUrl;
+      
+      // Note: We don't need to clear the switching loader because the page will reload
     },
     [user, router]
   );

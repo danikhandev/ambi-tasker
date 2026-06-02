@@ -91,11 +91,19 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Role-specific authorization (providers accept/progress/complete; customers cancel)
-    if (status === "Accepted" || status === "InProgress" || status === "Completed") {
+    // Role-specific authorization
+    if (status === "Accepted" || status === "InProgress") {
       if (!isProvider && !isAdmin) {
         return NextResponse.json(
-          { success: false, error: "Only the provider can accept, start, or complete a booking" },
+          { success: false, error: "Only the provider can accept or start a booking" },
+          { status: 403 }
+        );
+      }
+    }
+    if (status === "Completed") {
+      if (!isCustomer && !isAdmin) {
+        return NextResponse.json(
+          { success: false, error: "Only the customer can confirm and complete a booking" },
           { status: 403 }
         );
       }
