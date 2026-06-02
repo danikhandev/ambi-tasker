@@ -1004,6 +1004,8 @@
   "status": {
     "pending": "Pending",
     "accepted": "Accepted",
+    "arrived": "Arrived",
+    "active": "Active",
     "inProgress": "In Progress",
     "completed": "Completed",
     "cancelled": "Cancelled"
@@ -1058,6 +1060,7 @@
     "messagingLabel": "Messaging",
     "superAdmin": "Super Admin",
     "systemAdmin": "System Admin",
+    "recent": "Recent",
     "activity": "Activity",
     "market": "Market",
     "growth": "Growth",
@@ -1643,5 +1646,79 @@
   "service": {
     "connection_guarantee": "We connect you with top-rated, background-checked professionals for {service} near you.",
     "not_found_desc": "We are currently verifying professionals for {service} in your area. Check back shortly!"
+  },
+  "admin": {
+    "dashboardLabel": "Admin Dashboard",
+    "adminSettingsLabel": "Admin Settings",
+    "superAdmin": "Super Admin",
+    "systemAdmin": "System Administrator",
+    "recent": "Recent",
+    "activity": "Activity",
+    "market": "Market",
+    "growth": "Growth",
+    "service": "Service",
+    "distribution": "Distribution",
+    "quick": "Quick",
+    "actions": "Actions",
+    "syncData": "Refresh Data",
+    "alerts": "Alerts",
+    "databaseLabel": "Database",
+    "permissions": "Permissions",
+    "addProvider": "Add Provider",
+    "messagingLabel": "Messaging",
+    "noRecentActivity": "System Idle",
+    "totalUsers": "Total Users",
+    "totalProviders": "Providers",
+    "totalServices": "Services",
+    "activeJobs": "Active Jobs",
+    "revenue": "Revenue",
+    "health": {
+      "systemHealth": "System Health",
+      "nominal": "Nominal",
+      "uptime": "Uptime"
+    },
+    "sidebar": {
+      "systemOverview": "System Overview",
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "providers": "Providers",
+      "services": "Services",
+      "bookings": "Bookings",
+      "locations": "Locations",
+      "financials": "Financials",
+      "payments": "Payments",
+      "analytics": "Analytics",
+      "operations": "Operations",
+      "supportChat": "Support Chat",
+      "verifications": "Verifications",
+      "reports": "Reports",
+      "messaging": "Messaging",
+      "notifications": "Notifications",
+      "management": "Management",
+      "subAdmins": "Sub Admins",
+      "auditLogs": "Audit Logs",
+      "settings": "Settings"
+    },
+    "database": {
+      "title": "Database Monitor",
+      "highlight": "Database",
+      "liveUplink": "Live Uplink",
+      "nodeHealth": "Node Health",
+      "operationalProtocol": "Operational Protocol",
+      "protocolStream": "Protocol Stream",
+      "recentAnomalies": "Recent Anomalies",
+      "resync": "Resync",
+      "sourceNode": "Source Node",
+      "targetEntity": "Target Entity",
+      "timestamp": "Timestamp",
+      "status": "Status",
+      "success": "Success"
+    },
+    "messaging": {
+      "title": "Admin Messaging",
+      "highlight": "Messaging",
+      "filterPlaceholder": "Search conversations...",
+      "noActiveNodes": "No Active Conversations"
+    }
   }
 }

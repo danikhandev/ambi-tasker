@@ -56,11 +56,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         // 1. Try localStorage first for immediate UI feedback
         const cached = localStorage.getItem(ADMIN_STORAGE_KEY);
+        let hasCachedAdmin = false;
         if (cached) {
           try {
             const parsed = JSON.parse(cached);
             if (parsed && parsed.id && parsed.role) {
               setAdmin(parsed);
+              hasCachedAdmin = true;
             } else {
               localStorage.removeItem(ADMIN_STORAGE_KEY);
             }
@@ -70,6 +72,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 2. Validate with server to ensure cookies are still valid
+        // Only do this if we think the user might be an admin, or we are on an admin page
+        const isPathAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+        
+        if (!hasCachedAdmin && !isPathAdmin) {
+           setLoading(false);
+           return;
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         

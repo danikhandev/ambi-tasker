@@ -218,18 +218,18 @@ export default function DashboardHeader({
         </div>
 
         {isAdminView && displayTitle && (
-          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center pointer-events-none z-10">
-            <div className="px-4 py-1.5 bg-card/60 backdrop-blur-md border border-border/80 rounded-full shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] flex items-center gap-2.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          <div className="hidden md:flex flex-1 flex-col items-center justify-center text-center pointer-events-none min-w-0 px-2 lg:px-4">
+            <div className="px-6 py-2.5 bg-card/95 backdrop-blur-xl border border-border/80 rounded-full shadow-[0_8px_30px_-4px_rgba(0,0,0,0.15)] flex items-center gap-3 max-w-full">
+              <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary shadow-[0_0_10px_var(--primary)]"></span>
               </span>
-              <h1 className={`${unbounded.className} text-[11px] lg:text-[13px] font-black uppercase tracking-[0.16em] bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent`}>
+              <h1 className={`${unbounded.className} text-[12px] lg:text-[16px] font-black uppercase tracking-[0.15em] text-foreground drop-shadow-sm text-center leading-snug break-words`}>
                 {displayTitle}
               </h1>
             </div>
             {displaySubtitle && (
-              <p className="text-[7px] md:text-[8px] font-black text-text-hint/70 uppercase tracking-[0.2em] mt-1.5 bg-secondary/40 px-2.5 py-0.5 rounded-full border border-border/40 backdrop-blur-md pointer-events-none">
+              <p className="text-[9px] md:text-[11px] font-black text-text-secondary uppercase tracking-[0.25em] mt-2 bg-muted/90 px-4 py-1 rounded-full border border-border/50 backdrop-blur-xl shadow-inner pointer-events-none text-center break-words max-w-full">
                 {displaySubtitle}
               </p>
             )}

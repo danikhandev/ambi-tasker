@@ -909,6 +909,7 @@
   "status": {
     "inProgress": "کام جاری ہے",
     "pending": "زیر التواء",
+    "active": "فعال",
     "urgent": "فوری",
     "scheduled": "مقرر",
     "completed": "مکمل ہو گیا",
@@ -916,6 +917,7 @@
     "scheduled_upper": "مقرر کردہ",
     "in_progress": "جاری ہے",
     "accepted": "قبول کر لیا",
+    "arrived": "پہنچ گئے",
     "rejected": "مسترد شدہ"
   },
   "common": {

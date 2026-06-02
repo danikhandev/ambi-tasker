@@ -17,7 +17,6 @@ import { useRouter } from "next/navigation";
 import { useSound } from "@/contexts/SoundContext";
 import Image from "next/image";
 import Link from "next/link";
-import ConnectSection from "@/components/ConnectSection";
 import { themes, ThemeType } from "@/constants/themes";
 
 type SettingsSection = "profile" | "password" | "notifications" | "privacy" | "availability" | "theme" | "language" | null;
@@ -732,10 +731,7 @@ export default function WorkerSettingsPage() {
                     </button>
                 </motion.div>
 
-                {/* Connect Section */}
-                <div className="mt-12 pt-12 border-t border-border">
-                    <ConnectSection />
-                </div>
+
 
                 <p className="text-center text-xs text-text-disabled font-medium mt-8"><BrandText text={t("footer.madeInPakistan")} /></p>
             </div>

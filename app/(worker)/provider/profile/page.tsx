@@ -9,7 +9,6 @@ import { SERVICE_CATEGORIES } from "@/constants/services";
 import {
   Edit3, Save, Loader2, PlusCircle, Trash2, Banknote, CheckCircle, X, AlertCircle, Mail, Camera
 } from "lucide-react";
-import ConnectSection from "@/components/ConnectSection";
 import CircularFrame from "@/components/CircularFrame";
 import { Star, Award, TrendingUp, MapPin } from "lucide-react";
 import LocationSelector from "@/components/LocationSelector";
@@ -727,10 +726,7 @@ export default function ProviderProfilePage() {
         />
       </motion.div>
 
-      {/* Connect Section */}
-      <div className="mt-12 pt-12 border-t border-border">
-        <ConnectSection />
-      </div>
+
 
       <AnimatePresence>
         {showCamera && (

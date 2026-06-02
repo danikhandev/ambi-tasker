@@ -269,13 +269,13 @@ export default function ServiceManagementPage() {
       <AnimatePresence>
         {isEditing && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditing(false)} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[60]" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditing(false)} className="fixed inset-0 bg-gray-950/60 backdrop-blur-xl z-[60]" />
             <motion.div 
               initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="fixed inset-0 m-auto w-full max-w-xl h-fit bg-card border border-border rounded-[48px] shadow-2xl z-[70] overflow-hidden"
+              className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-auto md:w-full max-w-xl max-h-[90vh] flex flex-col bg-card border-2 border-border/80 rounded-[32px] md:rounded-[48px] shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] z-[70] overflow-hidden"
             >
-              <form onSubmit={handleSave}>
-                <div className="p-10 border-b border-border flex justify-between items-center bg-muted/20">
+              <form onSubmit={handleSave} className="flex flex-col flex-1 min-h-0">
+                <div className="p-6 md:p-10 border-b border-border flex justify-between items-center bg-muted/20 shrink-0">
                    <div className="space-y-1">
                       <h3 className={`${unbounded.className} text-xl font-black`}>{selectedService ? 'Update' : 'Register'} <span className="text-primary italic">Service</span></h3>
                       <p className="text-[10px] font-black text-text-hint uppercase tracking-widest">Service Specification Terminal</p>
@@ -285,13 +285,13 @@ export default function ServiceManagementPage() {
                    </button>
                 </div>
 
-                <div className="p-12 space-y-6">
-                   <div className="grid grid-cols-2 gap-8">
+                <div className="p-6 md:p-12 space-y-6 overflow-y-auto min-h-0 flex-1">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">Service Name</label>
                          <input 
                            required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                           className="w-full px-6 py-4 bg-muted/40 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm outline-none"
+                           className="w-full px-6 py-4 bg-muted/80 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all font-bold text-sm outline-none shadow-inner"
                            placeholder="e.g. Ceiling Fan Repair"
                          />
                       </div>
@@ -299,18 +299,18 @@ export default function ServiceManagementPage() {
                          <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">Category</label>
                          <input 
                            required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
-                           className="w-full px-6 py-4 bg-muted/40 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm outline-none"
+                           className="w-full px-6 py-4 bg-muted/80 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all font-bold text-sm outline-none shadow-inner"
                            placeholder="e.g. Electrician"
                          />
                       </div>
                    </div>
 
-                   <div className="grid grid-cols-2 gap-8">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">Base Price (Rs.)</label>
                          <input 
                            type="number" required value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})}
-                           className="w-full px-6 py-4 bg-muted/40 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm outline-none"
+                           className="w-full px-6 py-4 bg-muted/80 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all font-bold text-sm outline-none shadow-inner"
                            placeholder="500"
                          />
                       </div>
@@ -333,13 +333,13 @@ export default function ServiceManagementPage() {
                       <label className="text-[10px] font-black text-text-hint uppercase tracking-widest ml-1">Service Description</label>
                       <textarea 
                         value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
-                        className="w-full px-6 py-4 bg-muted/40 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-bold text-sm h-32 no-scrollbar outline-none"
+                        className="w-full px-6 py-4 bg-muted/80 rounded-2xl border border-border/50 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all font-bold text-sm h-32 no-scrollbar outline-none shadow-inner"
                         placeholder="Define the scope of this service..."
                       />
                    </div>
                 </div>
 
-                <div className="p-10 bg-muted/20 border-t border-border flex gap-4">
+                <div className="p-6 md:p-10 bg-muted/20 border-t border-border flex flex-col-reverse md:flex-row gap-4 shrink-0">
                    <button 
                     type="button" onClick={() => setIsEditing(false)}
                     className="flex-1 py-5 bg-white text-text-secondary border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all active:scale-95"

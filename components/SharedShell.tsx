@@ -133,13 +133,16 @@ export default function SharedShell({ children }: { children: React.ReactNode })
       )}
 
       {/* 7. Global Unified Loader Overlay (Appears on route changes) */}
-      {(userLoading || adminLoading) && (
-        <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
-            Syncing Ambi Tasker...
-          </p>
-        </div>
+      {/* Global loader: Never show on auth/login pages. Only show adminLoading on non-login admin routes. */}
+      {!isAuthPage && (
+        (userLoading || (adminLoading && pathname?.startsWith("/admin") && !pathname?.startsWith("/admin/login"))) && (
+          <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
+              Syncing Ambi Tasker...
+            </p>
+          </div>
+        )
       )}
       {/* 8. Support Floating Widget */}
       <SupportFloatingWidget />

@@ -82,6 +82,22 @@ export default function RequestDetailPage() {
     if (params.id) {
       fetchRequestDetails();
       fetchReview();
+
+      // Real-time subscription for booking status changes
+      const channel = supabase
+        .channel(`booking-customer-${params.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'Booking',
+          filter: `id=eq.${params.id}`,
+        }, () => {
+          // Re-fetch the details to get the latest status, timeline, and location
+          fetchRequestDetails();
+        })
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
     }
   }, [params.id]);
 
@@ -104,6 +120,9 @@ export default function RequestDetailPage() {
 
       if (['Accepted', 'Arrived', 'InProgress', 'Completed'].includes(booking.status)) {
         timeline.push({ status: 'ACCEPTED', date: booking.updatedAt, note: 'Provider accepted the request.' });
+      }
+      if (['Arrived', 'InProgress', 'Completed'].includes(booking.status)) {
+        timeline.push({ status: 'ARRIVED', date: booking.updatedAt, note: 'Provider has arrived at the location.' });
       }
       if (['InProgress', 'Completed'].includes(booking.status)) {
         timeline.push({ status: 'IN_PROGRESS', date: booking.updatedAt, note: 'Provider is currently working on the task.' });

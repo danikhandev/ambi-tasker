@@ -52,10 +52,14 @@ function LoginContent() {
 
   // Redirect if already admin
   useEffect(() => {
+    if (roleParam === "admin") {
+      router.replace("/admin/login");
+      return;
+    }
     if (isAdmin) {
       router.push("/admin/dashboard");
     }
-  }, [isAdmin, router]);
+  }, [isAdmin, roleParam, router]);
 
   useEffect(() => {
     const fetchStats = async () => {

@@ -479,20 +479,71 @@ export default function ProviderSignupPage() {
                 />
               ) : (
                 /* Step 3: Service Specialization */
-                <div className="space-y-8">
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <label className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                      <Briefcase className="w-4 h-4" /> {t("auth.serviceSpecialist") || "Service Specialization"}
-                    </label>
-                    <div className="bg-accent/5 p-4 rounded-[32px] border border-accent/20">
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full bg-transparent text-accent-dark font-black text-sm p-2 outline-none cursor-pointer appearance-none"
-                      >
-                        <option value="">{t("auth.selectYourTrade") || "Select Your Trade"}</option>
-                        {SERVICE_CATEGORIES.map(c => <option key={c.id} value={c.name}>{t(`categories.${c.id}.name`) || c.name}</option>)}
-                      </select>
+                <div className="space-y-6">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                        <Briefcase className="w-4 h-4" /> {t("auth.serviceSpecialist") || "Choose Your Trade"}
+                      </label>
+                      {formData.category && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="text-[9px] font-black uppercase tracking-widest text-white bg-accent px-3 py-1 rounded-full"
+                        >
+                          ✓ Selected
+                        </motion.span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-text-hint font-medium">Select the <span className="font-black text-accent">one service category</span> you specialise in. You can only offer one trade.</p>
+
+                    {/* Scrollable single-select card grid */}
+                    <div className="max-h-[320px] overflow-y-auto pr-1 -mr-1 space-y-0" style={{ scrollbarWidth: 'thin' }}>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {SERVICE_CATEGORIES.map((c, i) => {
+                          const Icon = c.icon;
+                          const isSelected = formData.category === c.name;
+                          return (
+                            <motion.button
+                              key={c.id}
+                              type="button"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.03 }}
+                              onClick={() => setFormData({ ...formData, category: isSelected ? "" : c.name })}
+                              className={`relative flex flex-col items-start gap-2 p-3.5 rounded-2xl border-2 text-left transition-all duration-200 active:scale-[0.97] focus:outline-none
+                                ${isSelected
+                                  ? "border-accent bg-accent/10 shadow-[0_0_0_1px_var(--accent)] shadow-accent/20"
+                                  : "border-border bg-muted hover:border-accent/40 hover:bg-accent/5"
+                                }`}
+                            >
+                              {/* Selected tick */}
+                              {isSelected && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="absolute top-2.5 right-2.5 w-4 h-4 bg-accent rounded-full flex items-center justify-center"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 text-white" />
+                                </motion.div>
+                              )}
+                              {/* Icon */}
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isSelected ? "bg-accent text-white shadow-sm" : "bg-card border border-border"}`}>
+                                <span className="text-[18px] leading-none">{c.emoji}</span>
+                              </div>
+                              {/* Text */}
+                              <div className="min-w-0 w-full pr-4">
+                                <p className={`text-[11px] font-black uppercase tracking-tight leading-tight truncate ${isSelected ? "text-accent" : "text-foreground"}`}>
+                                  {t(`categories.${c.id}.name`) || c.name}
+                                </p>
+                                <p className="text-[9px] text-text-hint font-medium leading-tight mt-0.5 line-clamp-2">
+                                  {c.description}
+                                </p>
+                              </div>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </motion.div>
 

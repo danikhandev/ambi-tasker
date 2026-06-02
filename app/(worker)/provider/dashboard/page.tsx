@@ -103,8 +103,8 @@ export default function ProviderDashboardPage() {
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
-          table: 'bookings',
-          filter: `provider_id=eq.${user.id}` 
+          table: 'Booking',
+          filter: `providerId=eq.${user.id}` 
         }, () => {
           fetchDashboardData(true);
         })

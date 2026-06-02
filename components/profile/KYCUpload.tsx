@@ -174,10 +174,10 @@ export default function KYCUpload({ currentStatus, onSuccess }: KYCUploadProps) 
             <ArrowLeft className="w-6 h-6 text-[#1A1B4B]" />
           </button>
         ) : (
-          <div className="w-10"></div> // Placeholder for alignment
+          <div className="w-10"></div>
         )}
         <h1 className="text-[17px] font-bold text-[#1A1B4B]">{currentStep.title}</h1>
-        <div className="w-10"></div> // Placeholder for alignment
+        <div className="w-10"></div> {/* Placeholder for alignment */}
       </div>
 
       {/* Description */}

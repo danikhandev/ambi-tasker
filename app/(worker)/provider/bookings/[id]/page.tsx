@@ -348,10 +348,10 @@ export default function JobDetailPage() {
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'bookings',
+        table: 'Booking',
         filter: `id=eq.${params.id}`,
       }, (payload) => {
-        const newStatus = payload.new.booking_status?.toUpperCase();
+        const newStatus = (payload.new.status ?? payload.new.booking_status)?.toUpperCase();
         if (newStatus) {
           setCurrentStatus(newStatus);
           setJob(prev => prev ? { ...prev, status: newStatus } : null);

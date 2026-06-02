@@ -68,9 +68,11 @@ export async function createAndSendOtp(
         console.log(`\n-----------------------------------------`);
         console.log(`🔑 DEBUG OTP [${type}] for ${email}: ${code}`);
         console.log(`-----------------------------------------\n`);
+        logger.info(`Bypassing SMTP error in development. OTP printed to console.`);
+        // Don't throw in dev, let them read it from the console
+      } else {
+        throw new Error("Failed to deliver OTP email");
       }
-      
-      throw new Error("Failed to deliver OTP email");
     }
 
     logger.info(`OTP (${type}) sent to ${email}`);

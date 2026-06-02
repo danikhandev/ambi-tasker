@@ -2,9 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { NextRequest } from "next/server";
-import { getAdminAuth } from "@/utils/admin-auth";
+import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -13,15 +11,27 @@ import { Loader2 } from "lucide-react";
  * validates the JWT stored in the httpOnly cookie. If validation fails the user
  * is redirected to the admin login page.
  *
+ * The login page itself is excluded from the guard so it can always render.
+ *
  * The server‑side verification is performed in `utils/admin-auth.ts` and the
  * `admin` API (e.g. `/api/admin/me`). This ensures that the guard cannot be
  * bypassed by tampering with client state.
  */
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
+  // Allow the login page to render without authentication
+  const isLoginPage = pathname === "/admin/login";
+
   useEffect(() => {
+    // Skip auth check entirely for the login page
+    if (isLoginPage) {
+      setIsAuthorized(true);
+      return;
+    }
+
     // Minimal endpoint that returns the admin payload if token is valid.
     // The endpoint is protected by the same `getAdminAuth` logic used in
     // other admin APIs.
@@ -38,7 +48,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         setIsAuthorized(false);
         router.replace("/admin/login");
       });
-  }, [router]);
+  }, [router, isLoginPage]);
 
   if (isAuthorized === null) {
     return (

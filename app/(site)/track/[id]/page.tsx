@@ -34,7 +34,7 @@ export default function TrackingPage() {
             .on('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
-                table: 'bookings',
+                table: 'Booking',
                 filter: `id=eq.${bookingId}`,
             }, (payload: any) => {
                 setStatus(payload.new.status.toUpperCase());

@@ -101,28 +101,35 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Popular Services Grid */}
-      <section className="py-24 px-6 bg-white dark:bg-transparent relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className={`${unbounded.className} text-3xl font-black text-foreground`} dangerouslySetInnerHTML={{ __html: t("landing.services_ui.title") || "Popular Services" }} />
-            <p className="text-text-secondary font-medium max-w-xl mx-auto opacity-70">{t("landing.services_ui.desc") || "Discover the most requested services in your area. Professional help is just a click away."}</p>
+      <section className="py-16 md:py-24 px-4 md:px-6 relative z-10 overflow-hidden">
+        {/* Ambient background blobs - lighter on mobile for crisp rendering */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+           <div className="absolute top-1/4 -left-20 w-48 h-48 md:w-96 md:h-96 bg-primary/5 md:bg-primary/10 rounded-full blur-[40px] md:blur-[100px]" />
+           <div className="absolute bottom-1/4 -right-20 w-48 h-48 md:w-96 md:h-96 bg-indigo-500/5 md:bg-indigo-500/10 rounded-full blur-[40px] md:blur-[100px]" />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center space-y-4 mb-10 md:mb-16">
+            <h2 className={`${unbounded.className} text-2xl md:text-3xl font-black text-foreground`} dangerouslySetInnerHTML={{ __html: t("landing.services_ui.title") || "Popular Services" }} />
+            <p className="text-sm md:text-base text-text-secondary font-medium max-w-xl mx-auto opacity-70 px-4">{t("landing.services_ui.desc") || "Discover the most requested services in your area. Professional help is just a click away."}</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {featuredServices.map((service, i) => (
               <Link key={service.name} href="/search">
                 <motion.div
                   initial={{ opacity: 1, y: 0 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.95 }}
                   viewport={{ once: true }}
-                  className="p-8 bg-card rounded-[40px] border border-border/60 shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 transition-all group text-center cursor-pointer"
+                  className="p-5 md:p-8 bg-card md:bg-card/60 md:backdrop-blur-2xl rounded-[28px] md:rounded-[40px] border border-border/50 md:border-white/40 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.06)] md:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-2xl hover:shadow-primary/15 hover:-translate-y-2 transition-all group text-center cursor-pointer transform-gpu will-change-transform"
+                  style={{ WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' } as React.CSSProperties}
                 >
-                  <div className={`w-16 h-16 ${service.bg} ${service.color} rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <service.icon size={28} />
+                  <div className={`w-12 h-12 md:w-16 md:h-16 ${service.bg} ${service.color} rounded-xl md:rounded-2xl mx-auto mb-4 md:mb-6 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner`}>
+                    <service.icon className="w-6 h-6 md:w-7 md:h-7" />
                   </div>
-                  <h4 className="text-sm font-black uppercase tracking-widest mb-1 text-foreground">{service.name}</h4>
-                  <p className="text-[10px] font-bold text-text-hint uppercase tracking-tighter">{t("landing.services_ui.viewTopRated") || "VIEW TOP RATED"}</p>
+                  <h4 className="text-[11px] sm:text-xs md:text-sm font-black uppercase tracking-widest mb-1 md:mb-2 text-foreground">{service.name}</h4>
+                  <p className="text-[8px] md:text-[10px] font-black text-text-hint uppercase tracking-widest">{t("landing.services_ui.viewTopRated") || "VIEW TOP RATED"}</p>
                 </motion.div>
               </Link>
             ))}

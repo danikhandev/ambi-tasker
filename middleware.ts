@@ -13,16 +13,16 @@ export async function middleware(req: NextRequest) {
     const adminToken = req.cookies.get("admin-auth-token")?.value;
     
     if (!adminToken) {
-      return NextResponse.redirect(new URL("/login?role=admin", req.url));
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
 
     try {
       const { payload } = await jwtVerify(adminToken, JWT_SECRET_KEY);
       if (!payload.isAdmin) {
-        return NextResponse.redirect(new URL("/login?role=admin", req.url));
+        return NextResponse.redirect(new URL("/admin/login", req.url));
       }
     } catch (err) {
-      return NextResponse.redirect(new URL("/login?role=admin", req.url));
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
   }
 
