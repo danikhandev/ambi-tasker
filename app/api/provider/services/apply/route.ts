@@ -28,6 +28,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Provider profile not found' }, { status: 404 });
     }
 
+    // Count existing active services & pending applications
+    const activeAndPendingCount = await prisma.serviceApplication.count({
+      where: {
+        providerId: providerProfile.id,
+        status: { in: ['APPROVED', 'PENDING'] }
+      }
+    });
+
+    if (activeAndPendingCount >= 2) {
+      return NextResponse.json({
+        success: false,
+        error: 'You can only apply for or provide up to two services.'
+      }, { status: 400 });
+    }
+
     // Create the application
     const application = await prisma.serviceApplication.create({
       data: {

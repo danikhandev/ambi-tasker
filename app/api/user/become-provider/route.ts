@@ -25,6 +25,17 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
 
+    // Validate service categories for production-level providers
+    if (body.accountLevel === "PRODUCTION") {
+      const categories = body.serviceCategories || [];
+      if (!Array.isArray(categories) || categories.length === 0) {
+        return NextResponse.json({ success: false, error: "At least one service category must be selected for production-level providers." }, { status: 400 });
+      }
+      if (categories.length > 1) {
+        return NextResponse.json({ success: false, error: "Production-level providers can select only one service category." }, { status: 400 });
+      }
+    }
+
     // Create a new provider profile
     const newProfile = await prisma.providerProfile.create({
       data: {
@@ -34,6 +45,8 @@ export async function POST(req: NextRequest) {
         verificationStatus: "NOT_SUBMITTED",
         experienceYears: 0,
         isAvailable: false,
+        // Store the selected category if provided
+        servicesList: body.serviceCategories ? body.serviceCategories : undefined,
       },
     });
 

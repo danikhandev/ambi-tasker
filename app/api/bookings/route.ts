@@ -172,6 +172,23 @@ export async function POST(req: NextRequest) {
        }
     }
 
+    // Verify provider offers this service
+    const isServiceOffered = await prisma.serviceApplication.findFirst({
+      where: {
+        providerId: provider.id,
+        name: service.name,
+        category: service.category,
+        status: 'APPROVED'
+      }
+    });
+
+    if (!isServiceOffered) {
+      return NextResponse.json({
+        success: false,
+        error: "This provider does not offer this service."
+      }, { status: 400 });
+    }
+
     if (provider.verificationStatus !== "VERIFIED") {
       return NextResponse.json(
         { 

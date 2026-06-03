@@ -57,6 +57,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // --- Provider CNIC validation ---
+    if (role?.toUpperCase() === "PROVIDER") {
+      if (!cnic || !cnic.trim()) {
+        return NextResponse.json(
+          { success: false, error: "CNIC number is required to register as a service provider.", code: "CNIC_REQUIRED" },
+          { status: 400 }
+        );
+      }
+      
+      const cleanCnic = cnic.replace(/-/g, "").trim();
+      if (cleanCnic.length !== 13 || isNaN(Number(cleanCnic))) {
+        return NextResponse.json(
+          { success: false, error: "Invalid CNIC format. CNIC must contain exactly 13 digits.", code: "CNIC_INVALID" },
+          { status: 400 }
+        );
+      }
+    }
+
     // ─── Location validation ────────────────────────────────────
     if (!districtId || !cityId || !areaId) {
       return NextResponse.json(
@@ -120,8 +138,9 @@ export async function POST(req: NextRequest) {
                   professionalTitle: category || null,
                   verificationStatus: "NOT_SUBMITTED" as any,
                   isAvailable: false,
+                  cnicNumber: cnic ? cnic.replace(/-/g, "").trim() : null,
                   serviceRadius: serviceRadius ? parseFloat(serviceRadius) : 10.0,
-                  settings: cnic ? { cnicNumber: cnic } : {},
+                  settings: {},
                   serviceAreas: {
                     connect: areaId ? [{ id: areaId }] : [],
                   },
