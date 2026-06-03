@@ -38,7 +38,13 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
     if (admin) {
       currentRole = "ADMIN";
     } else if (user) {
-      currentRole = activePerspective === "provider" ? "PROVIDER" : "USER";
+      // If the user is a registered PROVIDER and the route requires PROVIDER, 
+      // allow access regardless of the current activePerspective UI toggle to prevent lockouts.
+      if (allowedRoles.includes("PROVIDER") && user.role === "PROVIDER") {
+        currentRole = "PROVIDER";
+      } else {
+        currentRole = activePerspective === "provider" ? "PROVIDER" : "USER";
+      }
     }
 
     if (!currentRole) {

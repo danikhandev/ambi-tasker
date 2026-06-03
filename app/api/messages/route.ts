@@ -297,11 +297,23 @@ export async function PATCH(req: NextRequest) {
     const guard = await userGuard(req);
     if (guard.error) return guard.error;
 
-    const { messageIds } = await req.json();
+    const { messageIds, conversationId } = await req.json();
+
+    if (conversationId) {
+      await prisma.message.updateMany({
+        where: {
+          conversationId,
+          receiverId: guard.user.id,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+      return NextResponse.json({ success: true, message: "Messages marked as read" });
+    }
 
     if (!Array.isArray(messageIds) || messageIds.length === 0) {
       return NextResponse.json(
-        { success: false, error: "messageIds array is required" },
+        { success: false, error: "messageIds array or conversationId is required" },
         { status: 400 }
       );
     }

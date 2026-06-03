@@ -73,16 +73,22 @@ function SearchContent() {
   const [query, setQuery] = useState(initialQuery);
   const [activeQuery, setActiveQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
+  const initialSortBy = searchParams.get("sortBy") || (searchParams.get("featured") === "true" ? "featured" : "featured");
+  const [sortBy, setSortBy] = useState(initialSortBy);
+
   const [location, setLocation] = useState<any>({
-    provinceId: "",
+    provinceId: searchParams.get("provinceId") || "",
+    provinceName: searchParams.get("provinceName") || "",
     districtId: searchParams.get("districtId") || user?.districtId || "",
-    cityId: user?.cityId || "",
-    areaId: searchParams.get("areaId") || user?.areaId || ""
+    districtName: searchParams.get("districtName") || "",
+    cityId: searchParams.get("cityId") || user?.cityId || "",
+    cityName: searchParams.get("cityName") || "",
+    areaId: searchParams.get("areaId") || user?.areaId || "",
+    areaName: searchParams.get("areaName") || ""
   });
   
   const [rating, setRating] = useState(0);
   const [priceRange, setPriceRange] = useState([0, 50000]);
-  const [sortBy, setSortBy] = useState("featured");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,15 +123,23 @@ function SearchContent() {
 
   // Sync location with user profile when loaded
   useEffect(() => {
-    if (user && !location.districtId && !location.areaId) {
+    const hasQueryLoc = searchParams.get("provinceId") || 
+                        searchParams.get("districtId") || 
+                        searchParams.get("cityId") || 
+                        searchParams.get("areaId");
+    if (user && !hasQueryLoc && !location.districtId && !location.areaId) {
       setLocation({
         provinceId: "",
+        provinceName: "",
         districtId: user.districtId || "",
+        districtName: user.district?.name || "",
         cityId: user.cityId || "",
-        areaId: user.areaId || ""
+        cityName: user.city?.name || "",
+        areaId: user.areaId || "",
+        areaName: user.area?.name || ""
       });
     }
-  }, [user]);
+  }, [user, searchParams]);
 
   // Debounce the query
   useEffect(() => {
@@ -163,7 +177,9 @@ function SearchContent() {
         const params = new URLSearchParams({
           search: activeQuery,
           category: category === "All" ? "" : category,
+          provinceId: location.provinceId || "",
           districtId: location.districtId || "",
+          cityId: location.cityId || "",
           areaId: location.areaId || "",
           limit: "50",
         });
@@ -172,12 +188,23 @@ function SearchContent() {
         const data = await res.json();
 
         if (data.success) {
-          let sortedWorkers = data.data;
+          let sortedWorkers = [...data.data];
           
-          if (sortBy === "rating-desc") {
+          if (sortBy === "featured") {
+            // Sort by rating desc, completedJobs desc, experienceYears desc
+            sortedWorkers.sort((a: any, b: any) => {
+              const rDiff = parseFloat(b.rating || "0") - parseFloat(a.rating || "0");
+              if (rDiff !== 0) return rDiff;
+              const jDiff = (b.completedJobs || 0) - (a.completedJobs || 0);
+              if (jDiff !== 0) return jDiff;
+              return (b.experienceYears || 0) - (a.experienceYears || 0);
+            });
+          } else if (sortBy === "rating") {
             sortedWorkers.sort((a: any, b: any) => parseFloat(b.rating || "0") - parseFloat(a.rating || "0"));
-          } else if (sortBy === "price-asc") {
+          } else if (sortBy === "price_low") {
             sortedWorkers.sort((a: any, b: any) => parseFloat(a.hourlyRate || "0") - parseFloat(b.hourlyRate || "0"));
+          } else if (sortBy === "price_high") {
+            sortedWorkers.sort((a: any, b: any) => parseFloat(b.hourlyRate || "0") - parseFloat(a.hourlyRate || "0"));
           }
 
           setFilteredWorkers(sortedWorkers);

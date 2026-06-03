@@ -59,8 +59,9 @@ export default function QRScanner({ onScan, onClose, title = "Scan Arrival Pass"
             <Scanner 
               onScan={handleScan}
               onError={handleError}
+              formats={["qr_code"]}
+              constraints={{ facingMode: "environment" }}
               components={{
-                audio: false,
                 onOff: false,
                 finder: false, // We use custom finder overlay
                 zoom: false,

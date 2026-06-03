@@ -493,7 +493,7 @@ export default function ChatWindow({
                             : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md"
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">
+                        <p className={`whitespace-pre-wrap break-words ${isOwn && !isFailed ? "text-white" : ""}`}>
                           {msg.content}
                         </p>
                         {isFailed && (

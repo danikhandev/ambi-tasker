@@ -14,6 +14,23 @@ import Link from "next/link";
  * SupportFloatingWidget - A production-level floating chat widget
  * designed for User and Provider dashboards.
  */
+
+/** Lightweight relative-time formatter */
+function getRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.max(0, now - then);
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 export default function SupportFloatingWidget() {
   const { user } = useUser();
   const { t } = useTranslation();
@@ -42,37 +59,40 @@ export default function SupportFloatingWidget() {
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
+  // Pre-fetch conversations for instantaneous opening
   useEffect(() => {
-    if (isOpen && user) {
+    if (user && !isAdminPage && !isSupportPage && !isAuthPage) {
       fetchConversations();
     }
-  }, [isOpen, user]);
+  }, [user]); // Removed isOpen to prefetch
 
-  const fetchConversations = async () => {
+  const fetchConversations = async (autoInitialize = false) => {
     setLoading(true);
     try {
       const res = await fetch("/api/support/conversations");
       const json = await res.json();
       if (json.success) {
         if (json.data.length === 0) {
-          // Auto-initialize to go directly to chat
-          const postRes = await fetch("/api/support/conversations", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subject: "Direct Support Inquiry", category: "GENERAL" })
-          });
-          const postJson = await postRes.json();
-          if (postJson.success) {
-            setConversations([postJson.data]);
-            setSelectedId(postJson.data.id);
-            setView("chat");
+          if (autoInitialize) {
+            // Auto-initialize to go directly to chat if opened
+            const postRes = await fetch("/api/support/conversations", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ subject: "Direct Support Inquiry", category: "GENERAL" })
+            });
+            const postJson = await postRes.json();
+            if (postJson.success) {
+              setConversations([postJson.data]);
+              setSelectedId(postJson.data.id);
+              setView("chat");
+            }
           }
         } else {
           setConversations(json.data);
           if (json.data.length === 1) {
             setSelectedId(json.data[0].id);
             setView("chat");
-          } else {
+          } else if (json.data.length > 1) {
             setView("list");
           }
         }
@@ -83,6 +103,21 @@ export default function SupportFloatingWidget() {
       setLoading(false);
     }
   };
+
+  // Auto-select conversation when widget opens if there's exactly 1 conversation
+  useEffect(() => {
+    if (isOpen && !selectedId && conversations.length === 1) {
+      setSelectedId(conversations[0].id);
+      setView('chat');
+    }
+  }, [isOpen, selectedId, conversations]);
+
+  // If there are 0 conversations, auto-initialize when opened
+  useEffect(() => {
+    if (isOpen && conversations.length === 0 && !loading) {
+      fetchConversations(true);
+    }
+  }, [isOpen]);
 
   const startNewConversation = async () => {
     setLoading(true);
@@ -188,7 +223,12 @@ export default function SupportFloatingWidget() {
               ) : conversations.length > 0 ? (
                 <div className="h-full flex flex-col">
                   <div className="flex-1 overflow-y-auto no-scrollbar">
-                    {conversations.map((conv, i) => (
+                    {conversations.map((conv, i) => {
+                      const lastMsg = conv.messages?.[0];
+                      const unreadCount = conv._count?.unread || 0;
+                      const timeAgo = lastMsg?.createdAt ? getRelativeTime(lastMsg.createdAt) : "";
+                      
+                      return (
                       <button
                         key={conv.id}
                         onClick={() => {
@@ -197,19 +237,27 @@ export default function SupportFloatingWidget() {
                         }}
                         className="w-full p-3 sm:p-4 border-b border-border/40 flex items-center gap-3 sm:gap-4 hover:bg-primary/5 transition-all group"
                       >
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center text-text-hint shrink-0 group-hover:scale-105 transition-transform">
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${lastMsg ? "bg-primary/10 text-primary" : "bg-muted text-text-hint"}`}>
                           <MessageSquare size={20} className="sm:w-6 sm:h-6" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-foreground truncate">
-                            Support Ticket #{conv.id.slice(-6).toUpperCase()}
-                          </h5>
-                          <p className="text-[9px] sm:text-[10px] font-bold text-text-hint truncate">
-                            {conv.subject || "General Support Inquiry"}
+                          <div className="flex items-center justify-between gap-2">
+                            <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-foreground truncate">
+                              {conv.subject || `Ticket #${conv.id.slice(-6).toUpperCase()}`}
+                            </h5>
+                            {timeAgo && (
+                              <span className="text-[9px] font-bold text-text-hint whitespace-nowrap flex-shrink-0">
+                                {timeAgo}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] font-bold text-text-hint truncate mt-0.5">
+                            {lastMsg?.content || "No messages yet — tap to start"}
                           </p>
                         </div>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button 
                     onClick={startNewConversation}
@@ -259,6 +307,11 @@ export default function SupportFloatingWidget() {
             >
               <Headphones size={22} strokeWidth={2.5} className="sm:w-7 sm:h-7" />
               <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 border-2 border-primary rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+              {conversations.reduce((sum, conv) => sum + (conv._count?.unread || 0), 0) > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center">
+                  {conversations.reduce((sum, conv) => sum + (conv._count?.unread || 0), 0)}
+                </span>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

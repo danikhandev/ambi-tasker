@@ -27,7 +27,14 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { updatedAt: "desc" }
       });
-      return NextResponse.json({ success: true, data: conversations });
+      // After fetching conversations, compute unread count for each conversation
+      const conversationsWithUnread = await Promise.all(conversations.map(async (conv: any) => {
+        const unread = await (prisma as any).supportMessage.count({
+          where: { conversationId: conv.id, isRead: false }
+        });
+        return { ...conv, _count: { unread } };
+      }));
+      return NextResponse.json({ success: true, data: conversationsWithUnread });
     }
 
     // Otherwise check user

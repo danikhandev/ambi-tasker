@@ -227,6 +227,17 @@ export function useChat({ conversationId, currentUserId, otherUserId, pageSize =
       );
     });
 
+    // Instant new message fallback (in case postgres_changes is delayed or disabled)
+    broadcastChannel.on("broadcast", { event: "new-message" }, (payload) => {
+      const msg = payload.payload as ChatMessage;
+      if (msg.senderId !== currentUserId) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      }
+    });
+
     broadcastChannel.subscribe((status) => {
       setIsConnected(status === "SUBSCRIBED");
       if (status === "SUBSCRIBED") {

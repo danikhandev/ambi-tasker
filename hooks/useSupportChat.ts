@@ -56,6 +56,18 @@ export function useSupportChat({ conversationId, currentUserId, role }: UseSuppo
   useEffect(() => {
     if (!conversationId) return;
 
+    // Helper: map snake_case DB row to camelCase SupportMessage
+    const mapDbRowToMessage = (row: any): SupportMessage => ({
+      id: row.id,
+      conversationId: row.conversation_id ?? row.conversationId,
+      senderId: row.sender_id ?? row.senderId,
+      senderRole: row.sender_role ?? row.senderRole,
+      content: row.content,
+      createdAt: row.created_at ?? row.createdAt,
+      isRead: row.is_read ?? row.isRead ?? false,
+      attachments: row.attachments || [],
+    });
+
     // A. Listen for DB changes (new messages)
     const dbChannel = supabase
       .channel(`support-db-${conversationId}`)
@@ -68,7 +80,8 @@ export function useSupportChat({ conversationId, currentUserId, role }: UseSuppo
           filter: `conversation_id=eq.${conversationId}`,
         },
         async (payload) => {
-          const newMessage = payload.new as SupportMessage;
+          console.log('Realtime new message payload:', payload);
+          const newMessage = mapDbRowToMessage(payload.new);
           // Avoid duplicates if we already added it optimistically
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMessage.id)) return prev;
@@ -98,9 +111,22 @@ export function useSupportChat({ conversationId, currentUserId, role }: UseSuppo
       setIsConnected(status === "SUBSCRIBED");
     });
 
+    // Reconnection and Heartbeat Logic
+
+    const heartbeatInterval = setInterval(() => {
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.send({
+          type: "broadcast",
+          event: "heartbeat",
+          payload: { timestamp: Date.now() },
+        });
+      }
+    }, 30000);
+
     broadcastChannelRef.current = broadcastChannel;
 
     return () => {
+      clearInterval(heartbeatInterval);
       supabase.removeChannel(dbChannel);
       supabase.removeChannel(broadcastChannel);
       broadcastChannelRef.current = null;

@@ -13,15 +13,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const search = searchParams.get("search");
-    const areaId = searchParams.get("areaId");
+    const provinceId = searchParams.get("provinceId");
     const districtId = searchParams.get("districtId");
+    const cityId = searchParams.get("cityId");
+    const areaId = searchParams.get("areaId");
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
     const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
 
     const conditions: any[] = [
-      { isAvailable: true },
-      { user: { isActive: true } },
-      { verificationStatus: "VERIFIED" } // Only show verified professionals in public search
+      { user: { isActive: true } }
     ];
 
     // --- Search Logic (Query based) ---
@@ -62,9 +62,15 @@ export async function GET(req: NextRequest) {
     if (areaId) {
       conditions.push({
         OR: [
-          { areaId: areaId }, // Direct link in profile
           { user: { areaId: areaId } }, // Link via user record
           { serviceAreas: { some: { id: areaId, isActive: true } } } // Link via serving regions
+        ]
+      });
+    } else if (cityId) {
+      conditions.push({
+        OR: [
+          { user: { cityId: cityId } },
+          { serviceAreas: { some: { cityId: cityId, isActive: true } } }
         ]
       });
     } else if (districtId) {
@@ -73,6 +79,13 @@ export async function GET(req: NextRequest) {
           { user: { districtId: districtId } },
           { user: { city: { districtId: districtId } } }, // Traverse City to District
           { serviceAreas: { some: { city: { districtId: districtId, isActive: true } } } }
+        ]
+      });
+    } else if (provinceId) {
+      conditions.push({
+        OR: [
+          { user: { district: { provinceId: provinceId } } },
+          { serviceAreas: { some: { city: { district: { provinceId: provinceId, isActive: true } } } } }
         ]
       });
     }

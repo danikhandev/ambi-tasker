@@ -136,9 +136,9 @@ export default function SupportChatWindow({
                 <div className={`px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-[20px] sm:rounded-[24px] text-sm shadow-sm ${
                   isOwn 
                     ? "bg-primary text-white rounded-tr-none" 
-                    : "bg-card border border-border rounded-tl-none"
+                    : "bg-card border border-border rounded-tl-none text-card-foreground"
                 }`}>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <p className={`whitespace-pre-wrap ${isOwn ? "text-white" : "text-card-foreground"}`}>{msg.content}</p>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5 px-2">
                   {!isOwn && isSupport && (

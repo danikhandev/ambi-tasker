@@ -14,25 +14,49 @@ export async function GET(req: NextRequest) {
     const guard = await userGuard(req);
     if (guard.error) return guard.error;
 
-    const user = await prisma.user.findUnique({
-      where: { id: guard.user.id },
-      select: { districtId: true }
-    });
+    const { searchParams } = new URL(req.url);
+    const provinceId = searchParams.get("provinceId");
+    const districtId = searchParams.get("districtId");
+    const cityId = searchParams.get("cityId");
+    const areaId = searchParams.get("areaId");
 
-    if (!user?.districtId) {
-       return NextResponse.json({ success: true, data: null });
+    let targetProvinceId = provinceId || null;
+    let targetDistrictId = districtId || null;
+    let targetCityId = cityId || null;
+    let targetAreaId = areaId || null;
+
+    // If no location parameters are provided, fall back to user's saved location
+    if (!targetProvinceId && !targetDistrictId && !targetCityId && !targetAreaId) {
+      const user = await prisma.user.findUnique({
+        where: { id: guard.user.id },
+        select: { districtId: true, cityId: true, areaId: true }
+      });
+      targetDistrictId = user?.districtId || null;
+      targetCityId = user?.cityId || null;
+      targetAreaId = user?.areaId || null;
     }
 
-    // Find highly rated providers in the same district
+    const whereClause: any = {
+      verificationStatus: "VERIFIED",
+      isAvailable: true,
+      user: {
+        isActive: true
+      }
+    };
+
+    if (targetAreaId) {
+      whereClause.user.areaId = targetAreaId;
+    } else if (targetCityId) {
+      whereClause.user.cityId = targetCityId;
+    } else if (targetDistrictId) {
+      whereClause.user.districtId = targetDistrictId;
+    } else if (targetProvinceId) {
+      whereClause.user.district = { provinceId: targetProvinceId };
+    }
+
+    // Find highly rated providers in the target location
     const featuredProvider = await prisma.providerProfile.findFirst({
-      where: {
-        verificationStatus: "VERIFIED",
-        isAvailable: true,
-        user: {
-          districtId: user.districtId,
-          isActive: true
-        }
-      },
+      where: whereClause,
       include: {
         user: { select: { name: true } }
       },
