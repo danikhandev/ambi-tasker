@@ -14,7 +14,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   Accepted: ["Arrived", "InProgress", "Cancelled"],
   Arrived: ["InProgress", "Cancelled"],
   InProgress: ["Completed", "Cancelled"],
-  Completed: ["Completed"],
+  Completed: ["PAYMENT_RECEIVED"],
   Cancelled: [],
 };
 
@@ -92,15 +92,23 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Role-specific authorization
-    if (status === "Accepted" || status === "InProgress") {
-      if (!isProvider && !isAdmin) {
-        return NextResponse.json(
-          { success: false, error: "Only the provider can accept or start a booking" },
-          { status: 403 }
-        );
-      }
-    }
-    if (status === "Completed") {
+if (status === "Accepted" || status === "InProgress") {
+  if (!isProvider && !isAdmin) {
+    return NextResponse.json({
+      success: false,
+      error: "Only the provider can accept or start a booking",
+    }, { status: 403 });
+  }
+}
+if (status === "PAYMENT_RECEIVED") {
+  if (!isProvider && !isAdmin) {
+    return NextResponse.json({
+      success: false,
+      error: "Only the provider can confirm payment receipt",
+    }, { status: 403 });
+  }
+}
+if (status === "Completed") {
       if (!isCustomer && !isAdmin) {
         return NextResponse.json(
           { success: false, error: "Only the customer can confirm and complete a booking" },
@@ -208,6 +216,13 @@ export async function PATCH(req: NextRequest) {
       });
 
       // NOTE: Provider earnings will be updated when User confirms completion
+      if (status === "PAYMENT_RECEIVED") {
+        await prisma.payment.updateMany({
+          where: { bookingId },
+          data: { status: "PAID" },
+        });
+        // Provider earnings could be updated here if needed
+      }
     }
 
     logger.info(`Booking ${bookingId} status: ${currentStatus} → ${status} by ${guard.user.email}`);

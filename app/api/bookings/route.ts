@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/services/prisma";
 import { userGuard } from "@/services/auth/guards";
+import { randomUUID } from "crypto";
 import { logger } from "@/utils/logger";
 import { validateLocationHierarchy } from "@/utils/location-validation";
 import { sendNotification } from "@/services/notifications";
@@ -263,6 +264,8 @@ export async function POST(req: NextRequest) {
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
           notes: notes || null,
           status: "Requested",
+          qrToken: randomUUID(),
+          qrExpiry: new Date(Date.now() + 15 * 60 * 1000),
         },
         include: {
           service: true,
